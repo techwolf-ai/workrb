@@ -25,13 +25,13 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install the latest version of uv (with Python ${{ matrix.python-version }})
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v6
         with:
           python-version: ${{ matrix.python-version }}
       
       # Make lock file
       - name: Install the project
-        run: uv sync --locked --all-extras --dev
+        run: uv sync --all-extras --dev
       
       # Use lock file using --frozen
       - name: Lint package
