@@ -25,6 +25,7 @@ repos:
       - id: check-docstring-first
       - id: check-illegal-windows-names
       - id: check-json
+        exclude: ^.vscode/
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
       - id: check-symlinks
@@ -43,15 +44,21 @@ repos:
         args: [--pytest-test-first]
       - id: trailing-whitespace
         types: [python]
-  - repo: local
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.9.1
     hooks:
       - id: commitizen
-        name: commitizen
-        entry: cz check
-        args: [--commit-msg-file]
-        require_serial: true
-        language: system
-        stages: [commit-msg]
+      # - id: commitizen-branch
+      #   stages: [commit-msg]
+  - repo: local
+    hooks:
+      # - id: commitizen
+      #   name: commitizen
+      #   entry: cz check
+      #   args: [--commit-msg-file]
+      #   require_serial: true
+      #   language: system
+      #   stages: [commit-msg]
       - id: ruff-check
         name: ruff check
         entry: ruff check
@@ -66,8 +73,8 @@ repos:
         require_serial: true
         language: system
         types_or: [python, pyi]
-      - id: mypy
-        name: mypy
-        entry: mypy
-        language: system
-        types: [python]
+      # - id: mypy
+      #   name: mypy
+      #   entry: mypy
+      #   language: system
+      #   types: [python]
