@@ -5,11 +5,9 @@ Tasks can self-register using @register_task() decorator.
 """
 
 import importlib
-import inspect
 import logging
 import pkgutil
-from functools import wraps
-from typing import Any, Dict, Type, TypeVar
+from typing import Any, TypeVar
 
 # Type variables for generic decorators
 TaskType = TypeVar("TaskType", bound="Task")
