@@ -49,49 +49,13 @@ repos:
     hooks:
       - id: commitizen
         stages: [commit-msg]
-        # require_serial: true
-      # - id: commitizen-branch
-      #   stages: [commit-msg]
-  # .pre-commit-config.yaml
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.14.1
     hooks:
-      # Run the linter.
       - id: ruff-check
         args: ["--extend-fixable=F401,F841", "--fix-only"]
         # Optional: narrow to Python files if you like
         types_or: [python, pyi]
-        # require_serial: true
-
       - id: ruff-format
         name: ruff format
         types_or: [python, pyi]
-        # require_serial: true
-  # - repo: local
-  #   hooks:
-  #     # - id: commitizen
-  #     #   name: commitizen
-  #     #   entry: cz check
-  #     #   args: [--commit-msg-file]
-  #     #   require_serial: true
-  #     #   language: system
-  #     #   stages: [commit-msg]
-  #     - id: ruff-check
-  #       name: ruff check
-  #       entry: ruff check
-  #       args: ["--force-exclude", "--extend-fixable=F401,F841", "--fix-only"]
-  #       require_serial: true
-  #       language: system
-  #       types_or: [python, pyi]
-  #     - id: ruff-format
-  #       name: ruff format
-  #       entry: ruff format
-  #       args: [--force-exclude]
-  #       require_serial: true
-  #       language: system
-  #       types_or: [python, pyi]
-  #     # - id: mypy
-  #     #   name: mypy
-  #     #   entry: mypy
-  #     #   language: system
-  #     #   types: [python]
