@@ -29,9 +29,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       
+      # Make lock file
+      - name: Install the project
+        run: uv sync --locked --all-extras --dev
+      
+      # Use lock file using --frozen
       - name: Lint package
-        run: uv run --frozen poe lint
+        run: uv run --no-sync poe lint
         
       - name: Test package
-        run: uv run --frozen poe test
+        run: uv run --no-sync poe test
 
