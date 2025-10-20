@@ -13,7 +13,6 @@ Usage:
 
 import sys
 import time
-from pathlib import Path
 
 import workbench as wb
 from tests.test_utils import create_toy_task_class

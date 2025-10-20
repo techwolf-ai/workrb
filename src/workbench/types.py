@@ -1,6 +1,5 @@
 """Shared types and enums used across WorkBench."""
 
-from abc import ABC
 from enum import StrEnum
 
 
