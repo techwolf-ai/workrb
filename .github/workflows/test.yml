@@ -1,0 +1,42 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11"]
+        resolution-strategy: ["highest", "lowest-direct"]
+    name: Python ${{ matrix.python-version }} (resolution=${{ matrix.resolution-strategy }})
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install the latest version of uv (with Python ${{ matrix.python-version }})
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      # Make lock file
+      - name: Install the project
+        run: uv sync --all-extras --dev
+      
+      # Use lock file and skip validating
+      - name: Lint package
+        run: uv run --no-sync poe lint
+        
+      - name: Test package
+        run: uv run --no-sync poe test
+
