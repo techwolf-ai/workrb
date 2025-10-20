@@ -3,10 +3,8 @@
 import pytest
 
 from workbench.registry import (
-    ModelRegistry,
     TaskRegistry,
     create_task_from_config,
-    register_model,
     register_task,
 )
 from workbench.tasks.abstract import Task

@@ -12,7 +12,6 @@ import math
 
 import pytest
 
-import workbench as wb
 from tests.test_utils import create_toy_task_class
 from workbench.models import BiEncoderModel, RndESCOClassificationModel
 from workbench.tasks import ESCOJob2SkillClassification, SkillMatch1kSkillSimilarityRanking
