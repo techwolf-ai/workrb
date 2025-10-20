@@ -33,7 +33,7 @@ jobs:
       - name: Install the project
         run: uv sync --all-extras --dev
       
-      # Use lock file using --frozen
+      # Use lock file and skip validating
       - name: Lint package
         run: uv run --no-sync poe lint
         
