@@ -1,16 +1,14 @@
-<h1 align="center">🛠️ WorkBench</h1>
-<h3 align="center">Evaluating AI progress in the work domain, made easy</h3>
+<div align="center">
 
-<p align="center">
-    <a href="https://github.com/techwolf-ai/workbench-toolkit/releases">
-        <img alt="GitHub release" src="https://img.shields.io/github/release/techwolf-ai/workbench-toolkit.svg">
-    </a>
-    <a href="https://github.com/techwolf-ai/workbench-toolkit/blob/master/LICENSE">
-        <img alt="License" src="https://img.shields.io/github/license/techwolf-ai/workbench-toolkit.svg?color=green">
-    </a>
-</p>
+# 🛠️ WorkBench
 
-<h4 align="center">
+<h2>Benchmarking AI progress in the work domain, made easy</h2>
+
+[![syntax checking](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml)
+[![GitHub release](https://img.shields.io/github/release/techwolf-ai/workbench-toolkit.svg)](https://github.com/techwolf-ai/workbench/releases)
+[![License](https://img.shields.io/github/license/techwolf-ai/workbench.svg?color=green)](https://github.com/techwolf-ai/workbench/blob/main/LICENSE)
+
+<h4>
     <p>
         <a href="#installation">Installation</a> |
         <a href="#quick-start">Quick Start</a> |
@@ -19,25 +17,22 @@
     <p>
 </h4>
 
-## Overview
+</div>
 
-WorkBench is an **open-source, community-driven benchmark** for evaluating AI systems in the work domain. We democratize evaluation by making it simple, transparent, and extensible for researchers and developers.
+**WorkBench** is an open-source library to *benchmark AI systems in the work domain*. 
+
+It provides a standardized framework to evaluate the performance of state-of-the-art models with ease.
+
+
+with the unique goal of  mission to standardize progress in the work domain is measured by providing clarity and transparency with an easy-to-use evaluation framework.
 
 **Design Principles:**
 - **Ease of Use** – Quick setup, clean APIs, minimal boilerplate
 - **Transparency** – Clear metrics and datasets, even in complex evaluation settings
 - **Community-Driven** – New tasks, models, and metrics evolve from the open-source community
 
-## Key Features
 
-- **7+ Benchmark Tasks** – Evaluate models on job-skill matching, normalization, extraction, and similarity
-- **Multilingual Support** – Test across 27+ European languages via ESCO datasets
-- **Standardized Metrics** – MAP, MRR, Recall@K, Precision@K for ranking; F1, accuracy for classification
-- **Automatic Checkpointing** – Resume interrupted or partial benchmarks seamlessly
-- **Extensible Design** – Add custom tasks and models with simple interfaces
-
-
-## Quick Start
+## Example Usage
 
 ```python
 import workbench as wb
@@ -61,32 +56,38 @@ print(results)
 ```
 
 ## Installation
-Install the package via:
-```bash
-pip install "workbench-toolkit @ git+https://github.com/techwolf-ai/workbench-toolkit.git"
-```
+*Note: PyPI installation is WIP, for now follow the [dev setup]().*
 
+Install WorkBench simply via pip. 
+```bash
+pip install workbench-ai
+```
 **Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
-*Note: PyPI installation is WIP.*
+## Features
+
+- **7+ Benchmark Tasks** – Evaluate models on job-skill matching, normalization, extraction, and similarity
+- **Multilingual Support** – Test across 27+ European languages via ESCO datasets
+- **Standardized Metrics** – MAP, MRR, Recall@K, Precision@K for ranking; F1, accuracy for classification
+- **Automatic Checkpointing** – Resume interrupted or partial benchmarks seamlessly
+- **Extensible Design** – Add custom tasks and models with simple interfaces
 
 ## Usage Guide
 
 This section covers common usage patterns. For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-### Table of Contents
+**Table of Contents:**
 - [Custom Tasks & Models](#custom-tasks--models)
 - [Discovering Available Tasks & Models](#discovering-available-tasks--models)
 - [Checkpointing & Resuming](#checkpointing--resuming)
 - [Results & Aggregation](#results--aggregation)
 
----
 
 ### Custom Tasks & Models
 
-Add your custom task or model by inheriting from predefined base classes: 
-- **Custom Tasks**: Inherit from `RankingTask`, `MultilabelClassificationTask`,...
-- **Custom models**: Implement the `ModelInterface` to add your own model.
+Add your custom task or model by (1) inheriting from a predefined base class and implementing the abstract methods, and (2) adding it to the registry: 
+- **Custom Tasks**: Inherit from `RankingTask`, `MultilabelClassificationTask`,... Implement the abstract methods. Register via `@register_task()`.
+- **Custom models**: Inherit from `ModelInterface`. Implement the abstract methods. Register via `@register_model()`.
 
 ```python
 from workbench.tasks.abstract.ranking_base import RankingTask
@@ -272,7 +273,7 @@ pre-commit install --install-hooks
 </details>
 
 
-## Citation
+<!-- ## Citation
 
 If you use WorkBench in your research, please cite:
 
@@ -283,7 +284,7 @@ If you use WorkBench in your research, please cite:
   year={2025},
   url={https://github.com/techwolf-ai/workbench-toolkit}
 }
-```
+``` -->
 
 ## License
 
