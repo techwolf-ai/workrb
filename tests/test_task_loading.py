@@ -15,10 +15,10 @@ from workbench.tasks import (
     SkillMatch1kSkillSimilarityRanking,
     TechSkillExtractRanking,
 )
-from workbench.tasks.abstract.base import DatasetSplit, Language
+from workbench.tasks.abstract.base import DatasetSplit, Language, TaskType
 
 
-class StubSupportedLanguagesTask(GeneralRankingTestTask):
+class StubSupportedLanguagesRankingTask(GeneralRankingTestTask):
     """Stub task class for testing language support."""
 
     @property
@@ -28,6 +28,10 @@ class StubSupportedLanguagesTask(GeneralRankingTestTask):
     @property
     def supported_target_languages(self):
         return [Language.EN, Language.DE]
+
+    @property
+    def task_type(self):
+        return TaskType.RANKING
 
 
 def test_ranking_tasks_init_en_splits():
@@ -138,27 +142,27 @@ class TestTaskLanguageSupport:
     ):
         """Test that passing unsupported languages raises an error."""
         with pytest.raises(ValueError):
-            StubSupportedLanguagesTask(
+            StubSupportedLanguagesRankingTask(
                 languages=self.unsupported_languages,
                 split=self.split,
                 unsupported_lang_mode=unsupported_lang_mode,
             )
 
         with pytest.raises(ValueError, match="not a valid Language"):
-            StubSupportedLanguagesTask(
+            StubSupportedLanguagesRankingTask(
                 languages=self.faulty_lang_input,
                 split=self.split,
                 unsupported_lang_mode=unsupported_lang_mode,
             )
 
         with pytest.raises(ValueError, match="not a valid Language"):
-            StubSupportedLanguagesTask(
+            StubSupportedLanguagesRankingTask(
                 languages=self.mixed_faulty_lang_input,
                 split=self.split,
                 unsupported_lang_mode=unsupported_lang_mode,
             )
 
-        StubSupportedLanguagesTask(
+        StubSupportedLanguagesRankingTask(
             languages=self.supported_languages,
             split=self.split,
             unsupported_lang_mode=unsupported_lang_mode,
@@ -169,27 +173,27 @@ class TestTaskLanguageSupport:
         self, split, unsupported_lang_mode: Literal["error", "skip"] = "skip"
     ):
         """Test that passing unsupported languages raises an error."""
-        StubSupportedLanguagesTask(
+        StubSupportedLanguagesRankingTask(
             languages=self.unsupported_languages,
             split=self.split,
             unsupported_lang_mode=unsupported_lang_mode,
         )
 
         with pytest.raises(ValueError, match="not a valid Language"):
-            StubSupportedLanguagesTask(
+            StubSupportedLanguagesRankingTask(
                 languages=self.faulty_lang_input,
                 split=self.split,
                 unsupported_lang_mode=unsupported_lang_mode,
             )
 
         with pytest.raises(ValueError, match="not a valid Language"):
-            StubSupportedLanguagesTask(
+            StubSupportedLanguagesRankingTask(
                 languages=self.mixed_faulty_lang_input,
                 split=self.split,
                 unsupported_lang_mode=unsupported_lang_mode,
             )
 
-        StubSupportedLanguagesTask(
+        StubSupportedLanguagesRankingTask(
             languages=self.supported_languages,
             split=self.split,
             unsupported_lang_mode=unsupported_lang_mode,
