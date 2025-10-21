@@ -13,11 +13,13 @@ from torch import nn
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
 from workbench.models.base import ModelInterface
+from workbench.registry import register_model
 from workbench.tasks.abstract.base import Language
 
 logger = logging.getLogger(__name__)
 
 
+@register_model()
 class RndESCOClassificationModel(ModelInterface):
     """
     Multi-label classification model with random prediction head for ESCO, to serve as a baseline.
@@ -75,9 +77,16 @@ class RndESCOClassificationModel(ModelInterface):
         self.encoder.eval()
         self.rnd_classifier.eval()
 
+    @property
     def name(self) -> str:
         """Return the name of the model."""
         return f"Classifier-{self.base_model_name.split('/')[-1]}"
+
+    @property
+    def description(self) -> str:
+        return (
+            "Random baseline for multi-label classification with random prediction head for ESCO."
+        )
 
     @property
     def classification_label_space(self) -> list[str] | None:

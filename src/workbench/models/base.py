@@ -10,9 +10,15 @@ from workbench.data.input_types import ModelInputType
 class ModelInterface(ABC):
     """Abstract base class for all models in WorkBench."""
 
+    @property
     @abstractmethod
     def name(self) -> str:
         """Return the name of the model."""
+
+    @property
+    @abstractmethod
+    def description(self) -> str:
+        """Return the description of the model."""
 
     @abstractmethod
     def _compute_rankings(

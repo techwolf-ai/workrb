@@ -7,8 +7,10 @@ from tqdm.auto import tqdm
 
 from workbench.data.input_types import ModelInputType
 from workbench.models.base import ModelInterface
+from workbench.registry import register_model
 
 
+@register_model()
 class BiEncoderModel(ModelInterface):
     """BiEncoder model using sentence-transformers."""
 
@@ -21,8 +23,13 @@ class BiEncoderModel(ModelInterface):
         self.model.to(device)
         self.model.eval()
 
+    @property
     def name(self) -> str:
         return f"BiEncoder-{self.base_model_name.split('/')[-1]}"
+
+    @property
+    def description(self) -> str:
+        return "BiEncoder model using sentence-transformers for ranking and classification tasks."
 
     def _compute_rankings(
         self,
@@ -79,6 +86,7 @@ class BiEncoderModel(ModelInterface):
         return None
 
 
+@register_model()
 class JobBERTModel(ModelInterface):
     """BiEncoder model using sentence-transformers."""
 
@@ -102,8 +110,15 @@ class JobBERTModel(ModelInterface):
             ModelInputType.SKILL_SENTENCE: positive_branch,
         }
 
+    @property
     def name(self) -> str:
         return self.base_model_name.split("/")[-1]
+
+    @property
+    def description(self) -> str:
+        return (
+            "Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2"
+        )
 
     @staticmethod
     def encode_batch(jobbert_model, texts, branch: str = "anchor"):
