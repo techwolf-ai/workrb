@@ -2,7 +2,7 @@
 
 # 🛠️ WorkBench
 
-<h2>Benchmarking AI progress in the work domain, made easy</h2>
+<h2>Easy benchmarking of AI progress in the work domain</h2>
 
 [![syntax checking](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml)
 [![GitHub release](https://img.shields.io/github/release/techwolf-ai/workbench-toolkit.svg)](https://github.com/techwolf-ai/workbench/releases)
@@ -11,26 +11,25 @@
 <h4>
     <p>
         <a href="#installation">Installation</a> |
-        <a href="#quick-start">Quick Start</a> |
+        <a href="#features">Features</a> |
         <a href="#usage-guide">Usage Guide</a> |
-        <a href="#contributing--development">Contributing</a>
+        <a href="#contributing--development">Contributing</a> |
+        <a href="#citing">Citing</a>
     <p>
 </h4>
 
 </div>
 
 **WorkBench** is an open-source library to *benchmark AI systems in the work domain*. 
+It provides a standardized framework that is easy to use and community-driven, scaling evaluation over a wide range of state-of-the-art tasks and models.
 
-It provides a standardized framework to evaluate the performance of state-of-the-art models with ease.
+## Features
 
-
-with the unique goal of  mission to standardize progress in the work domain is measured by providing clarity and transparency with an easy-to-use evaluation framework.
-
-**Design Principles:**
-- **Ease of Use** – Quick setup, clean APIs, minimal boilerplate
-- **Transparency** – Clear metrics and datasets, even in complex evaluation settings
-- **Community-Driven** – New tasks, models, and metrics evolve from the open-source community
-
+- 🧪 **7+ benchmark tasks** — Evaluate models on job–skill matching, normalization, extraction, and similarity
+- 🌍 **Dynamic Multilinguality** — Test tasks dynamically across 27+ EU languages via ESCO ontologies
+- 🧩 **Extensible design** — Add your custom tasks and models with simple interfaces
+- 📊 **Standardized metrics** — Measure unified metrics over ranking and classification tasks
+- 🔄 **Automatic checkpointing** — Resume interrupted or partial benchmarks seamlessly
 
 ## Example Usage
 
@@ -64,21 +63,10 @@ pip install workbench-ai
 ```
 **Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
-## Features
-
-- **7+ Benchmark Tasks** – Evaluate models on job-skill matching, normalization, extraction, and similarity
-- **Multilingual Support** – Test across 27+ European languages via ESCO datasets
-- **Standardized Metrics** – MAP, MRR, Recall@K, Precision@K for ranking; F1, accuracy for classification
-- **Automatic Checkpointing** – Resume interrupted or partial benchmarks seamlessly
-- **Extensible Design** – Add custom tasks and models with simple interfaces
-
 ## Usage Guide
 
-This section covers common usage patterns. For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
-**Table of Contents:**
+This section covers common usage patterns. Table of Contents:
 - [Custom Tasks & Models](#custom-tasks--models)
-- [Discovering Available Tasks & Models](#discovering-available-tasks--models)
 - [Checkpointing & Resuming](#checkpointing--resuming)
 - [Results & Aggregation](#results--aggregation)
 
@@ -112,26 +100,9 @@ model_results = benchmark.run(MyCustomModel())
 
 **For detailed examples**, see:
 - [examples/custom_task_example.py](examples/custom_task_example.py) for a complete custom task implementation
-- [CONTRIBUTING.md](CONTRIBUTING.md) for step-by-step guides
+- [examples/custom_model_example.py](examples/custom_model_example.py) for a complete custom model implementation
 
----
-
-### Discovering Available Tasks & Models
-
-List all registered tasks and models:
-
-```python
-from workbench.registry import TaskRegistry, ModelRegistry
-
-# List all available tasks and models
-available_tasks = TaskRegistry.list_available()
-available_models = ModelRegistry.list_available()
-
-# Create by name
-task = TaskRegistry.create("ESCOJob2SkillRanking", split="val", languages=["en"])
-```
-
----
+Feel free to make a PR to add your models & tasks to the official package! See [CONTRIBUTING guidelines](CONTRIBUTING.md) for details.
 
 ### Checkpointing & Resuming
 
@@ -171,12 +142,11 @@ results = benchmark.run(model, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
 
-❌**You cannot reduce scope** when resuming, by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WorkBench initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
+❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WorkBench initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
 ```python
 results = benchmark.run(model, output_folder="results/my_model", force_restart=True)
 ```
 
----
 
 ### Results & Metric Aggregation
 
@@ -215,36 +185,45 @@ summary: dict[str, float] = results.get_summary_metrics()
 
 # Show all results
 print(summary)
-print(results) # Equivalently, internally runs get_summary_metrics()
+print(results) # Equivalent: internally runs get_summary_metrics()
 
 # Access metric via tag
 lang_result = summary["mean_per_language/en/f1_macro/mean"]
+lang_result_ci = summary["mean_per_language/en/f1_macro/ci_margin"]
 ```
-
----
 
 
 ## Supported tasks & models
 
-| Task | Type | Description |
-|------|------|-------------|
-| **ESCOJob2SkillRanking** | Ranking | Map job titles to relevant skills |
-| **ESCOSkill2JobRanking** | Ranking | Map skills to relevant job titles |
-| **TechSkillExtractRanking** | Ranking | Extract skills from technical text |
-| **HouseSkillExtractRanking** | Ranking | Extract skills from general text |
-| **JobBERTJobNormRanking** | Ranking | Normalize job titles |
-| **ESCOSkillNormRanking** | Ranking | Normalize skills to ESCO taxonomy |
-| **SkillMatch1kSkillSimilarityRanking** | Ranking | Find similar skills |
-| **ESCOJob2SkillClassification** | Classification | Classify jobs to skill categories |
+### Tasks
+| Task Name | Label Type | Dataset Size (English) | Languages |
+| --- | --- | --- | --- |
+| **Ranking** 
+| Job to Skills | multi_label | 3039 queries x 13939 targets | 28  |
+| Job Normalization | multi_class | 15463 queries x 2942 targets | 28  |
+| Skill to Job | multi_label | 13492 queries x 3039 targets | 28  |
+| Skill Extraction House | multi_label | 262 queries x 13891 targets | 28  |
+| Skill Extraction Tech | multi_label | 338 queries x 13891 targets | 28  |
+| Skill Similarity | multi_class | 900 queries x 2648 targets | 1 |
+| ESCO Skill Normalization | multi_label | 72008 queries x 13939 targets | 28  |
+| **Classification**
+| Job-Skill Classification | multi_label | 3039 samples, 13939 classes | 28  |
 
----
+
+### Models
+| Model Name | Description | Fixed Classifier |
+| --- | --- | --- |
+| BiEncoderModel | BiEncoder model using sentence-transformers for ranking and classification tasks. | ❌ |
+| JobBERTModel | Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2 | ❌ |
+| RndESCOClassificationModel | Random baseline for multi-label classification with random prediction head for ESCO. | ✅ |
+
 
 
 ## Contributing
-Read our detailed [CONTRIBUTING.md](CONTRIBUTING.md) guide for more details.
+Want to contribute new tasks, models, or metrics?
+Read our [CONTRIBUTING.md](CONTRIBUTING.md) guide for all details.
 
-### Development setup
-Clone this repository and run the following from root of the repository:
+### Development environment
 
 ```sh
 # Clone repository
