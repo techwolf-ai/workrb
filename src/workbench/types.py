@@ -1,9 +1,9 @@
 """Shared types and enums used across WorkBench."""
 
-from enum import StrEnum
+from enum import Enum
 
 
-class Language(StrEnum):
+class Language(str, Enum):
     """Language enum."""
 
     EN = "en"
@@ -36,14 +36,14 @@ class Language(StrEnum):
     UK = "uk"
 
 
-class LabelType(StrEnum):
+class LabelType(str, Enum):
     """Label type enum."""
 
     SINGLE_LABEL = "single_label"
     MULTI_LABEL = "multi_label"
 
 
-class DatasetSplit(StrEnum):
+class DatasetSplit(str, Enum):
     """Dataset split enum."""
 
     VAL = "val"

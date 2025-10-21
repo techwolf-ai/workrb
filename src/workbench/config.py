@@ -97,7 +97,7 @@ class BenchmarkConfig:
             model_name=model_name,
             model_class=model_class,
             task_configs=task_configs,
-            languages=sorted(all_languages),
+            languages=sorted([lang.value for lang in all_languages]),
             custom_metrics=custom_metrics,
             output_folder=output_folder,
             description=description,

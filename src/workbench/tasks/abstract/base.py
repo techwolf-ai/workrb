@@ -2,7 +2,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from enum import StrEnum
+from enum import Enum
 from typing import Any, Literal, final
 
 from workbench.types import DatasetSplit, LabelType, Language
@@ -10,7 +10,7 @@ from workbench.types import DatasetSplit, LabelType, Language
 logger = logging.getLogger(__name__)
 
 
-class BaseTaskGroup(StrEnum):
+class BaseTaskGroup(str, Enum):
     """
     Task group enum.
 
@@ -19,7 +19,7 @@ class BaseTaskGroup(StrEnum):
     """
 
 
-class TaskType(StrEnum):
+class TaskType(str, Enum):
     """Task type enum."""
 
     CLASSIFICATION = "classification"
@@ -86,12 +86,12 @@ class Task(ABC):
         """Get task configuration."""
         return {
             "name": self.name,
-            "languages": self.languages,
-            "split": self.split,
+            "languages": [lang.value for lang in self.languages],
+            "split": self.split.value,
             "class": self.__class__.__name__,
-            "task_group": self.task_group,
-            "task_type": self.task_type,
-            "label_type": self.label_type,
+            "task_group": self.task_group.value,
+            "task_type": self.task_type.value,
+            "label_type": self.label_type.value,
             "description": self.description,
         }
 
