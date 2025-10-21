@@ -6,20 +6,20 @@ Thank you for your interest in contributing to WorkBench! We're building a commu
 
 - [Ways to Contribute](#ways-to-contribute)
 - [Development Setup](#development-setup)
+- [Contributing Process](#contributing-process)
 - [Adding a New Task](#adding-a-new-task)
 - [Adding a New Model](#adding-a-new-model)
 - [Adding New Metrics](#adding-new-metrics)
 - [Code Standards](#code-standards)
-- [Pull Request Process](#pull-request-process)
 - [Questions & Support](#questions--support)
 
 ## Ways to Contribute
 
 We welcome contributions of all kinds:
 
-- **🐛 Report bugs** – Found an issue? Let us know in [GitHub Issues](https://github.com/techwolf-ai/workbench-toolkit/issues)
+- **🐛 Report bugs** – Found an issue? Let us know in [GitHub Issues](https://github.com/techwolf-ai/workbench/issues)
 - **📊 Add new tasks** – Extend WorkBench with new evaluation tasks
-- **🤖 Add new models** – Implement reference models or adapters for popular architectures
+- **🤖 Add new models** – Implement state-of-the-art models or baselines
 - **📈 Add new metrics** – Contribute evaluation metrics relevant to the work domain
 - **📚 Improve documentation** – Help make WorkBench easier to use
 - **✨ Suggest features** – Share ideas for improvements
@@ -28,34 +28,33 @@ We welcome contributions of all kinds:
 
 ### Prerequisites
 
-- **Python 3.10+**
-- **uv** (recommended) or pip
+- [install uv](https://docs.astral.sh/uv/getting-started/installation/)
 - Git
 
 ### Setup Instructions
 
 1. **Fork and clone the repository:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/workbench-toolkit.git
-   cd workbench-toolkit
+   git clone https://github.com/YOUR_USERNAME/workbench.git
+   cd workbench
    ```
 
 2. **Install dependencies:**
    ```bash
-   # Using uv (recommended)
-   uv sync
-   
-   # Or using pip
-   pip install -e ".[dev]"
+    # Create and install a virtual environment, including dev
+    uv sync --all-extras
+
+    # Activate the virtual environment (venv)
+    source .venv/bin/activate
+
+    # Install the pre-commit hooks in the venv
+    pre-commit install --install-hooks
    ```
 
 3. **Verify installation:**
    ```bash
-   # Run tests
-   uv run poe test
-   
-   # Run linting
-   uv run poe lint
+   # Run example script
+   uv run python examples/usage_example.py
    ```
 
 4. **Create a new branch for your changes:**
@@ -63,18 +62,107 @@ We welcome contributions of all kinds:
    git checkout -b feature/my-new-feature
    ```
 
+
+## Contributing Process
+
+### 1. Make an Issue with your proposal
+
+Before starting any significant work (new feature, task, model, or refactor), please open a proposal issue first. This helps us align on scope and approach before you invest time in an implementation.
+
+- Open an issue at `https://github.com/techwolf-ai/workbench/issues` describing your proposal
+- Maintainers will triage and respond in the issue with feedback and next steps
+- Once there’s agreement on the direction, proceed with a Pull Request referencing the issue
+
+Issue template (copy/paste into a new issue):
+
+```markdown
+## Proposal Summary
+One-sentence goal and motivation.
+
+## Problem Statement
+What problem or limitation does this address? Who is impacted?
+
+## Proposed Changes
+- High-level approach
+- Affected areas (files/modules/APIs)
+- Alternatives considered
+
+## Impact
+- Backward compatibility: yes/no (explain)
+- Performance implications
+
+## Test Plan (optional)
+How will this be tested and validated?
+
+## Additional Context
+Links to related issues/PRs/docs.
+```
+
+### 2. Start implementing (local)
+Project: 
+1. Make a fork of the main branch into your own repo
+2. Implement your code. See further in this guide how to add new tasks, models, or metrics.
+3. Ensure all linting and tests complete successfully locally before creating a PR:
+   ```bash
+   uv run poe lint
+   uv run pytest test/my_task_tests.py # Just your tests
+   uv run poe test # (ideally) For all tests
+   ```
+4. Having questions? Add them to your Github Issue. 
+
+### 3. Submit Your PR
+Make a pull request (PR) from your fork into the main branch of WorkBench, following:
+
+1. **Push your branch** to your fork:
+   ```bash
+   git push origin feature/my-new-feature
+   ```
+
+2. **Open a Pull Request** on GitHub with: 
+    - A clear title describing the change
+    - Filling in the following template:
+
+        ```markdown
+        ## Description
+        - Description of what changed and why
+        - References to any related issues
+        - Screenshots/examples if relevant
+        
+        ## Type of Change
+        - [ ] Bug fix
+        - [ ] New Task
+        - [ ] New Model
+        - [ ] New Metric
+        - [ ] Performance improvement
+        
+        ## Checklist
+        - [ ] Added new tests for new functionality
+        - [ ] Tested locally with example tasks
+        - [ ] Code follows project style guidelines
+        - [ ] Documentation updated
+        - [ ] No new warnings introduced
+        ```
+
+### 4. Review Process
+
+1. Maintainers will review your PR
+2. Address any feedback or requested changes
+3. Once approved, a maintainer will merge your PR
+
+
 ## Adding a New Task
 
 Tasks are the core evaluation units in WorkBench. Follow these steps to add a new task:
 
 ### Step 1: Choose the Task Type
 
-- **RankingTask**: For retrieval/matching tasks (e.g., job-to-skills, skill extraction)
-- **ClassificationTask**: For categorization tasks (e.g., job classification)
+- **RankingTask** in [src/workbench/tasks/abstract/ranking_base.py](src/workbench/tasks/abstract/ranking_base.py)
+- **ClassificationTask** in [src/workbench/tasks/abstract/classification_base.py](src/workbench/tasks/abstract/classification_base.py)
 
 ### Step 2: Create Your Task Class
 
-Create a new file in `src/workbench/tasks/ranking/` or `src/workbench/tasks/classification/`:
+Create a new file in `src/workbench/tasks/ranking/` or `src/workbench/tasks/classification/` based on the task type. 
+For a full example, see also [examples/custom_task_example.py](examples/custom_task_example.py).
 
 ```python
 # src/workbench/tasks/ranking/my_task.py
@@ -177,18 +265,6 @@ def test_my_custom_task_loads():
     assert len(dataset.query_texts) > 0
     assert len(dataset.target_space) > 0
     assert len(dataset.target_indices) == len(dataset.query_texts)
-
-
-def test_my_custom_task_evaluation():
-    """Test that task can be evaluated"""
-    task = wb.tasks.MyCustomRankingTask(split="val", languages=["en"])
-    model = wb.models.BiEncoderModel("all-MiniLM-L6-v2")
-    
-    benchmark = wb.WorkBench([task])
-    results = benchmark.run(model, output_folder="test_results", force_restart=True)
-    
-    assert task.name in results.task_results
-    assert Language.EN in results.task_results[task.name].language_results
 ```
 
 ### Step 5: Test Your Task
@@ -209,7 +285,7 @@ Add documentation to your task class docstring:
 - Expected model behavior
 - Any special considerations
 
-**See `examples/custom_task_example.py` for a complete reference implementation.**
+**See [examples/custom_task_example.py](examples/custom_task_example.py) for a complete reference implementation.**
 
 ## Adding a New Model
 
@@ -374,17 +450,6 @@ def test_my_model_ranking():
     )
     
     assert scores.shape == (len(queries), len(targets))
-
-
-def test_my_model_benchmark_integration():
-    """Test model works with WorkBench"""
-    model = wb.models.MyCustomModel("all-MiniLM-L6-v2")
-    tasks = [wb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"])]
-    
-    benchmark = wb.WorkBench(tasks)
-    results = benchmark.run(model, output_folder="test_results", force_restart=True)
-    
-    assert len(results.task_results) > 0
 ```
 
 ### Step 4: Register Your Model (if using registry)
@@ -445,20 +510,13 @@ We use automated tools to maintain code quality:
 
 ### Formatting & Linting
 
-- **Formatter**: ruff (automatic)
-- **Linter**: ruff
-- **Type checker**: mypy
+- **Formatting**: ruff (automatic)
+- **Linter**: ruff (`uv run poe lint`)
 - **Docstring style**: numpy
 
 ```bash
-# Run all checks
+# Run all checks & auto-fix where possible
 uv run poe lint
-
-# Auto-fix formatting issues
-uv run ruff format
-
-# Auto-fix linting issues
-uv run ruff check --fix
 ```
 
 ### Testing Requirements
@@ -468,12 +526,11 @@ uv run ruff check --fix
 - Aim for >80% code coverage
 
 ```bash
-# Run tests
-uv run poe test
+# Run your specific tests only
+uv run pytest test/my_tests.py
 
-# Run tests with coverage
-uv run coverage run
-uv run coverage report
+# Run all tests (can take some time)
+uv run poe test
 ```
 
 ### Documentation Standards
@@ -516,71 +573,12 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
     pass
 ```
 
-## Pull Request Process
-
-### Before Submitting
-
-1. **Ensure all tests pass:**
-   ```bash
-   uv run poe test
-   ```
-
-2. **Run linting:**
-   ```bash
-   uv run poe lint
-   ```
-
-3. **Update documentation** if you've changed APIs or added features
-
-4. **Add your changes to CHANGELOG** (if applicable)
-
-### Submitting Your PR
-
-1. **Push your branch** to your fork:
-   ```bash
-   git push origin feature/my-new-feature
-   ```
-
-2. **Open a Pull Request** on GitHub with:
-   - Clear title describing the change
-   - Description of what changed and why
-   - References to any related issues
-   - Screenshots/examples if relevant
-
-3. **PR Template:**
-   ```markdown
-   ## Description
-   Brief description of changes
-   
-   ## Type of Change
-   - [ ] Bug fix
-   - [ ] New feature
-   - [ ] Documentation update
-   - [ ] Performance improvement
-   
-   ## Testing
-   - [ ] All existing tests pass
-   - [ ] Added new tests for new functionality
-   - [ ] Tested locally with example tasks
-   
-   ## Checklist
-   - [ ] Code follows project style guidelines
-   - [ ] Self-review completed
-   - [ ] Documentation updated
-   - [ ] No new warnings introduced
-   ```
-
-### Review Process
-
-1. Maintainers will review your PR within a few days
-2. Address any feedback or requested changes
-3. Once approved, a maintainer will merge your PR
 
 ## Questions & Support
 
-- **🐛 Bug reports**: [GitHub Issues](https://github.com/techwolf-ai/workbench-toolkit/issues)
-- **💡 Feature requests**: [GitHub Issues](https://github.com/techwolf-ai/workbench-toolkit/issues)
-- **💬 Questions**: [GitHub Discussions](https://github.com/techwolf-ai/workbench-toolkit/discussions)
+- **🐛 Bug reports**: [GitHub Issues](https://github.com/techwolf-ai/workbench/issues)
+- **💡 Feature requests**: [GitHub Issues](https://github.com/techwolf-ai/workbench/issues)
+<!-- - **💬 Questions**: [GitHub Discussions](https://github.com/techwolf-ai/workbench/discussions) -->
 - **📧 Email**: For private matters, contact the maintainers
 
 ---
