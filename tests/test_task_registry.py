@@ -8,7 +8,7 @@ from workbench.registry import (
     register_task,
 )
 from workbench.tasks.abstract import Task
-from workbench.tasks.abstract.base import LabelType, Language
+from workbench.tasks.abstract.base import LabelType, Language, TaskType
 from workbench.tasks.abstract.ranking_base import RankingTaskGroup
 from workbench.workbench import WorkBench
 
@@ -32,6 +32,10 @@ class BaseTestTask(Task):
     @property
     def task_group(self):
         return RankingTaskGroup.JOB_NORMALIZATION
+
+    @property
+    def task_type(self):
+        return TaskType.RANKING
 
     @property
     def label_type(self):

@@ -8,7 +8,7 @@ This module provides common utilities for testing, including:
 
 from typing import Any
 
-from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language, Task
+from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language, Task, TaskType
 from workbench.tasks.abstract.classification_base import ClassificationDataset, ClassificationTask
 from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
 
@@ -166,8 +166,8 @@ class ToyClassificationTaskMixin:
 
 
 def create_toy_task_class(
-    base_task_class: type[RankingTask] | type[ClassificationTask],
-) -> type[RankingTask] | type[ClassificationTask]:
+    base_task_class: type[Task],
+) -> type[Task]:
     """
     Dynamically create a toy version of a task class.
 
@@ -179,38 +179,39 @@ def create_toy_task_class(
         A new class that inherits from appropriate ToyMixin and the base class
     """
     # Determine if it's a ranking or classification task
-    is_ranking = issubclass(base_task_class, RankingTask)
-    is_classification = issubclass(base_task_class, ClassificationTask)
+    if issubclass(base_task_class, RankingTask):
 
-    if is_ranking:
-
-        class ToyTask(ToyTaskMixin, base_task_class):
+        class ToyRankingTask(ToyTaskMixin, base_task_class):
             """Dynamically created toy ranking task."""
 
             def load_monolingual_data(
                 self, split: DatasetSplit, language: Language
             ) -> RankingDataset:
-                full_dataset = super().load_monolingual_data(split, language)
+                full_dataset = super().load_monolingual_data(split=split, language=language)
                 return self._limit_dataset(full_dataset)
 
-    elif is_classification:
+        return_cls = ToyRankingTask
 
-        class ToyTask(ToyClassificationTaskMixin, base_task_class):
+    elif issubclass(base_task_class, ClassificationTask):
+
+        class ToyClassificationTask(ToyClassificationTaskMixin, base_task_class):
             """Dynamically created toy classification task."""
 
             def load_monolingual_data(
                 self, split: DatasetSplit, language: Language
             ) -> ClassificationDataset:
-                full_dataset = super().load_monolingual_data(split, language)
+                full_dataset = super().load_monolingual_data(split=split, language=language)
                 return self._limit_classification_dataset(full_dataset)
+
+        return_cls = ToyClassificationTask
 
     else:
         raise ValueError(
-            f"Task class {base_task_class} is neither RankingTask nor ClassificationTask"
+            f"Task class {base_task_class} is not in a supported task type: {list(TaskType)}"
         )
 
     # Set a meaningful name for debugging
-    ToyTask.__name__ = f"Toy{base_task_class.__name__}"
-    ToyTask.__qualname__ = f"Toy{base_task_class.__name__}"
+    return_cls.__name__ = f"Toy{base_task_class.__name__}"
+    return_cls.__qualname__ = f"Toy{base_task_class.__name__}"
 
-    return ToyTask
+    return return_cls
