@@ -16,6 +16,7 @@ from tests.test_utils import create_toy_task_class
 from workbench.models import BiEncoderModel, RndESCOClassificationModel
 from workbench.tasks import ESCOJob2SkillClassification, SkillMatch1kSkillSimilarityRanking
 from workbench.tasks.abstract.base import Language
+from workbench.tasks.abstract.classification_base import ClassificationDataset
 
 
 def is_valid_metric(value: float) -> bool:
@@ -55,7 +56,7 @@ class TestClassificationTaskWithBiEncoder:
         model = BiEncoderModel("all-MiniLM-L6-v2")
 
         # Get dataset
-        dataset = task.lang_datasets[Language.EN]
+        dataset: ClassificationDataset = task.lang_datasets[Language.EN]
 
         # Compute predictions
         predictions = model.compute_classification(

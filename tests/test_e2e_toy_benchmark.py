@@ -51,10 +51,8 @@ def get_all_tasks(split: str = "val", languages: list[str] = None) -> list[Task]
             task_class = TaskRegistry.get(task_name)
 
             # Only process RankingTask or ClassificationTask subclasses
-            if not (
-                issubclass(task_class, RankingTask) or issubclass(task_class, ClassificationTask)
-            ):
-                skipped_tasks.append((task_name, "Not a RankingTask or ClassificationTask"))
+            if not issubclass(task_class, Task):
+                skipped_tasks.append((task_name, "Not a Task subclass"))
                 continue
 
             # Create toy version
