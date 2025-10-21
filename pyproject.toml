@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 packages = ["src/workbench"]
 
 [project]
-name = "workbench-toolkit"
+name = "workbench"
 version = "0.0.0"
 description = "Perform easy inference on a range of work-related tasks."
 readme = "README.md"
@@ -45,7 +45,6 @@ dependencies = [
     "appdirs>=1.4.4",
     "PyYAML>=6.0",
     "sentence-transformers>=5.1.0",
-    "strenum>=0.4.15",
     "pydantic>=2.11.9",
 ]
 
@@ -69,10 +68,10 @@ dev = [
 
 
 [project.urls]
-Homepage = "https://github.com/techwolf-ai/workbench-toolkit"
-Documentation = "https://github.com/techwolf-ai/workbench-toolkit#readme"
-Repository = "https://github.com/techwolf-ai/workbench-toolkit.git"
-Issues = "https://github.com/techwolf-ai/workbench-toolkit/issues"
+Homepage = "https://github.com/techwolf-ai/workbench"
+Documentation = "https://github.com/techwolf-ai/workbench#readme"
+Repository = "https://github.com/techwolf-ai/workbench.git"
+Issues = "https://github.com/techwolf-ai/workbench/issues"
 
 [tool.commitizen] # https://commitizen-tools.github.io/commitizen/config/
 bump_message = "bump: v$current_version → v$new_version"
@@ -93,15 +92,6 @@ source = ["src"]
 
 [tool.coverage.xml] # https://coverage.readthedocs.io/en/latest/config.html#xml
 output = "reports/coverage.xml"
-
-[tool.mypy] # https://mypy.readthedocs.io/en/latest/config_file.html
-junit_xml = "reports/mypy.xml"
-ignore_missing_imports = true
-pretty = true
-show_column_numbers = true
-show_error_codes = true
-show_error_context = true
-warn_unreachable = true
 
 [tool.pytest.ini_options] # https://docs.pytest.org/en/latest/reference/reference.html#ini-options-ref
 addopts = "--color=yes --doctest-modules --exitfirst --failed-first --verbosity=2 --junitxml=reports/pytest.xml"
