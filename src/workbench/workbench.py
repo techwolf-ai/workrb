@@ -95,7 +95,7 @@ class WorkBench:
             # Collect key metrics by task group
             key_metrics_by_task_group = {}
             for task in self.tasks:
-                key_metrics_by_task_group[str(task.task_group)] = task.default_metrics
+                key_metrics_by_task_group[task.task_group.value] = task.default_metrics
 
             # Create new BenchmarkResults
             results = BenchmarkResults(
@@ -143,11 +143,11 @@ class WorkBench:
             if task.name not in results.task_results:
                 results.task_results[task.name] = TaskResults(
                     metadata=TaskResultMetadata(
-                        task_group=task.task_group,
-                        task_type=task.task_type,
-                        label_type=task.label_type,
+                        task_group=task.task_group.value,
+                        task_type=task.task_type.value,
+                        label_type=task.label_type.value,
                         description=task.description,
-                        split=task.split,
+                        split=task.split.value,
                     ),
                     language_results={},
                 )
@@ -371,8 +371,8 @@ class WorkBench:
         # Add each task's information
         for task in self.tasks:
             task_name = task.name
-            group = str(task.task_group) if task.task_group else "N/A"
-            task_languages = ", ".join([str(lang) for lang in task.languages])
+            group = task.task_group.value
+            task_languages = ", ".join([lang.value for lang in task.languages])
 
             lines.append(f"{task_name:<40} {group:<20} {task_languages:<20}")
 

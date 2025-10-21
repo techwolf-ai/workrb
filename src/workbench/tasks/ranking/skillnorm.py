@@ -1,6 +1,6 @@
 """ESCO Skill Normalization ranking task."""
 
-from enum import StrEnum
+from enum import Enum
 
 from sklearn.model_selection import train_test_split
 
@@ -11,7 +11,7 @@ from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
 
 
-class SplitMode(StrEnum):
+class SplitMode(str, Enum):
     """Split mode for val/test data splitting."""
 
     RND_SPLIT = "rnd_split"

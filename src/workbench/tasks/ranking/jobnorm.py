@@ -66,7 +66,7 @@ class JobBERTJobNormRanking(RankingTask):
 
     def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
         """Load job normalization data."""
-        csv_filename = self.raw_val_csv if split == "val" else self.raw_test_csv
+        csv_filename = self.raw_val_csv if split == DatasetSplit.VAL else self.raw_test_csv
         data_path = self.local_data_path / csv_filename
         df = pd.read_csv(data_path)
 

@@ -66,7 +66,7 @@ Install the package via:
 pip install "workbench-toolkit @ git+https://github.com/techwolf-ai/workbench-toolkit.git"
 ```
 
-**Requirements:** Python 3.11+, see [pyproject.toml](pyproject.toml) for all dependencies.
+**Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
 *Note: PyPI installation is WIP.*
 

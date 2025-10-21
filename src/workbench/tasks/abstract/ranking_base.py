@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from collections import Counter
-from enum import StrEnum
+from enum import Enum
 from typing import TYPE_CHECKING
 
 import torch
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from workbench.models.base import ModelInterface
 
 
-class RankingTaskGroup(BaseTaskGroup, StrEnum):
+class RankingTaskGroup(BaseTaskGroup, str, Enum):
     _prefix = "rank_"
 
     JOB_NORMALIZATION = f"{_prefix}job_normalization"
