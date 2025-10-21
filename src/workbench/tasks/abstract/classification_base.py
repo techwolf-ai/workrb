@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from abc import abstractmethod
 from collections import Counter
-from enum import StrEnum
+from enum import Enum
 from typing import TYPE_CHECKING, Literal
 
 from workbench.data.input_types import ModelInputType
@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class ClassificationTaskGroup(BaseTaskGroup, StrEnum):
+class ClassificationTaskGroup(BaseTaskGroup, str, Enum):
     """Classification task group enum."""
 
     _prefix = "cls_"

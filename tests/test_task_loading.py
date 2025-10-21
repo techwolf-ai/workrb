@@ -131,9 +131,9 @@ def test_classification_tasks_init_en_splits():
 
 class TestTaskLanguageSupport:
     faulty_lang_input = ["i am not a language input"]
-    supported_languages = [str(Language.EN), str(Language.DE)]
-    unsupported_languages = [str(Language.ES), str(Language.IT)]
-    mixed_faulty_lang_input = [faulty_lang_input[0], str(Language.EN)]
+    supported_languages = [Language.EN.value, Language.DE.value]
+    unsupported_languages = [Language.ES.value, Language.IT.value]
+    mixed_faulty_lang_input = [faulty_lang_input[0], Language.EN.value]
     split = DatasetSplit.TEST
 
     @pytest.mark.parametrize("split", [DatasetSplit.TEST, DatasetSplit.VAL])

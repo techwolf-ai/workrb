@@ -82,8 +82,8 @@ class ESCO:
 
         self.language = language
         assert self.language in self.SUPPORTED_ESCO_LANGUAGES, (
-            f"Language {self.language} not supported by ESCO. "
-            f"Supported languages: {[lang for lang in self.SUPPORTED_ESCO_LANGUAGES]}"
+            f"Language {self.language.value} not supported by ESCO. "
+            f"Supported languages: {[lang.value for lang in self.SUPPORTED_ESCO_LANGUAGES]}"
         )
 
         # Set up data paths - use cache directory by default
@@ -109,7 +109,7 @@ class ESCO:
             raise RuntimeError(f"ESCO data not found at {self.data_path} and auto_download=False")
 
         try:
-            logger.debug(f"ESCO v{self.version} ({self.language}) not found in cache.")
+            logger.debug(f"ESCO v{self.version} ({self.language.value}) not found in cache.")
             logger.debug(f"Downloading to {self.data_path}...")
             self._download_esco_data()
 
@@ -120,15 +120,15 @@ class ESCO:
             logger.debug(f"Failed to download ESCO data: {e}")
             raise RuntimeError(
                 f"Could not load or download ESCO data for version {self.version}, "
-                f"language {self.language}. Try setting auto_download=True or "
+                f"language {self.language.value}. Try setting auto_download=True or "
                 f"manually downloading data to {self.data_path}"
             ) from e
 
     def _load_data_from_path(self, path: Path) -> bool:
         """Try to load ESCO data from the given path. Returns True if successful."""
-        skills_path = path / f"skills_{self.language}.csv"
-        occupations_path = path / f"occupations_{self.language}.csv"
-        relations_path = path / f"occupationSkillRelations_{self.language}.csv"
+        skills_path = path / f"skills_{self.language.value}.csv"
+        occupations_path = path / f"occupations_{self.language.value}.csv"
+        relations_path = path / f"occupationSkillRelations_{self.language.value}.csv"
 
         if not all(p.exists() for p in [skills_path, occupations_path, relations_path]):
             logger.debug(f"ESCO data not found at {path}")
@@ -147,7 +147,7 @@ class ESCO:
 
         self.relations_df = pd.read_csv(relations_path)
 
-        logger.debug(f"Loaded ESCO v{self.version} ({self.language}) from {path}")
+        logger.debug(f"Loaded ESCO v{self.version} ({self.language.value}) from {path}")
         return True
 
     def _load_skills_df(self, skills_path: Path) -> pd.DataFrame:
@@ -187,7 +187,9 @@ class ESCO:
 
     def _create_download_url(self) -> str:
         """Create the download URL for the specific version and language."""
-        filename = f"ESCO dataset - v{self.version} - classification - {self.language} - csv.zip"
+        filename = (
+            f"ESCO dataset - v{self.version} - classification - {self.language.value} - csv.zip"
+        )
         encoded_filename = urllib.parse.quote(filename)
         return f"{self.BASE_URL}{encoded_filename}"
 
@@ -204,7 +206,7 @@ class ESCO:
             with (
                 open(output_path, "wb") as f,
                 tqdm(
-                    desc=f"Downloading ESCO v{self.version} ({self.language})",
+                    desc=f"Downloading ESCO v{self.version} ({self.language.value})",
                     total=total_size,
                     unit="B",
                     unit_scale=True,
@@ -250,7 +252,7 @@ class ESCO:
         download_cache.mkdir(parents=True, exist_ok=True)
 
         # Create filename and path
-        filename = f"ESCO_dataset_v{self.version}_classification_{self.language}_csv.zip"
+        filename = f"ESCO_dataset_v{self.version}_classification_{self.language.value}_csv.zip"
         zip_path = download_cache / filename
 
         # Download if not already cached

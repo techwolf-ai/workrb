@@ -1,9 +1,9 @@
 """Types describing the input modality for a model."""
 
-from enum import StrEnum
+from enum import Enum
 
 
-class ModelInputType(StrEnum):
+class ModelInputType(str, Enum):
     """
     Type describing the input modality for a model.
 
