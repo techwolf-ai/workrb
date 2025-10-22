@@ -41,7 +41,7 @@ class ClassificationDataset:
     def __init__(
         self,
         texts: list[str],
-        labels: list[int] | list[list[int]],
+        labels: list[list[int]],
         label_space: list[str],
         language: Language,
     ):
@@ -49,13 +49,9 @@ class ClassificationDataset:
 
         Args:
             texts: List of input text strings
-                   For pairwise: format as combined strings (e.g., "job [SEP] skill")
-                   For multi-class: single texts
-                   For multi-label: single texts
-            labels: List of class indices corresponding to each text
-                   For single-label: list[int] where each int is the class index
-                   For multi-label: list[list[int]] where each inner list contains multiple class indices
-            label_space: List of class names/labels (e.g., ["incompatible", "compatible"])
+            labels: List with list of class indices corresponding to each text.
+                Contains just 1 item per list for single-label classification.
+            label_space: List of class names/labels (e.g., ["skill1", "skill2", "skill3"])
             language: Language enum
         """
         self.texts = self._postprocess_texts(texts)
@@ -76,21 +72,23 @@ class ClassificationDataset:
             )
 
         # Check all labels are valid indices into label_space
-        # Handle both single-label (list[int]) and multi-label (list[list[int]]) formats
-        for label in self.labels:
-            if isinstance(label, list):
-                # Multi-label case
-                for idx in label:
-                    assert idx < len(self.label_space), (
-                        f"Label {idx} is not in label space (size {len(self.label_space)})"
-                    )
-                    assert isinstance(idx, int), f"Label {idx} is not an integer"
-            else:
-                # Single-label case
-                assert label < len(self.label_space), (
-                    f"Label {label} is not in label space (size {len(self.label_space)})"
+        label_set = set()
+        for label_list in self.labels:
+            assert isinstance(label_list, list), (
+                f"Label list must be a list, got: {type(label_list)}, value: {label_list}"
+            )
+            label_set.update(label_list)
+            for idx in label_list:
+                assert idx < len(self.label_space), (
+                    f"Label {idx} is not in label space (size {len(self.label_space)})"
                 )
-                assert isinstance(label, int), f"Label {label} is not an integer"
+                assert isinstance(idx, int), f"Label {idx} is not an integer"
+
+        # Check more than 1 class available
+        if len(label_set) <= 1:
+            raise ValueError(
+                f"At least 2 classes are required for classification dataset, only got labels: {label_set}"
+            )
 
         # Check lengths match
         assert len(self.texts) == len(self.labels), (
