@@ -143,7 +143,7 @@ if __name__ == "__main__":
 
     # 1. Create custom model with custom configuration
     model = MyCustomModel(base_model_name="all-MiniLM-L6-v2", custom_skip_query_norm=False)
-    print(f"Model name: {model.name()}")
+    print(f"Model name: {model.name}")
 
     # 2. Create a simple task to test the model
     tasks = [

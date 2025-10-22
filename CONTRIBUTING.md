@@ -431,7 +431,7 @@ import workbench as wb
 def test_my_model_initialization():
     """Test model initialization"""
     model = wb.models.MyCustomModel("all-MiniLM-L6-v2")
-    assert model.name() is not None
+    assert model.name is not None
 
 
 def test_my_model_ranking():
