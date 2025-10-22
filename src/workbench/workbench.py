@@ -71,8 +71,8 @@ class WorkBench:
         existing_results = None
         if not force_restart and config and config.has_checkpoint():
             logger.info("Resuming from existing checkpoint...")
-            assert model.name() == config.model_name, (
-                f"Model name mismatch. Trying to run model '{model.name()}' "
+            assert model.name == config.model_name, (
+                f"Model name mismatch. Trying to run model '{model.name}' "
                 f"with checkpoint from model '{config.model_name}' "
                 f"in checkpoint '{config.get_checkpoint_path()}'."
             )
@@ -101,7 +101,7 @@ class WorkBench:
             results = BenchmarkResults(
                 task_results={},
                 metadata=BenchmarkMetadata(
-                    model_name=model.name(),
+                    model_name=model.name,
                     total_evaluation_time=0.0,
                     timestamp=time.time(),
                     num_tasks=len(self.tasks),
@@ -234,7 +234,7 @@ class WorkBench:
             logger.info("All work already completed!")
             return results
 
-        logger.info(f"Running WorkBench for model: {model.name()}")
+        logger.info(f"Running WorkBench for model: {model.name}")
         logger.info(self.get_tasks_overview())
         logger.info(f"{'=' * 60}")
         logger.info(
@@ -316,7 +316,7 @@ class WorkBench:
             Dictionary mapping model names to their results
         """
         # Input checks
-        model_names = [model.name() for model in models]
+        model_names = [model.name for model in models]
         model_name_counts = Counter(model_names)
         assert sum(model_name_counts.values()) == len(model_names), (
             f"All models must have unique names, "
@@ -329,19 +329,19 @@ class WorkBench:
         all_results = {}
         for model in models:
             # Set up output folder for this model
-            model_output_folder = output_folder_template.format(model_name=model.name())
+            model_output_folder = output_folder_template.format(model_name=model.name)
             run_kwargs["output_folder"] = model_output_folder
 
             logger.info(f"{'=' * 60}")
-            logger.info(f"Running model: {model.name()}")
+            logger.info(f"Running model: {model.name}")
             logger.info(f"Output folder: {model_output_folder}")
             logger.info(f"{'=' * 60}")
 
             try:
                 results = self.run(model, **run_kwargs)
-                all_results[model.name()] = results
+                all_results[model.name] = results
             except Exception as e:
-                logger.error(f"Error running model {model.name()}: {e}")
+                logger.error(f"Error running model {model.name}: {e}")
                 raise e
 
         return all_results

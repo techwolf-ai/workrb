@@ -82,7 +82,7 @@ class BenchmarkConfig:
             BenchmarkConfig instance
         """
         # Extract model info
-        model_name = model.name()
+        model_name = model.name
         model_class = model.__class__.__name__
 
         # Extract task info
