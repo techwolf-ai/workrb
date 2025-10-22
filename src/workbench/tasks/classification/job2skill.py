@@ -1,10 +1,12 @@
 """Job-Skill Multi-Label Classification benchmark task."""
 
+import logging
+
 import pandas as pd
+from datasets import DatasetDict, load_dataset
 
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
-from workbench.data.utils import get_data_path
 from workbench.registry import register_task
 from workbench.tasks.abstract.base import DatasetSplit, Language
 from workbench.tasks.abstract.classification_base import (
@@ -12,6 +14,8 @@ from workbench.tasks.abstract.classification_base import (
     ClassificationTaskGroup,
     MultiLabelClassificationTask,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @register_task()
@@ -24,8 +28,6 @@ class ESCOJob2SkillClassification(MultiLabelClassificationTask):
     """
 
     # Static validation dataset location (within repo data folder)
-    local_data_path = get_data_path("techwolf_vacancies")
-    raw_val_parquet = "job_skill_val.parquet"
     original_esco_version = "1.2.0"
 
     def __init__(self, esco_version: str = "1.2.0", **kwargs):
@@ -138,12 +140,21 @@ class ESCOJob2SkillClassification(MultiLabelClassificationTask):
         skill_vocab = target_esco.get_skills_vocabulary()
         skill2label = {skill: i for i, skill in enumerate(skill_vocab)}
 
-        data_path = self.local_data_path / self.raw_val_parquet
-        df = pd.read_parquet(data_path)
+        logger.debug("Loading validation dataset from TechWolf/vacancy-job-to-skill")
+        ds = load_dataset("TechWolf/vacancy-job-to-skill")
+        assert isinstance(ds, DatasetDict)
+        df = ds["validation"].to_pandas()
+        assert isinstance(df, pd.DataFrame)
+
+        title_col_name = "vacancy_job_title"
+        skills_col_name = "tagged_esco_skills"
+        assert set(df.columns) == {title_col_name, skills_col_name}, (
+            f"Unexpected columns in dataset: {df.columns}, expected {title_col_name, skills_col_name}"
+        )
 
         # Normalize possible list vs string columns
-        queries_col = df["title"].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
-        skills_col = df["skill_name"].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
+        queries_col = df[title_col_name].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
+        skills_col = df[skills_col_name].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
 
         # Map skills from original EN v1.2.0 to target version/language via URIs
         original_esco = ESCO(version=self.original_esco_version, language=Language.EN)
@@ -155,10 +166,12 @@ class ESCOJob2SkillClassification(MultiLabelClassificationTask):
         for skill_list in skills_col:
             mapped_labels: list[str] = []
             for skill_label_en in skill_list:
-                if skill_label_en in original_skill_uris:
-                    uri = original_skill_uris[skill_label_en]
-                    if uri in target_uri_to_label:
-                        mapped_labels.append(target_uri_to_label[uri])
+                assert skill_label_en in original_skill_uris, (
+                    f"Skill label {skill_label_en} not found in original ESCO skill URIs"
+                )
+                uri = original_skill_uris[skill_label_en]
+                if uri in target_uri_to_label:
+                    mapped_labels.append(target_uri_to_label[uri])
             converted_skills.append(mapped_labels)
 
         # Convert to classification format (one text per occupation title)
