@@ -1,10 +1,10 @@
 """Skill to Job Ranking Task."""
 
 import pandas as pd
+from datasets import DatasetDict, load_dataset
 
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
-from workbench.data.utils import get_data_path
 from workbench.registry import register_task
 from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
@@ -13,10 +13,6 @@ from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, R
 @register_task()
 class ESCOSkill2JobRanking(RankingTask):
     """Skill to Job Ranking Task."""
-
-    # Validation data (static) mirrors tmp task: data/tasks/job_skill_val.parquet
-    local_data_path = get_data_path("techwolf_vacancies")
-    raw_val_parquet = "job_skill_val.parquet"
 
     def __init__(self, esco_version: str = "1.2.0", **kwargs):
         self.esco_version = esco_version
@@ -127,17 +123,22 @@ class ESCOSkill2JobRanking(RankingTask):
 
         target_esco = ESCO(version=self.esco_version, language=language)
 
-        # Load static parquet and invert mapping to Skill -> Jobs
-        data_path = self.local_data_path / self.raw_val_parquet
-        df = pd.read_parquet(data_path)
+        # Load validation split from Hugging Face dataset and invert mapping to Skill -> Jobs
+        ds = load_dataset("TechWolf/vacancy-job-to-skill")
+        assert isinstance(ds, DatasetDict)
+        df = ds["validation"].to_pandas()
+        assert isinstance(df, pd.DataFrame)
+
+        title_col_name = "vacancy_job_title"
+        skills_col_name = "tagged_esco_skills"
+        assert set(df.columns) == {title_col_name, skills_col_name}
 
         # Target space is all the job titles in the validation set
-        job_vocab = sorted(df["title"].unique().tolist())
+        job_vocab = sorted(df[title_col_name].unique().tolist())
         job2label = {job: i for i, job in enumerate(job_vocab)}
 
-        # Columns: "title" (job titles, str or list), "skill_name" (skills, str or list)
-        jobs_per_row = df["title"].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
-        skills_per_row = df["skill_name"].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
+        jobs_per_row = df[title_col_name].tolist()
+        skills_per_row = df[skills_col_name].tolist()
 
         # Convert original EN skill labels to target version/language via URIs
         orig_esco = ESCO(version=self.original_esco_version, language=Language.EN)
@@ -157,13 +158,12 @@ class ESCOSkill2JobRanking(RankingTask):
 
         # Build Skill -> set(Jobs) mapping from rows
         skill_to_jobs_map: dict[str, set[str]] = {}
-        for job_titles, skill_list in zip(jobs_per_row, converted_skill_rows, strict=True):
+        for job_title, skill_list in zip(jobs_per_row, converted_skill_rows, strict=True):
             for skill in skill_list:
                 if skill not in skill_to_jobs_map:
                     skill_to_jobs_map[skill] = set()
-                for job_title in job_titles:
-                    if isinstance(job_title, str):
-                        skill_to_jobs_map[skill].add(job_title)
+                if isinstance(job_title, str):
+                    skill_to_jobs_map[skill].add(job_title)
 
         # Convert mapping to ranking format using job2label
         query_texts: list[str] = []

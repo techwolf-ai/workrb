@@ -1,10 +1,10 @@
 """Job-to-Skills Ranking Task."""
 
 import pandas as pd
+from datasets import DatasetDict, load_dataset
 
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
-from workbench.data.utils import get_data_path
 from workbench.registry import register_task
 from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
@@ -14,9 +14,6 @@ from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, R
 class ESCOJob2SkillRanking(RankingTask):
     """Job-to-Skills Ranking Task."""
 
-    # Static validation dataset location (within repo data folder)
-    local_data_path = get_data_path("techwolf_vacancies")
-    raw_val_parquet = "job_skill_val.parquet"
     original_esco_version = "1.2.0"
 
     def __init__(self, esco_version: str = "1.2.0", **kwargs):
@@ -124,12 +121,18 @@ class ESCOJob2SkillRanking(RankingTask):
         skill_vocab = target_esco.get_skills_vocabulary()
         skill2label = {skill: i for i, skill in enumerate(skill_vocab)}
 
-        data_path = self.local_data_path / self.raw_val_parquet
-        df = pd.read_parquet(data_path)
+        # Load validation split from Hugging Face dataset
+        ds = load_dataset("TechWolf/vacancy-job-to-skill")
+        assert isinstance(ds, DatasetDict)
+        df = ds["validation"].to_pandas()
+        assert isinstance(df, pd.DataFrame)
 
-        # Normalize possible list vs string columns
-        queries_col = df["title"].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
-        skills_col = df["skill_name"].apply(lambda x: [x] if isinstance(x, str) else x).tolist()
+        title_col_name = "vacancy_job_title"
+        skills_col_name = "tagged_esco_skills"
+        assert set(df.columns) == {title_col_name, skills_col_name}
+
+        queries_col = df[title_col_name].tolist()
+        skills_col = df[skills_col_name].tolist()
 
         # Map skills from original EN v1.2.0 to target version/language via URIs
         original_esco = ESCO(version=self.original_esco_version, language=Language.EN)
@@ -150,11 +153,10 @@ class ESCOJob2SkillRanking(RankingTask):
         # Convert to ranking format (one query per occupation title)
         query_texts: list[str] = []
         target_indices: list[list[int]] = []
-        for job_titles, skill_list in zip(queries_col, converted_skills, strict=True):
-            for job_title in job_titles:
-                query_texts.append(job_title)
-                indices = [skill2label[s] for s in skill_list if s in skill2label]
-                target_indices.append(indices)
+        for job_title, skill_list in zip(queries_col, converted_skills, strict=True):
+            query_texts.append(job_title)
+            indices = [skill2label[s] for s in skill_list if s in skill2label]
+            target_indices.append(indices)
 
         return RankingDataset(
             query_texts=query_texts,
