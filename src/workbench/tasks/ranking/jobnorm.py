@@ -1,10 +1,10 @@
 """Job Normalization Ranking Task."""
 
 import pandas as pd
+from datasets import DatasetDict, load_dataset
 
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
-from workbench.data.utils import get_data_path
 from workbench.registry import register_task
 from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
@@ -14,9 +14,6 @@ from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, R
 class JobBERTJobNormRanking(RankingTask):
     """Job Normalization Ranking Task."""
 
-    local_data_path = get_data_path("jobbert_v1")
-    raw_val_csv = "jobbert_v1_titles.csv"
-    raw_test_csv = "jobbert_v1_titles.test.csv"
     orig_esco_version = "1.0.5"
 
     def __init__(self, esco_version: str = "1.0.5", **kwargs):
@@ -66,9 +63,21 @@ class JobBERTJobNormRanking(RankingTask):
 
     def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
         """Load job normalization data."""
-        csv_filename = self.raw_val_csv if split == DatasetSplit.VAL else self.raw_test_csv
-        data_path = self.local_data_path / csv_filename
-        df = pd.read_csv(data_path)
+        # Login using e.g. `huggingface-cli login` to access this dataset
+        ds = load_dataset("TechWolf/JobBERT-evaluation-dataset")
+        assert isinstance(ds, DatasetDict)
+
+        split_map = {split.VAL: "validation", split.TEST: "test"}
+        ds_split = ds[split_map[split]]
+        df = ds_split.to_pandas()
+        assert isinstance(df, pd.DataFrame)
+
+        uri_col = "esco_URI"
+        label_col = "esco_job_title"
+        text_col = "vacancy_job_title"
+        assert set(df.columns) == {uri_col, label_col, text_col}, (
+            f"Unexpected columns in dataset: {df.columns}, expected {uri_col, label_col, text_col}"
+        )
 
         # ESCO used in the original JobBERT dataset
         orig_esco = ESCO(version=self.orig_esco_version, language=Language.EN)
@@ -82,25 +91,25 @@ class JobBERTJobNormRanking(RankingTask):
 
             # Original job URIs
             orig_job_uris = orig_esco.get_occupations_uris()
-            df["uri"] = df["label"].apply(lambda x: orig_job_uris.get(x))
+            df[uri_col] = df[label_col].apply(lambda x: orig_job_uris.get(x))
 
             # Target job titles
             target_job_uris = target_esco.get_occupations_uris()
             target_uris_to_job = {v: k for k, v in target_job_uris.items()}
-            df["target_label"] = df["uri"].apply(lambda x: target_uris_to_job.get(x, pd.NA))
+            df["target_label"] = df[uri_col].apply(lambda x: target_uris_to_job.get(x, pd.NA))
 
             # Filter NANs (without match to URI)
             df.dropna(inplace=True)
-            df.drop(columns=["uri", "label"], inplace=True)
-            df.rename(columns={"target_label": "label"}, inplace=True)
+            df.drop(columns=[uri_col, label_col], inplace=True)
+            df.rename(columns={"target_label": label_col}, inplace=True)
 
             # Keep the full target job vocabulary (even those without match)
             job_vocab = target_esco.get_occupations_vocabulary()
 
         # Final dataset post filtering
         job2label = {job: i for i, job in enumerate(job_vocab)}
-        label_indices = [[job2label[title]] for title in df["label"].tolist()]
-        query_texts = df["text"].tolist()
+        label_indices = [[job2label[title]] for title in df[label_col].tolist()]
+        query_texts = df[text_col].tolist()
 
         return RankingDataset(
             query_texts=query_texts,
