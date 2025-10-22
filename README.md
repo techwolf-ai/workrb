@@ -2,7 +2,7 @@
 
 # 🛠️ WorkBench
 
-<h2>Easy benchmarking of AI progress in the work domain</h2>
+<h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
 [![syntax checking](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml)
 [![GitHub release](https://img.shields.io/github/release/techwolf-ai/workbench-toolkit.svg)](https://github.com/techwolf-ai/workbench/releases)
@@ -267,4 +267,4 @@ If you use WorkBench in your research, please cite:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
+Apache 2.0 License - see [LICENSE](LICENSE) for details.
