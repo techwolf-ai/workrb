@@ -13,7 +13,7 @@
         <a href="#installation">Installation</a> |
         <a href="#features">Features</a> |
         <a href="#usage-guide">Usage Guide</a> |
-        <a href="#contributing--development">Contributing</a> |
+        <a href="#contributing">Contributing</a> |
         <a href="#citing">Citing</a>
     <p>
 </h4>
@@ -55,11 +55,9 @@ print(results)
 ```
 
 ## Installation
-*Note: PyPI installation is WIP, for now follow the [dev setup]().*
-
-Install WorkBench simply via pip. 
+Install WorkBench simply via pip:
 ```bash
-pip install workbench-ai
+pip install workbench-eval
 ```
 **Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
