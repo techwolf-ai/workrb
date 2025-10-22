@@ -8,22 +8,8 @@ This module provides:
 
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
-from workbench.data.utils import (
-    ensure_path_exists,
-    get_data_path,
-    load_csv,
-    load_json,
-    load_jsonl,
-    load_parquet,
-)
 
 __all__ = [
     "ESCO",
     "ModelInputType",
-    "ensure_path_exists",
-    "get_data_path",
-    "load_csv",
-    "load_json",
-    "load_jsonl",
-    "load_parquet",
 ]
