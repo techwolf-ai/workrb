@@ -164,3 +164,8 @@ class ESCOJob2SkillRanking(RankingTask):
             target_space=skill_vocab,
             language=language,
         )
+
+    @property
+    def citation(self) -> str:
+        """Job to Skills task citation."""
+        return """UWE-PLACEHOLDER"""

@@ -257,12 +257,7 @@ pre-commit install --install-hooks
 If you use WorkBench in your research, please cite:
 
 ```bibtex
-@misc{workbench2025,
-  title={WorkBench: A Community-Driven Benchmark for Work Domain AI Evaluation},
-  author={TechWolf Research Team},
-  year={2025},
-  url={https://github.com/techwolf-ai/workbench-toolkit}
-}
+UWE-PLACEHOLDER
 ``` -->
 
 ## License

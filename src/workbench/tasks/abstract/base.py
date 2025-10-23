@@ -141,6 +141,10 @@ class Task(ABC):
         pass
 
     @property
+    def citation(self) -> str:
+        """Citation for the task."""
+
+    @property
     def split_seed(self) -> int:
         """Split seed for reproducible splits."""
         return 42

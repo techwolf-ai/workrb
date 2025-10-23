@@ -61,6 +61,22 @@ class JobBERTJobNormRanking(RankingTask):
         """Target input type for ESCO occupations."""
         return ModelInputType.JOB_TITLE
 
+    @property
+    def citation(self) -> str:
+        """JobBERT paper."""
+        return """
+@inproceedings{jobbert_2021,
+    author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Demeester, Thomas and Develder, Chris}},
+    booktitle    = {{FEAST, ECML-PKDD 2021 Workshop, Proceedings}},
+    language     = {{eng}},
+    location     = {{Online}},
+    pages        = {{9}},
+    title        = {{JobBERT : understanding job titles through skills}},
+    url          = {{https://feast-ecmlpkdd.github.io/papers/FEAST2021_paper_6.pdf}},
+    year         = {{2021}},
+}
+"""
+
     def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
         """Load job normalization data."""
         # Login using e.g. `huggingface-cli login` to access this dataset
