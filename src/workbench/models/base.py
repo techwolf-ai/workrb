@@ -20,6 +20,11 @@ class ModelInterface(ABC):
     def description(self) -> str:
         """Return the description of the model."""
 
+    @property
+    def citation(self) -> str | None:
+        """Return the citation of the model."""
+        return None
+
     @abstractmethod
     def _compute_rankings(
         self,

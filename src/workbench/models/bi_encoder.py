@@ -85,6 +85,21 @@ class BiEncoderModel(ModelInterface):
         """BiEncoder models do not have classification heads."""
         return None
 
+    @property
+    def citation(self) -> str | None:
+        """BiEncoder models based on sentence-transformers."""
+        return """
+@inproceedings{reimers-2019-sentence-bert,
+    title = "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks",
+    author = "Reimers, Nils and Gurevych, Iryna",
+    booktitle = "Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing",
+    month = "11",
+    year = "2019",
+    publisher = "Association for Computational Linguistics",
+    url = "http://arxiv.org/abs/1908.10084",
+}
+"""
+
 
 @register_model()
 class JobBERTModel(ModelInterface):
@@ -216,3 +231,41 @@ class JobBERTModel(ModelInterface):
     def classification_label_space(self) -> list[str] | None:
         """JobBERT models do not have classification heads."""
         return None
+
+    @property
+    def citation(self) -> str | None:
+        """JobBERT model citations."""
+        return """
+@misc{jobbert_v3_2025,
+      title={Multilingual JobBERT for Cross-Lingual Job Title Matching},
+      author={Jens-Joris Decorte and Matthias De Lange and Jeroen Van Hautte},
+      year={2025},
+      eprint={2507.21609},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2507.21609},
+}
+@article{jobbert_v2_2025,
+  abstract     = {{Labor market analysis relies on extracting insights from job advertisements, which provide valuable yet unstructured information on job titles and corresponding skill requirements. While state-of-the-art methods for skill extraction achieve strong performance, they depend on large language models (LLMs), which are computationally expensive and slow. In this paper, we propose ConTeXT-match, a novel contrastive learning approach with token-level attention that is well-suited for the extreme multi-label classification task of skill classification. ConTeXT-match significantly improves skill extraction efficiency and performance, achieving state-of-the-art results with a lightweight bi-encoder model. To support robust evaluation, we introduce Skill-XL a new benchmark with exhaustive, sentence-level skill annotations that explicitly address the redundancy in the large label space. Finally, we present JobBERT V2, an improved job title normalization model that leverages extracted skills to produce high-quality job title representations. Experiments demonstrate that our models are efficient, accurate, and scalable, making them ideal for large-scale, real-time labor market analysis.}},
+  author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Develder, Chris and Demeester, Thomas}},
+  issn         = {{2169-3536}},
+  journal      = {{IEEE ACCESS}},
+  keywords     = {{Taxonomy,Contrastive learning,Training,Annotations,Benchmark testing,Training data,Large language models,Computational efficiency,Accuracy,Terminology,Labor market analysis,text encoders,skill extraction,job title normalization}},
+  language     = {{eng}},
+  pages        = {{133596--133608}},
+  title        = {{Efficient text encoders for labor market analysis}},
+  url          = {{http://doi.org/10.1109/ACCESS.2025.3589147}},
+  volume       = {{13}},
+  year         = {{2025}},
+}
+@inproceedings{jobbert_v1_2021,
+    author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Demeester, Thomas and Develder, Chris}},
+    booktitle    = {{FEAST, ECML-PKDD 2021 Workshop, Proceedings}},
+    language     = {{eng}},
+    location     = {{Online}},
+    pages        = {{9}},
+    title        = {{JobBERT : understanding job titles through skills}},
+    url          = {{https://feast-ecmlpkdd.github.io/papers/FEAST2021_paper_6.pdf}},
+    year         = {{2021}},
+}
+"""
