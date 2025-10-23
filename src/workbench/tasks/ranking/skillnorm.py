@@ -188,3 +188,8 @@ class ESCOSkillNormRanking(RankingTask):
                 elif skill not in alt2skill[alt]:
                     alt2skill[alt].append(skill)
         return alt2skill
+
+    @property
+    def citation(self) -> str:
+        """Skill normalization task citation."""
+        return """UWE-PLACEHOLDER"""

@@ -106,3 +106,18 @@ class SkillMatch1kSkillSimilarityRanking(RankingTask):
             selected_labels = label_test
 
         return RankingDataset(selected_queries, selected_labels, skill_vocab, language=language)
+
+    @property
+    def citation(self) -> str:
+        """Skill similarity task citation."""
+        return """
+@misc{decorte2024skillmatchevaluatingselfsupervisedlearning,
+      title={SkillMatch: Evaluating Self-supervised Learning of Skill Relatedness}, 
+      author={Jens-Joris Decorte and Jeroen Van Hautte and Thomas Demeester and Chris Develder},
+      year={2024},
+      eprint={2410.05006},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2410.05006}, 
+}
+"""

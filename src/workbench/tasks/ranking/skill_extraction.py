@@ -139,6 +139,26 @@ class HouseSkillExtractRanking(BaseESCOSkillExtractRanking):
         """Skill extraction house task description."""
         return "Extract skills from general text descriptions in the HOUSE subset of CAREER."
 
+    @property
+    def citation(self) -> str:
+        """Skill extraction house task citation."""
+        return """@inproceedings{decorte2022design,
+  articleno    = {{4}},
+  author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Deleu, Johannes and Develder, Chris and Demeester, Thomas}},
+  booktitle    = {{Proceedings of the 2nd Workshop on Recommender Systems for Human Resources (RecSys-in-HR 2022)}},
+  editor       = {{Kaya, Mesut and Bogers, Toine and Graus, David and Mesbah, Sepideh and Johnson, Chris and Gutiérrez, Francisco}},
+  isbn         = {{9781450398565}},
+  issn         = {{1613-0073}},
+  language     = {{eng}},
+  location     = {{Seatle, USA}},
+  pages        = {{7}},
+  publisher    = {{CEUR}},
+  title        = {{Design of negative sampling strategies for distantly supervised skill extraction}},
+  url          = {{https://ceur-ws.org/Vol-3218/RecSysHR2022-paper_4.pdf}},
+  volume       = {{3218}},
+  year         = {{2022}},
+}
+"""
 
 @register_task()
 class TechSkillExtractRanking(BaseESCOSkillExtractRanking):
@@ -159,3 +179,24 @@ class TechSkillExtractRanking(BaseESCOSkillExtractRanking):
     def description(self) -> str:
         """Skill extraction tech task description."""
         return "Extract skills from technical text descriptions in the TECH subset of CAREER."
+
+    @property
+    def citation(self) -> str:
+        """Skill extraction tech task citation."""
+        return """@inproceedings{decorte2022design,
+  articleno    = {{4}},
+  author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Deleu, Johannes and Develder, Chris and Demeester, Thomas}},
+  booktitle    = {{Proceedings of the 2nd Workshop on Recommender Systems for Human Resources (RecSys-in-HR 2022)}},
+  editor       = {{Kaya, Mesut and Bogers, Toine and Graus, David and Mesbah, Sepideh and Johnson, Chris and Gutiérrez, Francisco}},
+  isbn         = {{9781450398565}},
+  issn         = {{1613-0073}},
+  language     = {{eng}},
+  location     = {{Seatle, USA}},
+  pages        = {{7}},
+  publisher    = {{CEUR}},
+  title        = {{Design of negative sampling strategies for distantly supervised skill extraction}},
+  url          = {{https://ceur-ws.org/Vol-3218/RecSysHR2022-paper_4.pdf}},
+  volume       = {{3218}},
+  year         = {{2022}},
+}
+"""
