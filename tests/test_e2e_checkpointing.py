@@ -24,7 +24,6 @@ import sys
 from pathlib import Path
 
 import pytest
-import workbench as wb
 
 from tests.test_utils import create_toy_task_class
 from wteb.tasks import SkillMatch1kSkillSimilarityRanking

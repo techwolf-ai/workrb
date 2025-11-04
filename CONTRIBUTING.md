@@ -253,7 +253,7 @@ Create `tests/test_my_task.py`:
 
 ```python
 import pytest
-import workbench as wb
+import wteb
 from wteb.tasks.abstract.base import Language
 
 
@@ -425,7 +425,7 @@ __all__ = [
 # tests/test_my_model.py
 
 import pytest
-import workbench as wb
+import wteb
 
 
 def test_my_model_initialization():

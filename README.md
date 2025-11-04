@@ -34,7 +34,7 @@ It provides a standardized framework that is easy to use and community-driven, s
 ## Example Usage
 
 ```python
-import workbench as wb
+import wteb
 
 # 1. Initialize a model
 model = wb.models.BiEncoderModel("all-MiniLM-L6-v2")

@@ -14,8 +14,6 @@ Usage:
 import sys
 import time
 
-import workbench as wb
-
 from tests.test_utils import create_toy_task_class
 from wteb.registry import TaskRegistry
 from wteb.tasks.abstract.base import Language, Task
