@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+import wteb
 from tests.test_utils import create_toy_task_class
 from wteb.tasks import SkillMatch1kSkillSimilarityRanking
 from wteb.tasks.abstract.base import Language
