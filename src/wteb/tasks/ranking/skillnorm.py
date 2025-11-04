@@ -3,7 +3,6 @@
 from enum import Enum
 
 from sklearn.model_selection import train_test_split
-
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
 from workbench.registry import register_task

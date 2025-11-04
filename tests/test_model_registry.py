@@ -1,7 +1,6 @@
 """Test task registry system functionality."""
 
 import pytest
-
 from workbench.registry import (
     ModelRegistry,
     register_model,
