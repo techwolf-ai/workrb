@@ -2,7 +2,7 @@
 WTEB - A benchmarking framework for evaluating models on various tasks.
 """
 
-from wteb import metrics, models, tasks
+from wteb import data, metrics, models, tasks
 from wteb.evaluate import (
     evaluate,
     evaluate_multiple_models,
@@ -12,6 +12,7 @@ from wteb.evaluate import (
 )
 
 __all__ = [
+    "data",
     "evaluate",
     "evaluate_multiple_models",
     "get_tasks_overview",
