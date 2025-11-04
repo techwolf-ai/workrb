@@ -132,7 +132,7 @@ if __name__ == "__main__":
     load_models = not args.no_load_models
 
     print("=" * 80)
-    print("WORKBENCH TASKS AND MODELS")
+    print("WTEB TASKS AND MODELS")
     print("=" * 80)
     if not load_tasks or not load_models:
         print(f"Fast mode - loading tasks: {load_tasks}, models: {load_models}")

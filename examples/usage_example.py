@@ -9,11 +9,11 @@ This minimal example demonstrates:
 
 if __name__ == "__main__":
     # 1. Setup model and tasks
-    model = wb.models.BiEncoderModel("all-MiniLM-L6-v2")
-    tasks = [wb.tasks.ESCOSkill2JobRanking(split="val", languages=[["en", "fr", "de", "nl"]])]
+    model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
+    tasks = [wteb.tasks.ESCOSkill2JobRanking(split="val", languages=[["en", "fr", "de", "nl"]])]
 
     # 2. Create and run benchmark
-    benchmark = wb.WTEB(tasks)
+    benchmark = wteb.WTEB(tasks)
 
     results = benchmark.run(
         model,

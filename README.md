@@ -4,9 +4,9 @@
 
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
-[![syntax checking](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workbench/actions/workflows/test.yml)
-[![GitHub release](https://img.shields.io/github/release/techwolf-ai/workbench-toolkit.svg)](https://github.com/techwolf-ai/workbench/releases)
-[![License](https://img.shields.io/github/license/techwolf-ai/workbench.svg?color=green)](https://github.com/techwolf-ai/workbench/blob/main/LICENSE)
+[![syntax checking](https://github.com/techwolf-ai/wteb/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/wteb/actions/workflows/test.yml)
+[![GitHub release](https://img.shields.io/github/release/techwolf-ai/wteb-toolkit.svg)](https://github.com/techwolf-ai/wteb/releases)
+[![License](https://img.shields.io/github/license/techwolf-ai/wteb.svg?color=green)](https://github.com/techwolf-ai/wteb/blob/main/LICENSE)
 
 <h4>
     <p>
@@ -37,16 +37,16 @@ It provides a standardized framework that is easy to use and community-driven, s
 import wteb
 
 # 1. Initialize a model
-model = wb.models.BiEncoderModel("all-MiniLM-L6-v2")
+model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
 
 # 2. Select (multilingual) tasks to evaluate
 tasks = [
-    wb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
-    wb.tasks.ESCOSkillNormRanking(split="val", languages=["de", "fr"])
+    wteb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
+    wteb.tasks.ESCOSkillNormRanking(split="val", languages=["de", "fr"])
 ]
 
 # 3. Run benchmark & view results
-benchmark = wb.WTEB(tasks)
+benchmark = wteb.WTEB(tasks)
 results = benchmark.run(
     model,
     output_folder="results/my_model",
@@ -59,7 +59,7 @@ print(results)
 
 Install WTEB simply via pip. 
 ```bash
-pip install workbench-eval
+pip install wteb
 ```
 **Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
@@ -94,7 +94,7 @@ class MyCustomModel(ModelInterface):
     ...
 
 # Use your custom model and task:
-benchmark = wb.WTEB(tasks=[MyCustomTask()])
+benchmark = wteb.WTEB(tasks=[MyCustomTask()])
 model_results = benchmark.run(MyCustomModel())
 ```
 
@@ -113,12 +113,12 @@ WTEB automatically saves result checkpoints after each task completion in a spec
 ```python
 # Run 1: Gets interrupted after 2 tasks
 tasks = [
-    wb.tasks.ESCOJob2SkillRanking(
+    wteb.tasks.ESCOJob2SkillRanking(
         split="val", 
         languages=["en"],
     )
 ]
-benchmark = wb.WTEB(tasks)
+benchmark = wteb.WTEB(tasks)
 results = benchmark.run(model, output_folder="results/my_model")
 
 # Run 2: Automatically resumes from checkpoint
@@ -130,14 +130,14 @@ results = benchmark.run(model, output_folder="results/my_model")
 ```python
 # Resume from previous & extend with new task and languages
 tasks_extended = [
-    wb.tasks.ESCOJob2SkillRanking( # Add de, fr
+    wteb.tasks.ESCOJob2SkillRanking( # Add de, fr
         split="val", 
         languages=["en", "de", "fr"]), 
-    wb.tasks.ESCOJob2SkillRanking( # Add new task
+    wteb.tasks.ESCOJob2SkillRanking( # Add new task
         split="val", 
         languages=["en"],
 ]
-benchmark = wb.WTEB(tasks_extended)
+benchmark = wteb.WTEB(tasks_extended)
 results = benchmark.run(model, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
@@ -162,7 +162,7 @@ results/my_model/
 To load & parse results from a run:
 
 ```python
-results = wb.WTEB.load_results("results/my_model/results.json")
+results = wteb.WTEB.load_results("results/my_model/results.json")
 print(results)
 ```
 
@@ -227,7 +227,7 @@ Read our [CONTRIBUTING.md](CONTRIBUTING.md) guide for all details.
 
 ```sh
 # Clone repository
-git clone https://github.com/techwolf-ai/workbench.git && cd workbench
+git clone https://github.com/techwolf-ai/wteb.git && cd wteb
 
 # Create and install a virtual environment
 uv sync --all-extras

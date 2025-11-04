@@ -2,11 +2,13 @@
 Reproduce benchmark results.
 """
 
+import wteb
+
 if __name__ == "__main__":
     # 1. Setup model and tasks
     models = [
-        wb.models.BiEncoderModel(),
-        wb.models.JobBERTModel(),
+        wteb.models.BiEncoderModel(),
+        wteb.models.JobBERTModel(),
     ]
 
     # Cfg
@@ -19,18 +21,18 @@ if __name__ == "__main__":
     split = "test"
 
     tasks = [
-        wb.tasks.ESCOJob2SkillRanking(split=split, languages=langs),
-        wb.tasks.ESCOSkill2JobRanking(split=split, languages=langs),
-        wb.tasks.ESCOSkillNormRanking(split=split, languages=langs),
-        wb.tasks.SkillMatch1kSkillSimilarityRanking(split=split, languages=langs),
-        wb.tasks.JobBERTJobNormRanking(split=split, languages=langs),
-        wb.tasks.HouseSkillExtractRanking(split=split, languages=langs),
-        wb.tasks.TechSkillExtractRanking(split=split, languages=langs),
-        wb.tasks.ESCOJob2SkillClassification(split=split, languages=langs),
+        wteb.tasks.ESCOJob2SkillRanking(split=split, languages=langs),
+        wteb.tasks.ESCOSkill2JobRanking(split=split, languages=langs),
+        wteb.tasks.ESCOSkillNormRanking(split=split, languages=langs),
+        wteb.tasks.SkillMatch1kSkillSimilarityRanking(split=split, languages=langs),
+        wteb.tasks.JobBERTJobNormRanking(split=split, languages=langs),
+        wteb.tasks.HouseSkillExtractRanking(split=split, languages=langs),
+        wteb.tasks.TechSkillExtractRanking(split=split, languages=langs),
+        wteb.tasks.ESCOJob2SkillClassification(split=split, languages=langs),
     ]
 
     # 2. Create and run benchmark
-    benchmark = wb.WTEB(tasks)
+    benchmark = wteb.WTEB(tasks)
 
     results = benchmark.run_multiple_models(
         models=models,
