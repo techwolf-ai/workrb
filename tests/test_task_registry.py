@@ -2,6 +2,7 @@
 
 import pytest
 
+import wteb
 from wteb.registry import (
     TaskRegistry,
     create_task_from_config,
@@ -244,7 +245,7 @@ class TestWTEBRegistryIntegration:
         class WTEBTestTask(BaseTestTask):
             pass
 
-        available_tasks = WTEB.list_available_tasks()
+        available_tasks = wteb.list_available_tasks()
 
         assert "WTEBTestTask" in available_tasks
         assert isinstance(available_tasks, dict)
@@ -260,7 +261,7 @@ class TestWTEBRegistryIntegration:
 
     def test_registered_tasks_have_unique_names(self):
         """Test that registered tasks have unique names."""
-        available_tasks = WTEB.list_available_tasks()
+        available_tasks = wteb.list_available_tasks()
         assert len(available_tasks) == len(set(available_tasks.keys())), (
             "Duplicate registered tasks"
         )
@@ -292,7 +293,7 @@ class TestWTEBRegistryIntegration:
             def name(self) -> str:
                 return "WTEBTestTask"  # Same .name property
 
-        available_tasks = WTEB.list_available_tasks()
+        available_tasks = wteb.list_available_tasks()
         task_names = self._get_task_names(available_tasks)
         assert len(task_names) - len(set(task_names)) == 1, (
             f"Should have found one duplicate task name 'WTEBTestTask', got {len(task_names) - len(set(task_names))}"

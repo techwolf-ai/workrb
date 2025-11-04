@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING
 
 import torch
 
-from wteb.data.input_types import ModelInputType
 from wteb.metrics.ranking import calculate_ranking_metrics
 from wteb.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Language, Task, TaskType
+from wteb.types import ModelInputType
 
 if TYPE_CHECKING:
     from wteb.models.base import ModelInterface

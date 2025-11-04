@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 import torch
 
-from wteb.data.input_types import ModelInputType
+from wteb.types import ModelInputType
 
 
 class ModelInterface(ABC):

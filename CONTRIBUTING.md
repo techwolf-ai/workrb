@@ -167,7 +167,7 @@ For a full example, see also [examples/custom_task_example.py](examples/custom_t
 ```python
 # src/wteb/tasks/ranking/my_task.py
 
-from wteb.data.input_types import ModelInputType
+from wteb.types import ModelInputType
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, Language
 from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
@@ -301,7 +301,7 @@ Create a new file in `src/wteb/models/`:
 import torch
 from sentence_transformers import SentenceTransformer
 
-from wteb.data.input_types import ModelInputType
+from wteb.types import ModelInputType
 from wteb.models.base import ModelInterface
 from wteb.registry import register_model
 
@@ -437,7 +437,7 @@ def test_my_model_initialization():
 def test_my_model_ranking():
     """Test ranking computation"""
     model = wteb.models.MyCustomModel("all-MiniLM-L6-v2")
-    from wteb.data.input_types import ModelInputType
+    from wteb.types import ModelInputType
     
     queries = ["Software Engineer", "Data Scientist"]
     targets = ["Python", "Machine Learning", "SQL"]

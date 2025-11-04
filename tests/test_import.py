@@ -1,6 +1,5 @@
 """Test basic import functionality."""
 
-from wteb import WTEB
 from wteb.config import BenchmarkConfig
 from wteb.tasks import (
     ESCOJob2SkillClassification,
@@ -20,7 +19,6 @@ from wteb.tasks import (
 def test_basic_imports():
     """Test that we can import core components."""
     assert isinstance(BenchmarkConfig.__name__, str)
-    assert isinstance(WTEB.__name__, str)
 
     print("✓ All core imports successful")
 

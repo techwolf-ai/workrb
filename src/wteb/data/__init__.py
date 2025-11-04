@@ -7,7 +7,7 @@ This module provides:
 """
 
 from wteb.data.esco import ESCO
-from wteb.data.input_types import ModelInputType
+from wteb.types import ModelInputType
 
 __all__ = [
     "ESCO",

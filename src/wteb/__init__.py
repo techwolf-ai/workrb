@@ -2,8 +2,6 @@
 WTEB - A benchmarking framework for evaluating models on various tasks.
 """
 
-from importlib.metadata import version
-
 from wteb import metrics, models, tasks
 from wteb.evaluate import (
     evaluate,
@@ -12,8 +10,6 @@ from wteb.evaluate import (
     list_available_tasks,
     load_results,
 )
-
-__version__ = version("wteb")  # fetch version from install metadata
 
 __all__ = [
     "evaluate",
