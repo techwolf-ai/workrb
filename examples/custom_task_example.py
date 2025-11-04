@@ -140,12 +140,10 @@ if __name__ == "__main__":
     # 2. Create custom tasks
     tasks = [MyCustomRankingTask(languages=["en"], split="test")]
 
-    # 3. Create benchmark with custom tasks
-    benchmark = wteb.WTEB(tasks)
-
-    # 4. Run the benchmark
-    results = benchmark.run(
+    # 3. Run the benchmark
+    results = wteb.evaluate(
         model,
+        tasks,
         output_folder="results/custom_task_demo",
         description="Demonstration of custom ranking tasks",
         force_restart=True,

@@ -124,11 +124,10 @@ def test_e2e_checkpointing():
     print("PHASE 1: Initial run - interrupt after 1 task")
     print("=" * 70)
 
-    benchmark = wteb.WTEB(tasks=tasks[:1])
-
     # Run benchmark - it will be interrupted
-    _mid_results = benchmark.run(
+    _mid_results = wteb.evaluate(
         model,
+        tasks=tasks[:1],
         output_folder=str(output_folder),
         description="Checkpointing test - Phase 1",
     )
@@ -143,11 +142,10 @@ def test_e2e_checkpointing():
     print("PHASE 2: Resume - but with more tasks (including the original ones)")
     print("=" * 70)
 
-    benchmark2 = wteb.WTEB(tasks=tasks)
-
     # Run benchmark - it will be interrupted again
-    end_results = benchmark2.run(
+    end_results = wteb.evaluate(
         model,
+        tasks=tasks,
         output_folder=str(output_folder),
         description="Checkpointing test - Phase 2",
     )
@@ -182,10 +180,10 @@ def test_e2e_checkpointing():
     print("=" * 70)
 
     # 3 tasks are run, try to rerun with only 1 task (should fail)
-    benchmark_incomplete_tasks = wteb.WTEB(tasks=tasks[:1])  # No limit
     with pytest.raises(Exception):
-        _results3 = benchmark_incomplete_tasks.run(
+        _results3 = wteb.evaluate(
             model,
+            tasks=tasks[:1],
             output_folder=str(output_folder),
             description="Checkpointing test - Phase 3",
         )
@@ -197,9 +195,9 @@ def test_e2e_checkpointing():
     print("PHASE 4: Run again - should skip all work")
     print("=" * 70)
 
-    benchmark_retry_full = wteb.WTEB(tasks)
-    end_results_retry = benchmark_retry_full.run(
+    end_results_retry = wteb.evaluate(
         model,
+        tasks=tasks,
         output_folder=str(output_folder),
         description="Checkpointing test - Phase 4",
     )

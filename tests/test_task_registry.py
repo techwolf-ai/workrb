@@ -10,7 +10,6 @@ from wteb.registry import (
 from wteb.tasks.abstract import Task
 from wteb.tasks.abstract.base import LabelType, Language, TaskType
 from wteb.tasks.abstract.ranking_base import RankingTaskGroup
-from wteb.wteb import WTEB
 
 
 class BaseTestTask(Task):

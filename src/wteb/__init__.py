@@ -2,16 +2,26 @@
 WTEB - A benchmarking framework for evaluating models on various tasks.
 """
 
-__version__ = "0.1.0"
+from importlib.metadata import version
 
 from wteb import metrics, models, tasks
-from wteb.logging import setup_logger
-from wteb.wteb import WTEB
+from wteb.evaluate import (
+    evaluate,
+    evaluate_multiple_models,
+    get_tasks_overview,
+    list_available_tasks,
+    load_results,
+)
+
+__version__ = version("wteb")  # fetch version from install metadata
 
 __all__ = [
-    "WTEB",
+    "evaluate",
+    "evaluate_multiple_models",
+    "get_tasks_overview",
+    "list_available_tasks",
+    "load_results",
     "metrics",
     "models",
-    "setup_logger",
     "tasks",
 ]

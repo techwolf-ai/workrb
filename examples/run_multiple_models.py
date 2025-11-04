@@ -31,11 +31,10 @@ if __name__ == "__main__":
         wteb.tasks.ESCOJob2SkillClassification(split=split, languages=langs),
     ]
 
-    # 2. Create and run benchmark
-    benchmark = wteb.WTEB(tasks)
-
-    results = benchmark.run_multiple_models(
+    results = wteb.evaluate_multiple_models(
         models=models,
+        tasks=tasks,
         output_folder_template="../results/simple_demo/{model_name}",
         description="Simple WTEB demo",
+        force_restart=True,
     )

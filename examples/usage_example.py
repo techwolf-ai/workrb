@@ -7,16 +7,17 @@ This minimal example demonstrates:
 3. Resuming from checkpoint (optional)
 """
 
+import wteb
+
 if __name__ == "__main__":
     # 1. Setup model and tasks
     model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
     tasks = [wteb.tasks.ESCOSkill2JobRanking(split="val", languages=[["en", "fr", "de", "nl"]])]
 
-    # 2. Create and run benchmark
-    benchmark = wteb.WTEB(tasks)
-
-    results = benchmark.run(
+    # 2. Run the benchmark
+    results = wteb.evaluate(
         model,
+        tasks,
         output_folder="results/demo",
         description="WTEB demo",
         force_restart=True,
