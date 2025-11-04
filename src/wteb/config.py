@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from workbench.results import BenchmarkResults
 from workbench.tasks.abstract import Task
 

@@ -21,7 +21,6 @@ from workbench.tasks.abstract.base import (
 
 if TYPE_CHECKING:
     import torch
-
     from workbench.models.base import ModelInterface
 
 logger = logging.getLogger(__name__)

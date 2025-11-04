@@ -9,7 +9,6 @@ import logging
 import torch
 from sentence_transformers import SentenceTransformer
 from torch import nn
-
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
 from workbench.models.base import ModelInterface

@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-
 from workbench.data.input_types import ModelInputType
 
 

@@ -2,7 +2,6 @@
 
 import pandas as pd
 from datasets import Dataset, load_dataset
-
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
 from workbench.registry import register_task
@@ -159,6 +158,7 @@ class HouseSkillExtractRanking(BaseESCOSkillExtractRanking):
   year         = {{2022}},
 }
 """
+
 
 @register_task()
 class TechSkillExtractRanking(BaseESCOSkillExtractRanking):

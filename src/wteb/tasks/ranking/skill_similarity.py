@@ -3,7 +3,6 @@
 import pandas as pd
 from datasets import Dataset, load_dataset
 from sklearn.model_selection import train_test_split
-
 from workbench.data.input_types import ModelInputType
 from workbench.registry import register_task
 from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
@@ -112,12 +111,12 @@ class SkillMatch1kSkillSimilarityRanking(RankingTask):
         """Skill similarity task citation."""
         return """
 @misc{decorte2024skillmatchevaluatingselfsupervisedlearning,
-      title={SkillMatch: Evaluating Self-supervised Learning of Skill Relatedness}, 
+      title={SkillMatch: Evaluating Self-supervised Learning of Skill Relatedness},
       author={Jens-Joris Decorte and Jeroen Van Hautte and Thomas Demeester and Chris Develder},
       year={2024},
       eprint={2410.05006},
       archivePrefix={arXiv},
       primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2410.05006}, 
+      url={https://arxiv.org/abs/2410.05006},
 }
 """

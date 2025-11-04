@@ -8,7 +8,6 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 import torch
-
 from workbench.data.input_types import ModelInputType
 from workbench.metrics.ranking import calculate_ranking_metrics
 from workbench.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Language, Task, TaskType

@@ -2,7 +2,6 @@
 
 import pandas as pd
 from datasets import DatasetDict, load_dataset
-
 from workbench.data.esco import ESCO
 from workbench.data.input_types import ModelInputType
 from workbench.registry import register_task
