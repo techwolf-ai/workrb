@@ -46,7 +46,7 @@ tasks = [
 ]
 
 # 3. Run benchmark & view results
-results = benchmark.run(
+results = wteb.evaluate(
     model,
     tasks,
     output_folder="results/my_model",
