@@ -1,5 +1,5 @@
 """
-Configuration management for WorkBench benchmarks.
+Configuration management for WTEB benchmarks.
 
 BenchmarkConfig handles both configuration settings and checkpoint management,
 using unified BenchmarkResults storage for both checkpoints and final results.
@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class BenchmarkConfig:
     """
-    Configuration for a WorkBench benchmark run.
+    Configuration for a WTEB benchmark run.
 
     This config can be saved to YAML and used for resuming interrupted benchmarks.
     """
@@ -68,7 +68,7 @@ class BenchmarkConfig:
         description: str = "",
     ) -> "BenchmarkConfig":
         """
-        Create config from WorkBench model and tasks.
+        Create config from WTEB model and tasks.
 
         Args:
             model: Model instance

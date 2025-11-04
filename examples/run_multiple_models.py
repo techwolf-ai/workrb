@@ -32,10 +32,10 @@ if __name__ == "__main__":
     ]
 
     # 2. Create and run benchmark
-    benchmark = wb.WorkBench(tasks)
+    benchmark = wb.WTEB(tasks)
 
     results = benchmark.run_multiple_models(
         models=models,
         output_folder_template="../results/simple_demo/{model_name}",
-        description="Simple WorkBench demo",
+        description="Simple WTEB demo",
     )

@@ -1,5 +1,5 @@
 """
-Logging configuration for the WorkBench package.
+Logging configuration for the WTEB package.
 
 Provides a unified logging setup with console output for user-facing messages
 and optional file output for debugging.

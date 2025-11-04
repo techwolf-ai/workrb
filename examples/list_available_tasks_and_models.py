@@ -1,5 +1,5 @@
 """
-Generate tables for tasks and models in the WorkBench.
+Generate tables for tasks and models in the WTEB.
 
 Use --no-load-tasks and --no-load-models flags to skip loading (faster).
 """
@@ -121,7 +121,7 @@ def format_markdown(df: pd.DataFrame) -> str:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Generate tables for WorkBench tasks and models")
+    parser = argparse.ArgumentParser(description="Generate tables for WTEB tasks and models")
     parser.add_argument("--no-load-tasks", action="store_true", help="Skip loading tasks (faster)")
     parser.add_argument(
         "--no-load-models", action="store_true", help="Skip loading models (faster)"

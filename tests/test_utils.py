@@ -1,5 +1,5 @@
 """
-Test utilities for WorkBench tests.
+Test utilities for WTEB tests.
 
 This module provides common utilities for testing, including:
 - ToyTaskMixin: Reduces dataset size for fast testing

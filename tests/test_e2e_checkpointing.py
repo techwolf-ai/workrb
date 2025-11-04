@@ -1,7 +1,7 @@
 """
 End-to-End Checkpointing Test.
 
-This test validates the checkpointing and resume functionality of WorkBench.
+This test validates the checkpointing and resume functionality of WTEB.
 It simulates interrupted benchmark runs and validates that:
 1. Checkpoints are saved correctly after each task completion
 2. Benchmarks can be resumed from checkpoints
@@ -124,7 +124,7 @@ def test_e2e_checkpointing():
     print("PHASE 1: Initial run - interrupt after 1 task")
     print("=" * 70)
 
-    benchmark = wb.WorkBench(tasks=tasks[:1])
+    benchmark = wb.WTEB(tasks=tasks[:1])
 
     # Run benchmark - it will be interrupted
     _mid_results = benchmark.run(
@@ -143,7 +143,7 @@ def test_e2e_checkpointing():
     print("PHASE 2: Resume - but with more tasks (including the original ones)")
     print("=" * 70)
 
-    benchmark2 = wb.WorkBench(tasks=tasks)
+    benchmark2 = wb.WTEB(tasks=tasks)
 
     # Run benchmark - it will be interrupted again
     end_results = benchmark2.run(
@@ -182,7 +182,7 @@ def test_e2e_checkpointing():
     print("=" * 70)
 
     # 3 tasks are run, try to rerun with only 1 task (should fail)
-    benchmark_incomplete_tasks = wb.WorkBench(tasks=tasks[:1])  # No limit
+    benchmark_incomplete_tasks = wb.WTEB(tasks=tasks[:1])  # No limit
     with pytest.raises(Exception):
         _results3 = benchmark_incomplete_tasks.run(
             model,
@@ -197,7 +197,7 @@ def test_e2e_checkpointing():
     print("PHASE 4: Run again - should skip all work")
     print("=" * 70)
 
-    benchmark_retry_full = wb.WorkBench(tasks)
+    benchmark_retry_full = wb.WTEB(tasks)
     end_results_retry = benchmark_retry_full.run(
         model,
         output_folder=str(output_folder),

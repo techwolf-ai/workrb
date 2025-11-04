@@ -118,7 +118,7 @@ def register_task(name: str | None = None):
     return decorator
 
 
-# Convenience function for WorkBench integration
+# Convenience function for WTEB integration
 def create_task_from_config(task_config: dict[str, Any]) -> "Task":
     """Create a task instance from configuration dictionary."""
     task_class_name = task_config["class"]

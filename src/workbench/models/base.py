@@ -1,4 +1,4 @@
-"""Model interface for WorkBench."""
+"""Model interface for WTEB."""
 
 from abc import ABC, abstractmethod
 
@@ -8,7 +8,7 @@ from workbench.data.input_types import ModelInputType
 
 
 class ModelInterface(ABC):
-    """Abstract base class for all models in WorkBench."""
+    """Abstract base class for all models in WTEB."""
 
     @property
     @abstractmethod

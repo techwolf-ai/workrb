@@ -1,5 +1,5 @@
 """
-Simple WorkBench Example - Basic Usage
+Simple WTEB Example - Basic Usage
 
 This minimal example demonstrates:
 1. Setting up a model and task
@@ -15,11 +15,11 @@ if __name__ == "__main__":
     tasks = [wb.tasks.ESCOSkill2JobRanking(split="val", languages=[["en", "fr", "de", "nl"]])]
 
     # 2. Create and run benchmark
-    benchmark = wb.WorkBench(tasks)
+    benchmark = wb.WTEB(tasks)
 
     results = benchmark.run(
         model,
         output_folder="results/demo",
-        description="WorkBench demo",
+        description="WTEB demo",
         force_restart=True,
     )
