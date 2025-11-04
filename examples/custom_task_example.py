@@ -6,8 +6,6 @@ with the WTEB framework. Custom tasks should inherit from wb.tasks.RankingTask
 and implement the required abstract methods.
 """
 
-import workbench as wb
-
 from wteb.data.input_types import ModelInputType
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language

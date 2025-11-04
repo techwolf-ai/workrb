@@ -7,8 +7,6 @@ This minimal example demonstrates:
 3. Resuming from checkpoint (optional)
 """
 
-import workbench as wb
-
 if __name__ == "__main__":
     # 1. Setup model and tasks
     model = wb.models.BiEncoderModel("all-MiniLM-L6-v2")

@@ -2,8 +2,6 @@
 Reproduce benchmark results.
 """
 
-import workbench as wb
-
 if __name__ == "__main__":
     # 1. Setup model and tasks
     models = [
