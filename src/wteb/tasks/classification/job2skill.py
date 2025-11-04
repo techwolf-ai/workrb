@@ -6,7 +6,6 @@ import pandas as pd
 from datasets import DatasetDict, load_dataset
 
 from wteb.data.esco import ESCO
-from wteb.data.input_types import ModelInputType
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, Language
 from wteb.tasks.abstract.classification_base import (
@@ -14,6 +13,7 @@ from wteb.tasks.abstract.classification_base import (
     ClassificationTaskGroup,
     MultiLabelClassificationTask,
 )
+from wteb.types import ModelInputType
 
 logger = logging.getLogger(__name__)
 

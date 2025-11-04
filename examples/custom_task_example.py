@@ -7,10 +7,10 @@ and implement the required abstract methods.
 """
 
 import wteb
-from wteb.data.input_types import ModelInputType
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
+from wteb.types import ModelInputType
 
 
 @register_task()

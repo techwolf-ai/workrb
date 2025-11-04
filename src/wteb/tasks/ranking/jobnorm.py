@@ -4,10 +4,10 @@ import pandas as pd
 from datasets import DatasetDict, load_dataset
 
 from wteb.data.esco import ESCO
-from wteb.data.input_types import ModelInputType
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+from wteb.types import ModelInputType
 
 
 @register_task()
