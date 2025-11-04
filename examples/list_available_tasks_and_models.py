@@ -9,8 +9,8 @@ from typing import Any, cast
 
 import pandas as pd
 
-from workbench.registry import ModelRegistry, TaskRegistry
-from workbench.tasks.abstract.base import Language
+from wteb.registry import ModelRegistry, TaskRegistry
+from wteb.tasks.abstract.base import Language
 
 
 def get_task_properties(task_class: type, registry_name: str, load_full: bool) -> dict[str, Any]:

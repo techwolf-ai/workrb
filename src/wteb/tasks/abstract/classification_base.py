@@ -8,9 +8,9 @@ from collections import Counter
 from enum import Enum
 from typing import TYPE_CHECKING, Literal
 
-from workbench.data.input_types import ModelInputType
-from workbench.metrics.classification import calculate_classification_metrics, optimize_threshold
-from workbench.tasks.abstract.base import (
+from wteb.data.input_types import ModelInputType
+from wteb.metrics.classification import calculate_classification_metrics, optimize_threshold
+from wteb.tasks.abstract.base import (
     BaseTaskGroup,
     DatasetSplit,
     LabelType,
@@ -21,7 +21,8 @@ from workbench.tasks.abstract.base import (
 
 if TYPE_CHECKING:
     import torch
-    from workbench.models.base import ModelInterface
+
+    from wteb.models.base import ModelInterface
 
 logger = logging.getLogger(__name__)
 

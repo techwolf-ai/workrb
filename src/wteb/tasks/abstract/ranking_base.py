@@ -8,12 +8,13 @@ from enum import Enum
 from typing import TYPE_CHECKING
 
 import torch
-from workbench.data.input_types import ModelInputType
-from workbench.metrics.ranking import calculate_ranking_metrics
-from workbench.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Language, Task, TaskType
+
+from wteb.data.input_types import ModelInputType
+from wteb.metrics.ranking import calculate_ranking_metrics
+from wteb.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Language, Task, TaskType
 
 if TYPE_CHECKING:
-    from workbench.models.base import ModelInterface
+    from wteb.models.base import ModelInterface
 
 
 class RankingTaskGroup(BaseTaskGroup, str, Enum):

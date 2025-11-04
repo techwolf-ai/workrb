@@ -9,19 +9,19 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
-from workbench.config import BenchmarkConfig
-from workbench.logging import setup_logger
-from workbench.metrics.reporting import format_results
-from workbench.models.base import ModelInterface
-from workbench.registry import TaskRegistry
-from workbench.results import (
+from wteb.config import BenchmarkConfig
+from wteb.logging import setup_logger
+from wteb.metrics.reporting import format_results
+from wteb.models.base import ModelInterface
+from wteb.registry import TaskRegistry
+from wteb.results import (
     BenchmarkMetadata,
     BenchmarkResults,
     MetricsResult,
     TaskResultMetadata,
     TaskResults,
 )
-from workbench.tasks.abstract.base import Language, Task
+from wteb.tasks.abstract.base import Language, Task
 
 logger = logging.getLogger(__name__)
 setup_logger(__name__, verbose=False)

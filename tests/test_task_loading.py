@@ -3,7 +3,9 @@
 from typing import Literal
 
 import pytest
-from workbench.tasks import (
+
+from tests.test_utils import GeneralRankingTestTask
+from wteb.tasks import (
     ESCOJob2SkillClassification,
     ESCOJob2SkillRanking,
     ESCOSkill2JobRanking,
@@ -13,9 +15,7 @@ from workbench.tasks import (
     SkillMatch1kSkillSimilarityRanking,
     TechSkillExtractRanking,
 )
-from workbench.tasks.abstract.base import DatasetSplit, Language, TaskType
-
-from tests.test_utils import GeneralRankingTestTask
+from wteb.tasks.abstract.base import DatasetSplit, Language, TaskType
 
 
 class StubSupportedLanguagesRankingTask(GeneralRankingTestTask):

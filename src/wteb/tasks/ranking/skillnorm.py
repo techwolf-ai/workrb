@@ -3,11 +3,12 @@
 from enum import Enum
 
 from sklearn.model_selection import train_test_split
-from workbench.data.esco import ESCO
-from workbench.data.input_types import ModelInputType
-from workbench.registry import register_task
-from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
-from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+
+from wteb.data.esco import ESCO
+from wteb.data.input_types import ModelInputType
+from wteb.registry import register_task
+from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language
+from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
 
 
 class SplitMode(str, Enum):
