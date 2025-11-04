@@ -52,6 +52,10 @@ class MyCustomModel(ModelInterface):
         """Return the unique name of this model."""
         return f"MyCustomModel-{self.base_model_name.split('/')[-1]}"
 
+    def description(self) -> str:
+        """Return the description of this model."""
+        return "A custom model that demonstrates WTEB extensibility"
+
     def _compute_rankings(
         self,
         queries: list[str],
