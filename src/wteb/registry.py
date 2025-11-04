@@ -82,11 +82,7 @@ class TaskRegistry:
         for importer, modname, ispkg in pkgutil.walk_packages(
             tasks_package.__path__, tasks_package.__name__ + "."
         ):
-            try:
-                importlib.import_module(modname)
-            except ImportError:
-                # Silently ignore import errors during discovery
-                pass
+            importlib.import_module(modname)
 
 
 def register_task(name: str | None = None):
