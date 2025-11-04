@@ -20,7 +20,7 @@
 
 </div>
 
-**WTEB** is an open-source library to *benchmark AI systems in the work domain*. 
+**WTEB** is an open-source library to *benchmark embedding models in the work domain*. 
 It provides a standardized framework that is easy to use and community-driven, scaling evaluation over a wide range of state-of-the-art tasks and models.
 
 ## Features
@@ -46,9 +46,9 @@ tasks = [
 ]
 
 # 3. Run benchmark & view results
-benchmark = wteb.WTEB(tasks)
 results = benchmark.run(
     model,
+    tasks,
     output_folder="results/my_model",
 )
 print(results)
@@ -94,8 +94,7 @@ class MyCustomModel(ModelInterface):
     ...
 
 # Use your custom model and task:
-benchmark = wteb.WTEB(tasks=[MyCustomTask()])
-model_results = benchmark.run(MyCustomModel())
+model_results = wteb.evaluate(MyCustomModel(),[MyCustomTask()])
 ```
 
 **For detailed examples**, see:
@@ -118,11 +117,11 @@ tasks = [
         languages=["en"],
     )
 ]
-benchmark = wteb.WTEB(tasks)
-results = benchmark.run(model, output_folder="results/my_model")
+
+results = wteb.evaluate(model, tasks, output_folder="results/my_model")
 
 # Run 2: Automatically resumes from checkpoint
-results = benchmark.run(model, output_folder="results/my_model")
+results = wteb.evaluate(model, tasks, output_folder="results/my_model")
 # ✓ Skips completed tasks, continues from where it left off
 ```
 **Extending Benchmarks** - Want to extend your results with additional tasks or languages? Add the new tasks or languages when resuming:
@@ -137,14 +136,13 @@ tasks_extended = [
         split="val", 
         languages=["en"],
 ]
-benchmark = wteb.WTEB(tasks_extended)
-results = benchmark.run(model, output_folder="results/my_model")
+results = wteb.evaluate(model, tasks, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
 
 ❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WTEB initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
 ```python
-results = benchmark.run(model, output_folder="results/my_model", force_restart=True)
+results = wteb.evaluate(model, tasks, output_folder="results/my_model", force_restart=True)
 ```
 
 
@@ -162,7 +160,7 @@ results/my_model/
 To load & parse results from a run:
 
 ```python
-results = wteb.WTEB.load_results("results/my_model/results.json")
+results = wteb.load_results("results/my_model/results.json")
 print(results)
 ```
 
@@ -178,7 +176,7 @@ Each aggregation provides 95% confidence intervals (replace `mean` with `ci_marg
 
 ```python
 # Benchmark returns a detailed Pydantic model
-results: BenchmarkResults = benchmark.run(...)
+results: BenchmarkResults = wteb.evaluate(...)
 
 # Calculate aggregated metrics
 summary: dict[str, float] = results.get_summary_metrics()

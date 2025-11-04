@@ -22,7 +22,7 @@ from wteb.tasks.abstract.classification_base import ClassificationTask
 from wteb.tasks.abstract.ranking_base import RankingTask
 
 
-def get_all_tasks(split: str = "val", languages: list[str] = None) -> list[Task]:
+def get_all_tasks(split: str = "val", languages: list[str] | None = None) -> list[Task]:
     """
     Discover and instantiate toy versions of all registered tasks (ranking and classification).
 
@@ -38,7 +38,7 @@ def get_all_tasks(split: str = "val", languages: list[str] = None) -> list[Task]
         languages = ["en"]
 
     # Discover all available tasks
-    available_tasks = wteb.WTEB.list_available_tasks()
+    available_tasks = wteb.list_available_tasks()
 
     print(f"\n🔍 Discovered {len(available_tasks)} registered tasks")
 
@@ -131,16 +131,17 @@ def test_e2e_toy_benchmark():
 
     # Create benchmark with all tasks (both ranking and classification)
     print("\n🏃 Running benchmark (all tasks)...")
-    benchmark = wteb.WTEB(tasks)
 
     # Track execution time
     start_time = time.time()
 
     # Run benchmark
-    results = benchmark.run(
+    results = wteb.evaluate(
         model,
+        tasks,
         output_folder="tmp/toy_benchmark_test",
         description="E2E Toy Benchmark Test (Registry-Based)",
+        force_restart=True,
     )
 
     execution_time = time.time() - start_time

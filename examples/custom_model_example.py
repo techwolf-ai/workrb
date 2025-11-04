@@ -151,13 +151,11 @@ if __name__ == "__main__":
         wteb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
     ]
 
-    # 3. Create benchmark
-    benchmark = wteb.WTEB(tasks)
-
-    # 4. Run the benchmark
+    # 3. Run the benchmark
     print("\nRunning benchmark with custom model...")
-    results = benchmark.run(
+    results = wteb.evaluate(
         model,
+        tasks,
         output_folder="results/custom_model_demo",
         description="Demonstration of custom model with configurable query normalization",
         force_restart=True,
