@@ -3,10 +3,10 @@ requires = ["hatchling>=1.27.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/workbench"]
+packages = ["src/wteb"]
 
 [project]
-name = "workbench"
+name = "wteb"
 version = "0.0.0"
 description = "Perform easy inference on a range of work-related tasks."
 readme = "README.md"
@@ -68,10 +68,10 @@ dev = [
 
 
 [project.urls]
-Homepage = "https://github.com/techwolf-ai/workbench"
-Documentation = "https://github.com/techwolf-ai/workbench#readme"
-Repository = "https://github.com/techwolf-ai/workbench.git"
-Issues = "https://github.com/techwolf-ai/workbench/issues"
+Homepage = "https://github.com/techwolf-ai/wteb"
+Documentation = "https://github.com/techwolf-ai/wteb#readme"
+Repository = "https://github.com/techwolf-ai/wteb.git"
+Issues = "https://github.com/techwolf-ai/wteb/issues"
 
 [tool.commitizen] # https://commitizen-tools.github.io/commitizen/config/
 bump_message = "bump: v$current_version → v$new_version"
@@ -166,7 +166,7 @@ cmd = """
     pdoc
       --docformat $docformat
       --output-directory $outputdirectory
-      workbench
+      wteb
     """
 
 [[tool.poe.tasks.docs.args]]

@@ -2,19 +2,21 @@
 Custom Model Example - Creating a Custom Model.
 
 This example demonstrates how to create a custom model that can be used
-with the WTEB framework. Custom models should inherit from wb.models.ModelInterface
+with the WTEB framework. Custom models should inherit from wteb.models.ModelInterface
 and implement the required abstract methods.
 """
 
 import torch
 from sentence_transformers import SentenceTransformer
 
+import wteb
 from wteb.data.input_types import ModelInputType
+from wteb.models.base import ModelInterface
 from wteb.registry import register_model
 
 
 @register_model()
-class MyCustomModel(wb.models.ModelInterface):
+class MyCustomModel(ModelInterface):
     """
     Example custom model for demonstrating the extensibility of WTEB.
 
@@ -146,11 +148,11 @@ if __name__ == "__main__":
 
     # 2. Create a simple task to test the model
     tasks = [
-        wb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
+        wteb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
     ]
 
     # 3. Create benchmark
-    benchmark = wb.WTEB(tasks)
+    benchmark = wteb.WTEB(tasks)
 
     # 4. Run the benchmark
     print("\nRunning benchmark with custom model...")

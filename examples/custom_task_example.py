@@ -2,10 +2,11 @@
 Custom Task Example - Creating a Custom Ranking Task
 
 This example demonstrates how to create a custom ranking task that can be used
-with the WTEB framework. Custom tasks should inherit from wb.tasks.RankingTask
+with the WTEB framework. Custom tasks should inherit from wteb.tasks.RankingTask
 and implement the required abstract methods.
 """
 
+import wteb
 from wteb.data.input_types import ModelInputType
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language
@@ -13,7 +14,7 @@ from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
 
 
 @register_task()
-class MyCustomRankingTask(wb.tasks.RankingTask):
+class MyCustomRankingTask(wteb.tasks.RankingTask):
     """
     Example custom ranking task for demonstrating the extensibility of WTEB.
 
@@ -134,13 +135,13 @@ if __name__ == "__main__":
     print("=" * 50)
 
     # 1. Create a model
-    model = wb.models.BiEncoderModel("all-MiniLM-L6-v2")
+    model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
 
     # 2. Create custom tasks
     tasks = [MyCustomRankingTask(languages=["en"], split="test")]
 
     # 3. Create benchmark with custom tasks
-    benchmark = wb.WTEB(tasks)
+    benchmark = wteb.WTEB(tasks)
 
     # 4. Run the benchmark
     results = benchmark.run(

@@ -90,7 +90,7 @@ class ESCO:
         if data_dir:
             self.base_path = Path(data_dir)
         else:
-            cache_dir = appdirs.user_cache_dir("workbench")
+            cache_dir = appdirs.user_cache_dir("wteb")
             self.base_path = Path(cache_dir) / "esco"
 
         self.data_path = self.base_path / version / self.language

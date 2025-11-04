@@ -1,7 +1,6 @@
 """Test task registry system functionality."""
 
 import pytest
-from wteb.workbench import WTEB
 
 from wteb.registry import (
     TaskRegistry,
@@ -11,6 +10,7 @@ from wteb.registry import (
 from wteb.tasks.abstract import Task
 from wteb.tasks.abstract.base import LabelType, Language, TaskType
 from wteb.tasks.abstract.ranking_base import RankingTaskGroup
+from wteb.wteb import WTEB
 
 
 class BaseTestTask(Task):
@@ -238,7 +238,7 @@ class TestWTEBRegistryIntegration:
         """Clear registry before each test."""
         TaskRegistry._registry.clear()
 
-    def test_workbench_list_available_tasks(self):
+    def test_wteb_list_available_tasks(self):
         """Test WTEB.list_available_tasks() method."""
 
         @register_task()

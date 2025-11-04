@@ -217,7 +217,7 @@ class WTEB:
             Dictionary containing all evaluation results
         """
         # Load config for output folder
-        config = BenchmarkConfig.from_workbench(
+        config = BenchmarkConfig.from_wteb(
             model=model,
             tasks=self.tasks,
             output_folder=output_folder,

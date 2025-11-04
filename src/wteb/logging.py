@@ -9,7 +9,7 @@ import logging
 import sys
 
 
-def setup_logger(name: str = "workbench", verbose: bool = False) -> logging.Logger:
+def setup_logger(name: str = "wteb", verbose: bool = False) -> logging.Logger:
     """
     Setup package logger with console and optional file handlers.
 
