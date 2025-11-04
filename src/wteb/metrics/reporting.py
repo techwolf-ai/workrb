@@ -6,7 +6,7 @@ import logging
 from collections import defaultdict
 from typing import Literal
 
-from workbench.results import BenchmarkResults
+from wteb.results import BenchmarkResults
 
 logger = logging.getLogger(__name__)
 

@@ -1,15 +1,16 @@
 """Test task registry system functionality."""
 
 import pytest
-from workbench.registry import (
+from wteb.workbench import WTEB
+
+from wteb.registry import (
     TaskRegistry,
     create_task_from_config,
     register_task,
 )
-from workbench.tasks.abstract import Task
-from workbench.tasks.abstract.base import LabelType, Language, TaskType
-from workbench.tasks.abstract.ranking_base import RankingTaskGroup
-from workbench.workbench import WTEB
+from wteb.tasks.abstract import Task
+from wteb.tasks.abstract.base import LabelType, Language, TaskType
+from wteb.tasks.abstract.ranking_base import RankingTaskGroup
 
 
 class BaseTestTask(Task):
@@ -305,9 +306,9 @@ class TestRealTaskRegistration:
     def test_real_task_imports_work(self):
         """Test that real task classes can be imported without errors."""
         # This tests that the decorator doesn't break the imports
-        from workbench.tasks.classification.job2skill import ESCOJob2SkillClassification
-        from workbench.tasks.ranking.job2skill import ESCOJob2SkillRanking
-        from workbench.tasks.ranking.skill2job import ESCOSkill2JobRanking
+        from wteb.tasks.classification.job2skill import ESCOJob2SkillClassification
+        from wteb.tasks.ranking.job2skill import ESCOJob2SkillRanking
+        from wteb.tasks.ranking.skill2job import ESCOSkill2JobRanking
 
         # Verify classes exist and have the decorator applied
         assert ESCOJob2SkillRanking is not None
@@ -315,7 +316,7 @@ class TestRealTaskRegistration:
         assert ESCOJob2SkillClassification is not None
 
         # Verify they inherit from Task
-        from workbench.tasks.abstract import Task
+        from wteb.tasks.abstract import Task
 
         assert issubclass(ESCOJob2SkillRanking, Task)
         assert issubclass(ESCOSkill2JobRanking, Task)

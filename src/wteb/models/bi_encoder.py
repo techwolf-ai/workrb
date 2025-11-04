@@ -4,9 +4,10 @@ import torch
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import batch_to_device
 from tqdm.auto import tqdm
-from workbench.data.input_types import ModelInputType
-from workbench.models.base import ModelInterface
-from workbench.registry import register_model
+
+from wteb.data.input_types import ModelInputType
+from wteb.models.base import ModelInterface
+from wteb.registry import register_model
 
 
 @register_model()

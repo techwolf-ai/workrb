@@ -7,10 +7,11 @@ and implement the required abstract methods.
 """
 
 import workbench as wb
-from workbench.data.input_types import ModelInputType
-from workbench.registry import register_task
-from workbench.tasks.abstract.base import DatasetSplit, LabelType, Language
-from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
+
+from wteb.data.input_types import ModelInputType
+from wteb.registry import register_task
+from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language
+from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
 
 
 @register_task()

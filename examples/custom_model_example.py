@@ -7,11 +7,11 @@ and implement the required abstract methods.
 """
 
 import torch
+import workbench as wb
 from sentence_transformers import SentenceTransformer
 
-import workbench as wb
-from workbench.data.input_types import ModelInputType
-from workbench.registry import register_model
+from wteb.data.input_types import ModelInputType
+from wteb.registry import register_model
 
 
 @register_model()

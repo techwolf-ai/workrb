@@ -4,11 +4,12 @@ import logging
 
 import pandas as pd
 from datasets import DatasetDict, load_dataset
-from workbench.data.esco import ESCO
-from workbench.data.input_types import ModelInputType
-from workbench.registry import register_task
-from workbench.tasks.abstract.base import DatasetSplit, Language
-from workbench.tasks.abstract.classification_base import (
+
+from wteb.data.esco import ESCO
+from wteb.data.input_types import ModelInputType
+from wteb.registry import register_task
+from wteb.tasks.abstract.base import DatasetSplit, Language
+from wteb.tasks.abstract.classification_base import (
     ClassificationDataset,
     ClassificationTaskGroup,
     MultiLabelClassificationTask,

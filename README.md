@@ -78,9 +78,9 @@ Add your custom task or model by (1) inheriting from a predefined base class and
 - **Custom models**: Inherit from `ModelInterface`. Implement the abstract methods. Register via `@register_model()`.
 
 ```python
-from workbench.tasks.abstract.ranking_base import RankingTask
-from workbench.models.base import ModelInterface
-from workbench.registry import register_task, register_model
+from wteb.tasks.abstract.ranking_base import RankingTask
+from wteb.models.base import ModelInterface
+from wteb.registry import register_task, register_model
 
 @register_task()
 class MyCustomTask(RankingTask):
