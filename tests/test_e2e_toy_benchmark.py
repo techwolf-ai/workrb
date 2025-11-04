@@ -38,7 +38,7 @@ def get_all_tasks(split: str = "val", languages: list[str] = None) -> list[Task]
         languages = ["en"]
 
     # Discover all available tasks
-    available_tasks = wb.WorkBench.list_available_tasks()
+    available_tasks = wb.WTEB.list_available_tasks()
 
     print(f"\n🔍 Discovered {len(available_tasks)} registered tasks")
 
@@ -131,7 +131,7 @@ def test_e2e_toy_benchmark():
 
     # Create benchmark with all tasks (both ranking and classification)
     print("\n🏃 Running benchmark (all tasks)...")
-    benchmark = wb.WorkBench(tasks)
+    benchmark = wb.WTEB(tasks)
 
     # Track execution time
     start_time = time.time()

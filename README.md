@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛠️ WorkBench
+# 🛠️ WTEB
 
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
@@ -20,7 +20,7 @@
 
 </div>
 
-**WorkBench** is an open-source library to *benchmark AI systems in the work domain*. 
+**WTEB** is an open-source library to *benchmark AI systems in the work domain*. 
 It provides a standardized framework that is easy to use and community-driven, scaling evaluation over a wide range of state-of-the-art tasks and models.
 
 ## Features
@@ -46,7 +46,7 @@ tasks = [
 ]
 
 # 3. Run benchmark & view results
-benchmark = wb.WorkBench(tasks)
+benchmark = wb.WTEB(tasks)
 results = benchmark.run(
     model,
     output_folder="results/my_model",
@@ -55,7 +55,9 @@ print(results)
 ```
 
 ## Installation
-Install WorkBench simply via pip:
+*Note: PyPI installation is WIP, for now follow the [dev setup]().*
+
+Install WTEB simply via pip. 
 ```bash
 pip install workbench-eval
 ```
@@ -92,7 +94,7 @@ class MyCustomModel(ModelInterface):
     ...
 
 # Use your custom model and task:
-benchmark = wb.WorkBench(tasks=[MyCustomTask()])
+benchmark = wb.WTEB(tasks=[MyCustomTask()])
 model_results = benchmark.run(MyCustomModel())
 ```
 
@@ -104,7 +106,7 @@ Feel free to make a PR to add your models & tasks to the official package! See [
 
 ### Checkpointing & Resuming
 
-WorkBench automatically saves result checkpoints after each task completion in a specific language.
+WTEB automatically saves result checkpoints after each task completion in a specific language.
 
 **Automatic Resuming** - Simply rerun with the same `output_folder`:
 
@@ -116,7 +118,7 @@ tasks = [
         languages=["en"],
     )
 ]
-benchmark = wb.WorkBench(tasks)
+benchmark = wb.WTEB(tasks)
 results = benchmark.run(model, output_folder="results/my_model")
 
 # Run 2: Automatically resumes from checkpoint
@@ -135,12 +137,12 @@ tasks_extended = [
         split="val", 
         languages=["en"],
 ]
-benchmark = wb.WorkBench(tasks_extended)
+benchmark = wb.WTEB(tasks_extended)
 results = benchmark.run(model, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
 
-❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WorkBench initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
+❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WTEB initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
 ```python
 results = benchmark.run(model, output_folder="results/my_model", force_restart=True)
 ```
@@ -160,7 +162,7 @@ results/my_model/
 To load & parse results from a run:
 
 ```python
-results = wb.WorkBench.load_results("results/my_model/results.json")
+results = wb.WTEB.load_results("results/my_model/results.json")
 print(results)
 ```
 
@@ -252,7 +254,7 @@ pre-commit install --install-hooks
 
 <!-- ## Citation
 
-If you use WorkBench in your research, please cite:
+If you use WTEB in your research, please cite:
 
 ```bibtex
 UWE-PLACEHOLDER

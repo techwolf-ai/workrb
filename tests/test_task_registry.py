@@ -10,7 +10,7 @@ from workbench.registry import (
 from workbench.tasks.abstract import Task
 from workbench.tasks.abstract.base import LabelType, Language, TaskType
 from workbench.tasks.abstract.ranking_base import RankingTaskGroup
-from workbench.workbench import WorkBench
+from workbench.workbench import WTEB
 
 
 class BaseTestTask(Task):
@@ -231,25 +231,25 @@ class TestTaskRegistryConfigIntegration:
             create_task_from_config(config)
 
 
-class TestWorkBenchRegistryIntegration:
-    """Test WorkBench integration with task registry."""
+class TestWTEBRegistryIntegration:
+    """Test WTEB integration with task registry."""
 
     def setup_method(self):
         """Clear registry before each test."""
         TaskRegistry._registry.clear()
 
     def test_workbench_list_available_tasks(self):
-        """Test WorkBench.list_available_tasks() method."""
+        """Test WTEB.list_available_tasks() method."""
 
         @register_task()
-        class WorkBenchTestTask(BaseTestTask):
+        class WTEBTestTask(BaseTestTask):
             pass
 
-        available_tasks = WorkBench.list_available_tasks()
+        available_tasks = WTEB.list_available_tasks()
 
-        assert "WorkBenchTestTask" in available_tasks
+        assert "WTEBTestTask" in available_tasks
         assert isinstance(available_tasks, dict)
-        assert available_tasks["WorkBenchTestTask"].endswith("WorkBenchTestTask")
+        assert available_tasks["WTEBTestTask"].endswith("WTEBTestTask")
 
     def _get_task_names(self, available_tasks: dict[str, str]) -> list[str]:
         task_names = []
@@ -261,7 +261,7 @@ class TestWorkBenchRegistryIntegration:
 
     def test_registered_tasks_have_unique_names(self):
         """Test that registered tasks have unique names."""
-        available_tasks = WorkBench.list_available_tasks()
+        available_tasks = WTEB.list_available_tasks()
         assert len(available_tasks) == len(set(available_tasks.keys())), (
             "Duplicate registered tasks"
         )
@@ -282,21 +282,21 @@ class TestWorkBenchRegistryIntegration:
 
         # Different registry keys but same .name property
         @register_task("Task1")  # Different registry key
-        class WorkBenchTestTask1(BaseTestTask):
+        class WTEBTestTask1(BaseTestTask):
             @property
             def name(self) -> str:
-                return "WorkBenchTestTask"  # Same .name property
+                return "WTEBTestTask"  # Same .name property
 
         @register_task("Task2")  # Different registry key
-        class WorkBenchTestTask2(BaseTestTask):
+        class WTEBTestTask2(BaseTestTask):
             @property
             def name(self) -> str:
-                return "WorkBenchTestTask"  # Same .name property
+                return "WTEBTestTask"  # Same .name property
 
-        available_tasks = WorkBench.list_available_tasks()
+        available_tasks = WTEB.list_available_tasks()
         task_names = self._get_task_names(available_tasks)
         assert len(task_names) - len(set(task_names)) == 1, (
-            f"Should have found one duplicate task name 'WorkBenchTestTask', got {len(task_names) - len(set(task_names))}"
+            f"Should have found one duplicate task name 'WTEBTestTask', got {len(task_names) - len(set(task_names))}"
         )
 
 

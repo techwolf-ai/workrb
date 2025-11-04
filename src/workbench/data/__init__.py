@@ -1,5 +1,5 @@
 """
-Simplified data management for WorkBench.
+Simplified data management for WTEB.
 
 This module provides:
 - ESCODataManager: Handles ESCO data downloads and caching

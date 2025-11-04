@@ -1,4 +1,4 @@
-"""Classification model wrapper for WorkBench with proper label space tracking.
+"""Classification model wrapper for WTEB with proper label space tracking.
 
 This module provides an example of how to create a classification model that
 properly tracks its label space, similar to how timm stores ImageNet class names.

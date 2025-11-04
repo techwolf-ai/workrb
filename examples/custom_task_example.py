@@ -2,7 +2,7 @@
 Custom Task Example - Creating a Custom Ranking Task
 
 This example demonstrates how to create a custom ranking task that can be used
-with the WorkBench framework. Custom tasks should inherit from wb.tasks.RankingTask
+with the WTEB framework. Custom tasks should inherit from wb.tasks.RankingTask
 and implement the required abstract methods.
 """
 
@@ -16,7 +16,7 @@ from workbench.tasks.abstract.ranking_base import RankingDataset, RankingTaskGro
 @register_task()
 class MyCustomRankingTask(wb.tasks.RankingTask):
     """
-    Example custom ranking task for demonstrating the extensibility of WorkBench.
+    Example custom ranking task for demonstrating the extensibility of WTEB.
 
     This task shows how to:
     1. Inherit from RankingTask
@@ -42,7 +42,7 @@ class MyCustomRankingTask(wb.tasks.RankingTask):
     @property
     def description(self) -> str:
         """Return a description of this task."""
-        return "A custom ranking task that demonstrates WorkBench extensibility"
+        return "A custom ranking task that demonstrates WTEB extensibility"
 
     @property
     def query_input_type(self) -> ModelInputType:
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     tasks = [MyCustomRankingTask(languages=["en"], split="test")]
 
     # 3. Create benchmark with custom tasks
-    benchmark = wb.WorkBench(tasks)
+    benchmark = wb.WTEB(tasks)
 
     # 4. Run the benchmark
     results = benchmark.run(

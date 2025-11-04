@@ -1,5 +1,5 @@
 """
-Model interfaces and implementations for WorkBench.
+Model interfaces and implementations for WTEB.
 """
 
 from workbench.models.base import ModelInterface

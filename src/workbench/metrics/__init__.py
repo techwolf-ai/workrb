@@ -1,5 +1,5 @@
 """
-Metrics and evaluation utilities for WorkBench.
+Metrics and evaluation utilities for WTEB.
 """
 
 from .classification import calculate_classification_metrics

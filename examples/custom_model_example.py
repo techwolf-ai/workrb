@@ -2,7 +2,7 @@
 Custom Model Example - Creating a Custom Model.
 
 This example demonstrates how to create a custom model that can be used
-with the WorkBench framework. Custom models should inherit from wb.models.ModelInterface
+with the WTEB framework. Custom models should inherit from wb.models.ModelInterface
 and implement the required abstract methods.
 """
 
@@ -17,7 +17,7 @@ from workbench.registry import register_model
 @register_model()
 class MyCustomModel(wb.models.ModelInterface):
     """
-    Example custom model for demonstrating the extensibility of WorkBench.
+    Example custom model for demonstrating the extensibility of WTEB.
 
     This model shows how to:
     1. Inherit from ModelInterface
@@ -151,7 +151,7 @@ if __name__ == "__main__":
     ]
 
     # 3. Create benchmark
-    benchmark = wb.WorkBench(tasks)
+    benchmark = wb.WTEB(tasks)
 
     # 4. Run the benchmark
     print("\nRunning benchmark with custom model...")

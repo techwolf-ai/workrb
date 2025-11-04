@@ -1,5 +1,5 @@
 """
-Main WorkBench class for evaluating models on benchmark tasks.
+Main WTEB class for evaluating models on benchmark tasks.
 """
 
 import json
@@ -27,9 +27,9 @@ logger = logging.getLogger(__name__)
 setup_logger(__name__, verbose=False)
 
 
-class WorkBench:
+class WTEB:
     """
-    Main WorkBench class for evaluating models on benchmark tasks.
+    Main WTEB class for evaluating models on benchmark tasks.
 
     Supports both simple single-model evaluation and advanced features like
     checkpointing, resuming, and efficient multi-model evaluation.
@@ -37,7 +37,7 @@ class WorkBench:
 
     def __init__(self, tasks: Sequence[Task]):
         """
-        Initialize WorkBench with tasks to evaluate.
+        Initialize WTEB with tasks to evaluate.
 
         Args:
             tasks: List of Task instances to run evaluation on
@@ -234,7 +234,7 @@ class WorkBench:
             logger.info("All work already completed!")
             return results
 
-        logger.info(f"Running WorkBench for model: {model.name}")
+        logger.info(f"Running WTEB for model: {model.name}")
         logger.info(self.get_tasks_overview())
         logger.info(f"{'=' * 60}")
         logger.info(
@@ -270,7 +270,7 @@ class WorkBench:
         config.save_final_result_artifacts(results)
 
         logger.info(f"{'=' * 60}")
-        logger.info("✓ WorkBench COMPLETE")
+        logger.info("✓ WTEB COMPLETE")
         logger.info(f"Total time: {results.metadata.total_evaluation_time:.2f}s")
         logger.info(
             format_results(
