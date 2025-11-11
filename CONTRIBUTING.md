@@ -579,7 +579,7 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
 - **🐛 Bug reports**: [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
 - **💡 Feature requests**: [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
 <!-- - **💬 Questions**: [GitHub Discussions](https://github.com/techwolf-ai/workrb/discussions) -->
-- **📧 Email**: For private matters, contact the maintainers
+- **📧 Email**: For other matters, directly contact the maintainers: workrb@techwolf.ai
 
 ---
 
