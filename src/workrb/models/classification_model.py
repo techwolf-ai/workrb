@@ -9,7 +9,6 @@ import logging
 import torch
 from sentence_transformers import SentenceTransformer
 from torch import nn
-
 from wteb.data.esco import ESCO
 from wteb.models.base import ModelInterface
 from wteb.registry import register_model

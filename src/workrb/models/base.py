@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 
 import torch
-
 from wteb.types import ModelInputType
 
 

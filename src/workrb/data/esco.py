@@ -11,7 +11,6 @@ import appdirs
 import pandas as pd
 import requests
 from tqdm import tqdm
-
 from wteb.types import Language
 
 logger = logging.getLogger(__name__)

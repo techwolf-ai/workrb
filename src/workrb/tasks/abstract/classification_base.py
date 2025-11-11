@@ -21,7 +21,6 @@ from wteb.types import ModelInputType
 
 if TYPE_CHECKING:
     import torch
-
     from wteb.models.base import ModelInterface
 
 logger = logging.getLogger(__name__)

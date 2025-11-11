@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-
 from wteb.results import BenchmarkResults
 from wteb.tasks.abstract import Task
 

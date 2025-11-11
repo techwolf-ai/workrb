@@ -24,11 +24,11 @@ import sys
 from pathlib import Path
 
 import pytest
-
 import wteb
-from tests.test_utils import create_toy_task_class
 from wteb.tasks import SkillMatch1kSkillSimilarityRanking
 from wteb.tasks.abstract.base import Language
+
+from tests.test_utils import create_toy_task_class
 
 
 def verify_checkpoint(checkpoint_path: Path, expected_completed: int, total_tasks: int):
