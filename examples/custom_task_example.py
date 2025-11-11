@@ -2,7 +2,7 @@
 Custom Task Example - Creating a Custom Ranking Task
 
 This example demonstrates how to create a custom ranking task that can be used
-with the WTEB framework. Custom tasks should inherit from workrb.tasks.RankingTask
+with the WorkRB framework. Custom tasks should inherit from workrb.tasks.RankingTask
 and implement the required abstract methods.
 """
 
@@ -15,7 +15,7 @@ from workrb.types import ModelInputType
 @register_task()
 class MyCustomRankingTask(workrb.tasks.RankingTask):
     """
-    Example custom ranking task for demonstrating the extensibility of WTEB.
+    Example custom ranking task for demonstrating the extensibility of WorkRB.
 
     This task shows how to:
     1. Inherit from RankingTask
@@ -41,7 +41,7 @@ class MyCustomRankingTask(workrb.tasks.RankingTask):
     @property
     def description(self) -> str:
         """Return a description of this task."""
-        return "A custom ranking task that demonstrates WTEB extensibility"
+        return "A custom ranking task that demonstrates WorkRB extensibility"
 
     @property
     def query_input_type(self) -> ModelInputType:

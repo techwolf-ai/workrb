@@ -2,7 +2,7 @@
 Custom Model Example - Creating a Custom Model.
 
 This example demonstrates how to create a custom model that can be used
-with the WTEB framework. Custom models should inherit from workrb.models.ModelInterface
+with the WorkRB framework. Custom models should inherit from workrb.models.ModelInterface
 and implement the required abstract methods.
 """
 
@@ -17,7 +17,7 @@ from workrb.types import ModelInputType
 @register_model()
 class MyCustomModel(ModelInterface):
     """
-    Example custom model for demonstrating the extensibility of WTEB.
+    Example custom model for demonstrating the extensibility of WorkRB.
 
     This model shows how to:
     1. Inherit from ModelInterface
@@ -53,7 +53,7 @@ class MyCustomModel(ModelInterface):
 
     def description(self) -> str:
         """Return the description of this model."""
-        return "A custom model that demonstrates WTEB extensibility"
+        return "A custom model that demonstrates WorkRB extensibility"
 
     def _compute_rankings(
         self,

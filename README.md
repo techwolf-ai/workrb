@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛠️ WTEB
+# 🛠️ WorkRB
 
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
@@ -20,7 +20,7 @@
 
 </div>
 
-**WTEB** is an open-source library to *benchmark embedding models in the work domain*. 
+**WorkRB** is an open-source library to *benchmark embedding models in the work domain*. 
 It provides a standardized framework that is easy to use and community-driven, scaling evaluation over a wide range of state-of-the-art tasks and models.
 
 ## Features
@@ -57,7 +57,7 @@ print(results)
 ## Installation
 *Note: PyPI installation is WIP, for now follow the [dev setup]().*
 
-Install WTEB simply via pip. 
+Install WorkRB simply via pip. 
 ```bash
 pip install workrb
 ```
@@ -105,7 +105,7 @@ Feel free to make a PR to add your models & tasks to the official package! See [
 
 ### Checkpointing & Resuming
 
-WTEB automatically saves result checkpoints after each task completion in a specific language.
+WorkRB automatically saves result checkpoints after each task completion in a specific language.
 
 **Automatic Resuming** - Simply rerun with the same `output_folder`:
 
@@ -140,7 +140,7 @@ results = workrb.evaluate(model, tasks, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
 
-❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WTEB initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
+❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WorkRB initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
 ```python
 results = workrb.evaluate(model, tasks, output_folder="results/my_model", force_restart=True)
 ```
@@ -252,7 +252,7 @@ pre-commit install --install-hooks
 
 <!-- ## Citation
 
-If you use WTEB in your research, please cite:
+If you use WorkRB in your research, please cite:
 
 ```bibtex
 UWE-PLACEHOLDER

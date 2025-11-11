@@ -1,5 +1,5 @@
 """
-Simple WTEB Example - Basic Usage
+Simple WorkRB Example - Basic Usage
 
 This minimal example demonstrates:
 1. Setting up a model and task
@@ -17,6 +17,6 @@ if __name__ == "__main__":
         model,
         tasks,
         output_folder="results/demo",
-        description="WTEB demo",
+        description="WorkRB demo",
         force_restart=True,
     )

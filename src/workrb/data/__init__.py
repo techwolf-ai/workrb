@@ -1,5 +1,5 @@
 """
-Simplified data management for WTEB.
+Simplified data management for WorkRB.
 
 This module provides:
 - ESCODataManager: Handles ESCO data downloads and caching

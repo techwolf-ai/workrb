@@ -1,5 +1,5 @@
 """
-Model interfaces and implementations for WTEB.
+Model interfaces and implementations for WorkRB.
 """
 
 from workrb.models.base import ModelInterface

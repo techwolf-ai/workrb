@@ -231,25 +231,25 @@ class TestTaskRegistryConfigIntegration:
             create_task_from_config(config)
 
 
-class TestWTEBRegistryIntegration:
-    """Test WTEB integration with task registry."""
+class TestWorkRBRegistryIntegration:
+    """Test WorkRB integration with task registry."""
 
     def setup_method(self):
         """Clear registry before each test."""
         TaskRegistry._registry.clear()
 
     def test_workrb_list_available_tasks(self):
-        """Test WTEB.list_available_tasks() method."""
+        """Test WorkRB.list_available_tasks() method."""
 
         @register_task()
-        class WTEBTestTask(BaseTestTask):
+        class WorkRBTestTask(BaseTestTask):
             pass
 
         available_tasks = workrb.list_available_tasks()
 
-        assert "WTEBTestTask" in available_tasks
+        assert "WorkRBTestTask" in available_tasks
         assert isinstance(available_tasks, dict)
-        assert available_tasks["WTEBTestTask"].endswith("WTEBTestTask")
+        assert available_tasks["WorkRBTestTask"].endswith("WorkRBTestTask")
 
     def _get_task_names(self, available_tasks: dict[str, str]) -> list[str]:
         task_names = []
@@ -282,21 +282,21 @@ class TestWTEBRegistryIntegration:
 
         # Different registry keys but same .name property
         @register_task("Task1")  # Different registry key
-        class WTEBTestTask1(BaseTestTask):
+        class WorkRBTestTask1(BaseTestTask):
             @property
             def name(self) -> str:
-                return "WTEBTestTask"  # Same .name property
+                return "WorkRBTestTask"  # Same .name property
 
         @register_task("Task2")  # Different registry key
-        class WTEBTestTask2(BaseTestTask):
+        class WorkRBTestTask2(BaseTestTask):
             @property
             def name(self) -> str:
-                return "WTEBTestTask"  # Same .name property
+                return "WorkRBTestTask"  # Same .name property
 
         available_tasks = workrb.list_available_tasks()
         task_names = self._get_task_names(available_tasks)
         assert len(task_names) - len(set(task_names)) == 1, (
-            f"Should have found one duplicate task name 'WTEBTestTask', got {len(task_names) - len(set(task_names))}"
+            f"Should have found one duplicate task name 'WorkRBTestTask', got {len(task_names) - len(set(task_names))}"
         )
 
 
