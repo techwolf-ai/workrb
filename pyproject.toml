@@ -7,7 +7,7 @@ packages = ["src/workrb"]
 
 [project]
 name = "workrb"
-version = "0.0.0"
+version = "0.1.0"
 description = "Perform easy inference on a range of work-related tasks."
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
