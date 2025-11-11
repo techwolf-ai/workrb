@@ -15,8 +15,9 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from wteb.results import BenchmarkResults
-from wteb.tasks.abstract import Task
+
+from workrb.results import BenchmarkResults
+from workrb.tasks.abstract import Task
 
 logger = logging.getLogger(__name__)
 

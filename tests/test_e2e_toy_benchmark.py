@@ -14,13 +14,11 @@ Usage:
 import sys
 import time
 
-import wteb
-from wteb.registry import TaskRegistry
-from wteb.tasks.abstract.base import Language, Task
-from wteb.tasks.abstract.classification_base import ClassificationTask
-from wteb.tasks.abstract.ranking_base import RankingTask
-
 from tests.test_utils import create_toy_task_class
+from workrb.registry import TaskRegistry
+from workrb.tasks.abstract.base import Language, Task
+from workrb.tasks.abstract.classification_base import ClassificationTask
+from workrb.tasks.abstract.ranking_base import RankingTask
 
 
 def get_all_tasks(split: str = "val", languages: list[str] | None = None) -> list[Task]:

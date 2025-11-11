@@ -2,16 +2,16 @@
 Custom Model Example - Creating a Custom Model.
 
 This example demonstrates how to create a custom model that can be used
-with the WTEB framework. Custom models should inherit from wteb.models.ModelInterface
+with the WTEB framework. Custom models should inherit from workrb.models.ModelInterface
 and implement the required abstract methods.
 """
 
 import torch
-import wteb
 from sentence_transformers import SentenceTransformer
-from wteb.models.base import ModelInterface
-from wteb.registry import register_model
-from wteb.types import ModelInputType
+
+from workrb.models.base import ModelInterface
+from workrb.registry import register_model
+from workrb.types import ModelInputType
 
 
 @register_model()

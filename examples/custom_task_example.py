@@ -2,15 +2,14 @@
 Custom Task Example - Creating a Custom Ranking Task
 
 This example demonstrates how to create a custom ranking task that can be used
-with the WTEB framework. Custom tasks should inherit from wteb.tasks.RankingTask
+with the WTEB framework. Custom tasks should inherit from workrb.tasks.RankingTask
 and implement the required abstract methods.
 """
 
-import wteb
-from wteb.registry import register_task
-from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language
-from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
-from wteb.types import ModelInputType
+from workrb.registry import register_task
+from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
+from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
+from workrb.types import ModelInputType
 
 
 @register_task()

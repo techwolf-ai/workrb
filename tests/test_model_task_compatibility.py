@@ -11,12 +11,12 @@ This test suite validates that:
 import math
 
 import pytest
-from wteb.models import BiEncoderModel, RndESCOClassificationModel
-from wteb.tasks import ESCOJob2SkillClassification, SkillMatch1kSkillSimilarityRanking
-from wteb.tasks.abstract.base import Language
-from wteb.tasks.abstract.classification_base import ClassificationDataset
 
 from tests.test_utils import create_toy_task_class
+from workrb.models import BiEncoderModel, RndESCOClassificationModel
+from workrb.tasks import ESCOJob2SkillClassification, SkillMatch1kSkillSimilarityRanking
+from workrb.tasks.abstract.base import Language
+from workrb.tasks.abstract.classification_base import ClassificationDataset
 
 
 def is_valid_metric(value: float) -> bool:

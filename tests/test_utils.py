@@ -8,9 +8,9 @@ This module provides common utilities for testing, including:
 
 from typing import Any
 
-from wteb.tasks.abstract.base import DatasetSplit, LabelType, Language, Task, TaskType
-from wteb.tasks.abstract.classification_base import ClassificationDataset, ClassificationTask
-from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language, Task, TaskType
+from workrb.tasks.abstract.classification_base import ClassificationDataset, ClassificationTask
+from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
 
 
 class GeneralRankingTestTask(Task):

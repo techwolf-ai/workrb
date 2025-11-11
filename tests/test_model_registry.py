@@ -1,7 +1,8 @@
 """Test task registry system functionality."""
 
 import pytest
-from wteb.registry import (
+
+from workrb.registry import (
     ModelRegistry,
     register_model,
 )
@@ -16,7 +17,7 @@ class TestModelRegistry:
 
     def test_register_model_decorator_basic(self):
         """Test basic model registration with decorator."""
-        from wteb.models.base import ModelInterface
+        from workrb.models.base import ModelInterface
 
         @register_model()
         class TestModel(ModelInterface):
@@ -39,7 +40,7 @@ class TestModelRegistry:
 
     def test_register_model_decorator_custom_name(self):
         """Test model registration with custom name."""
-        from wteb.models.base import ModelInterface
+        from workrb.models.base import ModelInterface
 
         @register_model("CustomModelName")
         class AnotherTestModel(ModelInterface):
@@ -71,7 +72,7 @@ class TestModelRegistry:
 
     def test_registry_get_existing_model(self):
         """Test getting an existing model from registry."""
-        from wteb.models.base import ModelInterface
+        from workrb.models.base import ModelInterface
 
         @register_model()
         class GetTestModel(ModelInterface):
@@ -98,7 +99,7 @@ class TestModelRegistry:
 
     def test_register_duplicate_model_name_raises_error(self):
         """Test that registering duplicate model names raises ValueError."""
-        from wteb.models.base import ModelInterface
+        from workrb.models.base import ModelInterface
 
         @register_model("DuplicateModel")
         class FirstModel(ModelInterface):
@@ -137,7 +138,7 @@ class TestModelRegistry:
 
     def test_register_same_model_class_twice_succeeds(self):
         """Test that re-registering the same model class is allowed (e.g., during re-import)."""
-        from wteb.models.base import ModelInterface
+        from workrb.models.base import ModelInterface
 
         @register_model("ReimportModel")
         class ReimportModel(ModelInterface):
@@ -162,7 +163,7 @@ class TestModelRegistry:
 
     def test_registry_list_available(self):
         """Test listing available models."""
-        from wteb.models.base import ModelInterface
+        from workrb.models.base import ModelInterface
 
         @register_model()
         class ListTestModel1(ModelInterface):

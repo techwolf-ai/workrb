@@ -77,7 +77,7 @@ class TaskRegistry:
     def auto_discover(cls):
         """Automatically import all task modules to trigger registration."""
         # Import all submodules in tasks package to trigger registration
-        import wteb.tasks as tasks_package
+        import workrb.tasks as tasks_package
 
         for importer, modname, ispkg in pkgutil.walk_packages(
             tasks_package.__path__, tasks_package.__name__ + "."

@@ -6,8 +6,8 @@ This module provides:
 - utils: Simple utilities for loading local data files
 """
 
-from wteb.data.esco import ESCO
-from wteb.types import ModelInputType
+from workrb.data.esco import ESCO
+from workrb.types import ModelInputType
 
 __all__ = [
     "ESCO",

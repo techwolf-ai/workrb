@@ -1,7 +1,7 @@
 """Test basic import functionality."""
 
-from wteb.config import BenchmarkConfig
-from wteb.tasks import (
+from workrb.config import BenchmarkConfig
+from workrb.tasks import (
     ESCOJob2SkillClassification,
     ESCOJob2SkillRanking,
     ESCOSkill2JobRanking,

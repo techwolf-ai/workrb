@@ -167,10 +167,10 @@ For a full example, see also [examples/custom_task_example.py](examples/custom_t
 ```python
 # src/wteb/tasks/ranking/my_task.py
 
-from wteb.types import ModelInputType
-from wteb.registry import register_task
-from wteb.tasks.abstract.base import DatasetSplit, Language
-from wteb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+from workrb.types import ModelInputType
+from workrb.registry import register_task
+from workrb.tasks.abstract.base import DatasetSplit, Language
+from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
 
 
 @register_task()
@@ -253,8 +253,8 @@ Create `tests/test_my_task.py`:
 
 ```python
 import pytest
-import wteb
-from wteb.tasks.abstract.base import Language
+import workrb
+from workrb.tasks.abstract.base import Language
 
 
 def test_my_custom_task_loads():
@@ -301,9 +301,9 @@ Create a new file in `src/wteb/models/`:
 import torch
 from sentence_transformers import SentenceTransformer
 
-from wteb.types import ModelInputType
-from wteb.models.base import ModelInterface
-from wteb.registry import register_model
+from workrb.types import ModelInputType
+from workrb.models.base import ModelInterface
+from workrb.registry import register_model
 
 
 @register_model()
@@ -425,7 +425,7 @@ __all__ = [
 # tests/test_my_model.py
 
 import pytest
-import wteb
+import workrb
 
 
 def test_my_model_initialization():
@@ -437,7 +437,7 @@ def test_my_model_initialization():
 def test_my_model_ranking():
     """Test ranking computation"""
     model = wteb.models.MyCustomModel("all-MiniLM-L6-v2")
-    from wteb.types import ModelInputType
+    from workrb.types import ModelInputType
     
     queries = ["Software Engineer", "Data Scientist"]
     targets = ["Python", "Machine Learning", "SQL"]

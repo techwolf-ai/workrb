@@ -2,9 +2,9 @@
 Model interfaces and implementations for WTEB.
 """
 
-from wteb.models.base import ModelInterface
-from wteb.models.bi_encoder import BiEncoderModel, JobBERTModel
-from wteb.models.classification_model import RndESCOClassificationModel
+from workrb.models.base import ModelInterface
+from workrb.models.bi_encoder import BiEncoderModel, JobBERTModel
+from workrb.models.classification_model import RndESCOClassificationModel
 
 __all__ = [
     "BiEncoderModel",
