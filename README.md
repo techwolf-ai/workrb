@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🛠️ WorkRB
+# 🐝 WorkRB: Work Research Benchmark
 
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
@@ -18,18 +18,22 @@
     <p>
 </h4>
 
+
+
 </div>
 
-**WorkRB** is an open-source library to *benchmark embedding models in the work domain*. 
-It provides a standardized framework that is easy to use and community-driven, scaling evaluation over a wide range of state-of-the-art tasks and models.
+**WorkRB** (~pronounced worker bee) is an open-source evaluation toolbox for *benchmarking AI models in the work research domain*. 
+It provides a standardized framework that is easy to use and community-driven, scaling evaluation over a wide range of tasks, ontologies, and models.
 
 ## Features
 
-- 🧪 **7+ benchmark tasks** — Evaluate models on job–skill matching, normalization, extraction, and similarity
-- 🌍 **Dynamic Multilinguality** — Test tasks dynamically across 27+ EU languages via ESCO ontologies
+- 🐝 **One Buzzing Work Toolkit** — Easily download & access ontologies, datasets, and  baselines in a single toolkit
+- 🧪 **Extensive tasks** — Evaluate models on job–skill matching, normalization, extraction, and similarity
+- 🌍 **Dynamic Multilinguality** — Evaluate over languages driven by  multilingual ontologies
+- 🏁 **Ready-to-go Baselines** — Leverage provided baseline models for comparison
 - 🧩 **Extensible design** — Add your custom tasks and models with simple interfaces
-- 📊 **Standardized metrics** — Measure unified metrics over ranking and classification tasks
-- 🔄 **Automatic checkpointing** — Resume interrupted or partial benchmarks seamlessly
+<!-- - 📊 **Standardized evaluation** — Measure unified metrics over ranking and classification tasks -->
+<!-- - 🔄 **Automatic checkpointing** — Resume interrupted or partial benchmarks seamlessly -->
 
 ## Example Usage
 
@@ -55,8 +59,6 @@ print(results)
 ```
 
 ## Installation
-*Note: PyPI installation is WIP, for now follow the [dev setup]().*
-
 Install WorkRB simply via pip. 
 ```bash
 pip install workrb
