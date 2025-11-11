@@ -69,34 +69,10 @@ We welcome contributions of all kinds:
 
 Before starting any significant work (new feature, task, model, or refactor), please open a proposal issue first. This helps us align on scope and approach before you invest time in an implementation.
 
-- Open an issue at `https://github.com/techwolf-ai/workrb/issues` describing your proposal
+- Open an issue at `https://github.com/techwolf-ai/workrb/issues` describing your proposal. Select the 'Feature Request' template to provide additional context.
 - Maintainers will triage and respond in the issue with feedback and next steps
-- Once there’s agreement on the direction, proceed with a Pull Request referencing the issue
-
-Issue template (copy/paste into a new issue):
-
-```markdown
-## Proposal Summary
-One-sentence goal and motivation.
-
-## Problem Statement
-What problem or limitation does this address? Who is impacted?
-
-## Proposed Changes
-- High-level approach
-- Affected areas (files/modules/APIs)
-- Alternatives considered
-
-## Impact
-- Backward compatibility: yes/no (explain)
-- Performance implications
-
-## Test Plan (optional)
-How will this be tested and validated?
-
-## Additional Context
-Links to related issues/PRs/docs.
-```
+- Once there’s agreement on the direction, proceed to the implementation 
+with a Pull Request referencing the issue
 
 ### 2. Start implementing (local)
 Project: 
@@ -118,22 +94,16 @@ Make a pull request (PR) from your fork into the main branch of WorkRB, followin
    git push origin feature/my-new-feature
    ```
 
-2. **Open a Pull Request** on GitHub with: 
+2. **Open a Pull Request** to `main` branch on WorkRB's GitHub with: 
     - A clear title describing the change
+    - Link to the issue by using hashtag identifier (e.g. #123 will refer to issue 123)
     - Filling in the following template:
 
         ```markdown
         ## Description
         - Description of what changed and why
-        - References to any related issues
+        - References to any related issues (use #)
         - Screenshots/examples if relevant
-        
-        ## Type of Change
-        - [ ] Bug fix
-        - [ ] New Task
-        - [ ] New Model
-        - [ ] New Metric
-        - [ ] Performance improvement
         
         ## Checklist
         - [ ] Added new tests for new functionality
@@ -324,10 +294,16 @@ class MyCustomModel(ModelInterface):
         self.model = SentenceTransformer(model_name_or_path)
         self.model_name_or_path = model_name_or_path
     
+    @property
     def name(self) -> str:
         """Return model name for tracking/logging"""
         return f"MyCustomModel-{self.model_name_or_path}"
     
+    @property
+    def description(self) -> str:
+        """Add description for your model."""
+        return f"MyCustomModel is BiEncoder based on..."
+
     def _compute_rankings(
         self,
         queries: list[str],
@@ -576,10 +552,10 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
 
 ## Questions & Support
 
-- **🐛 Bug reports**: [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
-- **💡 Feature requests**: [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
+- **🐛 Bug reports**: For problems and bugs, use [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
+- **💡 Feature requests**: For new ideas or additions, use [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
 <!-- - **💬 Questions**: [GitHub Discussions](https://github.com/techwolf-ai/workrb/discussions) -->
-- **📧 Email**: For other matters, directly contact the maintainers: workrb@techwolf.ai
+- **📧 Email**: For other matters, contact maintainers: workrb@techwolf.ai
 
 ---
 
