@@ -5,8 +5,9 @@
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
 [![syntax checking](https://github.com/techwolf-ai/workrb/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workrb/actions/workflows/test.yml)
-[![GitHub release](https://img.shields.io/github/release/techwolf-ai/workrb-toolkit.svg)](https://github.com/techwolf-ai/workrb/releases)
-[![License](https://img.shields.io/github/license/techwolf-ai/workrb.svg?color=green)](https://github.com/techwolf-ai/workrb/blob/main/LICENSE)
+[![GitHub release](https://img.shields.io/github/v/release/techwolf-ai/workrb.svg)](https://github.com/techwolf-ai/workrb/releases)
+[![License](https://img.shields.io/github/license/techwolf-ai/workrb
+)](https://github.com/techwolf-ai/workrb/blob/main/LICENSE)
 
 
 <h4>
