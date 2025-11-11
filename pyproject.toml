@@ -8,10 +8,10 @@ packages = ["src/workrb"]
 [project]
 name = "workrb"
 version = "0.1.0"
-description = "Perform easy inference on a range of work-related tasks."
+description = "WorkRB: Work Research Benchmark. Easy benchmarking of AI progress in the work domain."
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
-license = { text = "MIT" }
+license = { text = "Apache 2.0" }
 authors = [
     { name = "TechWolf Research Team" },
     { name = "Matthias De Lange", email = "matthias.delange@techwolf.ai" },
@@ -25,10 +25,9 @@ keywords = [
     "machine-learning",
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Text Processing :: Linguistic",
