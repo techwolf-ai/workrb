@@ -34,7 +34,7 @@ It provides a standardized framework that is easy to use and community-driven, s
 ## Example Usage
 
 ```python
-import wteb
+import workrb
 
 # 1. Initialize a model
 model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
@@ -78,9 +78,9 @@ Add your custom task or model by (1) inheriting from a predefined base class and
 - **Custom models**: Inherit from `ModelInterface`. Implement the abstract methods. Register via `@register_model()`.
 
 ```python
-from wteb.tasks.abstract.ranking_base import RankingTask
-from wteb.models.base import ModelInterface
-from wteb.registry import register_task, register_model
+from workrb.tasks.abstract.ranking_base import RankingTask
+from workrb.models.base import ModelInterface
+from workrb.registry import register_task, register_model
 
 @register_task()
 class MyCustomTask(RankingTask):

@@ -7,8 +7,6 @@ This minimal example demonstrates:
 3. Resuming from checkpoint (optional)
 """
 
-import wteb
-
 if __name__ == "__main__":
     # 1. Setup model and tasks
     model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")

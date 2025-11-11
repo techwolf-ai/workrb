@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Literal, final
 
-from wteb.types import DatasetSplit, LabelType, Language
+from workrb.types import DatasetSplit, LabelType, Language
 
 logger = logging.getLogger(__name__)
 

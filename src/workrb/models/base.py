@@ -3,7 +3,8 @@
 from abc import ABC, abstractmethod
 
 import torch
-from wteb.types import ModelInputType
+
+from workrb.types import ModelInputType
 
 
 class ModelInterface(ABC):

@@ -9,11 +9,12 @@ import logging
 import torch
 from sentence_transformers import SentenceTransformer
 from torch import nn
-from wteb.data.esco import ESCO
-from wteb.models.base import ModelInterface
-from wteb.registry import register_model
-from wteb.tasks.abstract.base import Language
-from wteb.types import ModelInputType
+
+from workrb.data.esco import ESCO
+from workrb.models.base import ModelInterface
+from workrb.registry import register_model
+from workrb.tasks.abstract.base import Language
+from workrb.types import ModelInputType
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +29,7 @@ class RndESCOClassificationModel(ModelInterface):
     ensuring predictions align correctly with task labels during evaluation.
 
     Example usage:
-        >>> from wteb.types import ModelInputType
+        >>> from workrb.types import ModelInputType
         >>> texts = ["Job title 1", "Job title 2", "Job title 3"]
         >>> model = RndESCOClassificationModel()
         >>> label_space = model.classification_label_space
