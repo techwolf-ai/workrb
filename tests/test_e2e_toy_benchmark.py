@@ -14,6 +14,7 @@ Usage:
 import sys
 import time
 
+import workrb
 from tests.test_utils import create_toy_task_class
 from workrb.registry import TaskRegistry
 from workrb.tasks.abstract.base import Language, Task
@@ -37,7 +38,7 @@ def get_all_tasks(split: str = "val", languages: list[str] | None = None) -> lis
         languages = ["en"]
 
     # Discover all available tasks
-    available_tasks = wteb.list_available_tasks()
+    available_tasks = workrb.list_available_tasks()
 
     print(f"\n🔍 Discovered {len(available_tasks)} registered tasks")
 
@@ -122,7 +123,7 @@ def test_e2e_toy_benchmark():
 
     # Create model (BiEncoder now supports both ranking and classification)
     print("\n🤖 Initializing model...")
-    model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
+    model = workrb.models.BiEncoderModel("all-MiniLM-L6-v2")
     print("✓ Model initialized")
 
     # BiEncoder supports both ranking and classification tasks
@@ -135,7 +136,7 @@ def test_e2e_toy_benchmark():
     start_time = time.time()
 
     # Run benchmark
-    results = wteb.evaluate(
+    results = workrb.evaluate(
         model,
         tasks,
         output_folder="tmp/toy_benchmark_test",

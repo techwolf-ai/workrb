@@ -17,7 +17,7 @@ Thank you for your interest in contributing to WTEB! We're building a community-
 
 We welcome contributions of all kinds:
 
-- **🐛 Report bugs** – Found an issue? Let us know in [GitHub Issues](https://github.com/techwolf-ai/wteb/issues)
+- **🐛 Report bugs** – Found an issue? Let us know in [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
 - **📊 Add new tasks** – Extend WTEB with new evaluation tasks
 - **🤖 Add new models** – Implement state-of-the-art models or baselines
 - **📈 Add new metrics** – Contribute evaluation metrics relevant to the work domain
@@ -35,8 +35,8 @@ We welcome contributions of all kinds:
 
 1. **Fork and clone the repository:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/wteb.git
-   cd wteb
+   git clone https://github.com/YOUR_USERNAME/workrb.git
+   cd workrb
    ```
 
 2. **Install dependencies:**
@@ -69,7 +69,7 @@ We welcome contributions of all kinds:
 
 Before starting any significant work (new feature, task, model, or refactor), please open a proposal issue first. This helps us align on scope and approach before you invest time in an implementation.
 
-- Open an issue at `https://github.com/techwolf-ai/wteb/issues` describing your proposal
+- Open an issue at `https://github.com/techwolf-ai/workrb/issues` describing your proposal
 - Maintainers will triage and respond in the issue with feedback and next steps
 - Once there’s agreement on the direction, proceed with a Pull Request referencing the issue
 
@@ -156,16 +156,16 @@ Tasks are the core evaluation units in WTEB. Follow these steps to add a new tas
 
 ### Step 1: Choose the Task Type
 
-- **RankingTask** in [src/wteb/tasks/abstract/ranking_base.py](src/wteb/tasks/abstract/ranking_base.py)
-- **ClassificationTask** in [src/wteb/tasks/abstract/classification_base.py](src/wteb/tasks/abstract/classification_base.py)
+- **RankingTask** in [src/workrb/tasks/abstract/ranking_base.py](src/workrb/tasks/abstract/ranking_base.py)
+- **ClassificationTask** in [src/workrb/tasks/abstract/classification_base.py](src/workrb/tasks/abstract/classification_base.py)
 
 ### Step 2: Create Your Task Class
 
-Create a new file in `src/wteb/tasks/ranking/` or `src/wteb/tasks/classification/` based on the task type. 
+Create a new file in `src/workrb/tasks/ranking/` or `src/workrb/tasks/classification/` based on the task type. 
 For a full example, see also [examples/custom_task_example.py](examples/custom_task_example.py).
 
 ```python
-# src/wteb/tasks/ranking/my_task.py
+# src/workrb/tasks/ranking/my_task.py
 
 from workrb.types import ModelInputType
 from workrb.registry import register_task
@@ -236,7 +236,7 @@ class MyCustomRankingTask(RankingTask):
 
 ### Step 3: Add to Module Exports
 
-Update `src/wteb/tasks/__init__.py`:
+Update `src/workrb/tasks/__init__.py`:
 
 ```python
 from .ranking.my_task import MyCustomRankingTask
@@ -259,7 +259,7 @@ from workrb.tasks.abstract.base import Language
 
 def test_my_custom_task_loads():
     """Test that task loads without errors"""
-    task = wteb.tasks.MyCustomRankingTask(split="val", languages=["en"])
+    task = workrb.tasks.MyCustomRankingTask(split="val", languages=["en"])
     dataset = task.lang_datasets[Language.EN]
     
     assert len(dataset.query_texts) > 0
@@ -293,10 +293,10 @@ Models in WTEB implement the `ModelInterface` for unified evaluation.
 
 ### Step 1: Implement ModelInterface
 
-Create a new file in `src/wteb/models/`:
+Create a new file in `src/workrb/models/`:
 
 ```python
-# src/wteb/models/my_model.py
+# src/workrb/models/my_model.py
 
 import torch
 from sentence_transformers import SentenceTransformer
@@ -408,7 +408,7 @@ class MyCustomModel(ModelInterface):
 
 ### Step 2: Add to Module Exports
 
-Update `src/wteb/models/__init__.py`:
+Update `src/workrb/models/__init__.py`:
 
 ```python
 from .my_model import MyCustomModel
@@ -430,13 +430,13 @@ import workrb
 
 def test_my_model_initialization():
     """Test model initialization"""
-    model = wteb.models.MyCustomModel("all-MiniLM-L6-v2")
+    model = workrb.models.MyCustomModel("all-MiniLM-L6-v2")
     assert model.name is not None
 
 
 def test_my_model_ranking():
     """Test ranking computation"""
-    model = wteb.models.MyCustomModel("all-MiniLM-L6-v2")
+    model = workrb.models.MyCustomModel("all-MiniLM-L6-v2")
     from workrb.types import ModelInputType
     
     queries = ["Software Engineer", "Data Scientist"]
@@ -462,7 +462,7 @@ To add new evaluation metrics:
 
 ### Step 1: Implement Metric Function
 
-Add to `src/wteb/metrics/ranking.py` or `classification.py`:
+Add to `src/workrb/metrics/ranking.py` or `classification.py`:
 
 ```python
 def my_custom_metric(
@@ -576,9 +576,9 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
 
 ## Questions & Support
 
-- **🐛 Bug reports**: [GitHub Issues](https://github.com/techwolf-ai/wteb/issues)
-- **💡 Feature requests**: [GitHub Issues](https://github.com/techwolf-ai/wteb/issues)
-<!-- - **💬 Questions**: [GitHub Discussions](https://github.com/techwolf-ai/wteb/discussions) -->
+- **🐛 Bug reports**: [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
+- **💡 Feature requests**: [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
+<!-- - **💬 Questions**: [GitHub Discussions](https://github.com/techwolf-ai/workrb/discussions) -->
 - **📧 Email**: For private matters, contact the maintainers
 
 ---

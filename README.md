@@ -4,9 +4,9 @@
 
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
-[![syntax checking](https://github.com/techwolf-ai/wteb/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/wteb/actions/workflows/test.yml)
-[![GitHub release](https://img.shields.io/github/release/techwolf-ai/wteb-toolkit.svg)](https://github.com/techwolf-ai/wteb/releases)
-[![License](https://img.shields.io/github/license/techwolf-ai/wteb.svg?color=green)](https://github.com/techwolf-ai/wteb/blob/main/LICENSE)
+[![syntax checking](https://github.com/techwolf-ai/workrb/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workrb/actions/workflows/test.yml)
+[![GitHub release](https://img.shields.io/github/release/techwolf-ai/workrb-toolkit.svg)](https://github.com/techwolf-ai/workrb/releases)
+[![License](https://img.shields.io/github/license/techwolf-ai/workrb.svg?color=green)](https://github.com/techwolf-ai/workrb/blob/main/LICENSE)
 
 <h4>
     <p>
@@ -37,16 +37,16 @@ It provides a standardized framework that is easy to use and community-driven, s
 import workrb
 
 # 1. Initialize a model
-model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
+model = workrb.models.BiEncoderModel("all-MiniLM-L6-v2")
 
 # 2. Select (multilingual) tasks to evaluate
 tasks = [
-    wteb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
-    wteb.tasks.ESCOSkillNormRanking(split="val", languages=["de", "fr"])
+    workrb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
+    workrb.tasks.ESCOSkillNormRanking(split="val", languages=["de", "fr"])
 ]
 
 # 3. Run benchmark & view results
-results = wteb.evaluate(
+results = workrb.evaluate(
     model,
     tasks,
     output_folder="results/my_model",
@@ -59,7 +59,7 @@ print(results)
 
 Install WTEB simply via pip. 
 ```bash
-pip install wteb
+pip install workrb
 ```
 **Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
@@ -94,7 +94,7 @@ class MyCustomModel(ModelInterface):
     ...
 
 # Use your custom model and task:
-model_results = wteb.evaluate(MyCustomModel(),[MyCustomTask()])
+model_results = workrb.evaluate(MyCustomModel(),[MyCustomTask()])
 ```
 
 **For detailed examples**, see:
@@ -112,16 +112,16 @@ WTEB automatically saves result checkpoints after each task completion in a spec
 ```python
 # Run 1: Gets interrupted after 2 tasks
 tasks = [
-    wteb.tasks.ESCOJob2SkillRanking(
+    workrb.tasks.ESCOJob2SkillRanking(
         split="val", 
         languages=["en"],
     )
 ]
 
-results = wteb.evaluate(model, tasks, output_folder="results/my_model")
+results = workrb.evaluate(model, tasks, output_folder="results/my_model")
 
 # Run 2: Automatically resumes from checkpoint
-results = wteb.evaluate(model, tasks, output_folder="results/my_model")
+results = workrb.evaluate(model, tasks, output_folder="results/my_model")
 # ✓ Skips completed tasks, continues from where it left off
 ```
 **Extending Benchmarks** - Want to extend your results with additional tasks or languages? Add the new tasks or languages when resuming:
@@ -129,20 +129,20 @@ results = wteb.evaluate(model, tasks, output_folder="results/my_model")
 ```python
 # Resume from previous & extend with new task and languages
 tasks_extended = [
-    wteb.tasks.ESCOJob2SkillRanking( # Add de, fr
+    workrb.tasks.ESCOJob2SkillRanking( # Add de, fr
         split="val", 
         languages=["en", "de", "fr"]), 
-    wteb.tasks.ESCOJob2SkillRanking( # Add new task
+    workrb.tasks.ESCOJob2SkillRanking( # Add new task
         split="val", 
         languages=["en"],
 ]
-results = wteb.evaluate(model, tasks, output_folder="results/my_model")
+results = workrb.evaluate(model, tasks, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
 
 ❌**You cannot reduce scope** when resuming. This is by design to avoid ambiguity. Finished tasks in the checkpoint should also be included in your WTEB initialization. If you want to start fresh in the same output folder, use `force_restart=True`:
 ```python
-results = wteb.evaluate(model, tasks, output_folder="results/my_model", force_restart=True)
+results = workrb.evaluate(model, tasks, output_folder="results/my_model", force_restart=True)
 ```
 
 
@@ -160,7 +160,7 @@ results/my_model/
 To load & parse results from a run:
 
 ```python
-results = wteb.load_results("results/my_model/results.json")
+results = workrb.load_results("results/my_model/results.json")
 print(results)
 ```
 
@@ -176,7 +176,7 @@ Each aggregation provides 95% confidence intervals (replace `mean` with `ci_marg
 
 ```python
 # Benchmark returns a detailed Pydantic model
-results: BenchmarkResults = wteb.evaluate(...)
+results: BenchmarkResults = workrb.evaluate(...)
 
 # Calculate aggregated metrics
 summary: dict[str, float] = results.get_summary_metrics()
@@ -225,7 +225,7 @@ Read our [CONTRIBUTING.md](CONTRIBUTING.md) guide for all details.
 
 ```sh
 # Clone repository
-git clone https://github.com/techwolf-ai/wteb.git && cd wteb
+git clone https://github.com/techwolf-ai/workrb.git && cd workrb
 
 # Create and install a virtual environment
 uv sync --all-extras

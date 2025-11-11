@@ -59,7 +59,7 @@ class BenchmarkConfig:
             self.created_at = datetime.now(timezone.utc).isoformat()
 
     @classmethod
-    def from_wteb(
+    def from_workrb(
         cls,
         model,
         tasks: Sequence[Task],
@@ -232,7 +232,7 @@ class BenchmarkConfig:
         """
         Validate that pre-existing results are defined in the current benchmark tasks.
 
-        This ensures both the benchmark results and the wteb tasks are consistent, preventing
+        This ensures both the benchmark results and the workrb tasks are consistent, preventing
         unexpected behavior for undefined tasks in the results.
         """
         if results is None:

@@ -57,7 +57,7 @@ def evaluate(
         Dictionary containing all evaluation results
     """
     # Load config for output folder
-    config = BenchmarkConfig.from_wteb(
+    config = BenchmarkConfig.from_workrb(
         model=model,
         tasks=tasks,
         output_folder=output_folder,
