@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+import workrb
 from tests.test_utils import create_toy_task_class
 from workrb.tasks import SkillMatch1kSkillSimilarityRanking
 from workrb.tasks.abstract.base import Language
@@ -113,7 +114,7 @@ def test_e2e_checkpointing():
 
     # Create model
     print("\n🤖 Initializing model...")
-    model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
+    model = workrb.models.BiEncoderModel("all-MiniLM-L6-v2")
     print("✓ Model initialized")
 
     # =========================================================================
@@ -124,7 +125,7 @@ def test_e2e_checkpointing():
     print("=" * 70)
 
     # Run benchmark - it will be interrupted
-    _mid_results = wteb.evaluate(
+    _mid_results = workrb.evaluate(
         model,
         tasks=tasks[:1],
         output_folder=str(output_folder),
@@ -142,7 +143,7 @@ def test_e2e_checkpointing():
     print("=" * 70)
 
     # Run benchmark - it will be interrupted again
-    end_results = wteb.evaluate(
+    end_results = workrb.evaluate(
         model,
         tasks=tasks,
         output_folder=str(output_folder),
@@ -180,7 +181,7 @@ def test_e2e_checkpointing():
 
     # 3 tasks are run, try to rerun with only 1 task (should fail)
     with pytest.raises(Exception):
-        _results3 = wteb.evaluate(
+        _results3 = workrb.evaluate(
             model,
             tasks=tasks[:1],
             output_folder=str(output_folder),
@@ -194,7 +195,7 @@ def test_e2e_checkpointing():
     print("PHASE 4: Run again - should skip all work")
     print("=" * 70)
 
-    end_results_retry = wteb.evaluate(
+    end_results_retry = workrb.evaluate(
         model,
         tasks=tasks,
         output_folder=str(output_folder),

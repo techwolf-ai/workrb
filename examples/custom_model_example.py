@@ -151,12 +151,12 @@ if __name__ == "__main__":
 
     # 2. Create a simple task to test the model
     tasks = [
-        wteb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
+        workrb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
     ]
 
     # 3. Run the benchmark
     print("\nRunning benchmark with custom model...")
-    results = wteb.evaluate(
+    results = workrb.evaluate(
         model,
         tasks,
         output_folder="results/custom_model_demo",

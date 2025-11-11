@@ -13,7 +13,7 @@ from workrb.types import ModelInputType
 
 
 @register_task()
-class MyCustomRankingTask(wteb.tasks.RankingTask):
+class MyCustomRankingTask(workrb.tasks.RankingTask):
     """
     Example custom ranking task for demonstrating the extensibility of WTEB.
 
@@ -134,13 +134,13 @@ if __name__ == "__main__":
     print("=" * 50)
 
     # 1. Create a model
-    model = wteb.models.BiEncoderModel("all-MiniLM-L6-v2")
+    model = workrb.models.BiEncoderModel("all-MiniLM-L6-v2")
 
     # 2. Create custom tasks
     tasks = [MyCustomRankingTask(languages=["en"], split="test")]
 
     # 3. Run the benchmark
-    results = wteb.evaluate(
+    results = workrb.evaluate(
         model,
         tasks,
         output_folder="results/custom_task_demo",
