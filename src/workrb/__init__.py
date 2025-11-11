@@ -1,5 +1,5 @@
 """
-WTEB - A benchmarking framework for evaluating models on various tasks.
+WorkRB - A benchmarking framework for evaluating models on various tasks.
 """
 
 from workrb import data, metrics, models, tasks

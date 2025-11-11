@@ -1,6 +1,6 @@
-# Contributing to WTEB
+# Contributing to WorkRB
 
-Thank you for your interest in contributing to WTEB! We're building a community-driven benchmark for work domain AI evaluation, and your contributions help make it better for everyone.
+Thank you for your interest in contributing to WorkRB! We're building a community-driven benchmark for work domain AI evaluation, and your contributions help make it better for everyone.
 
 ## Table of Contents
 
@@ -18,10 +18,10 @@ Thank you for your interest in contributing to WTEB! We're building a community-
 We welcome contributions of all kinds:
 
 - **🐛 Report bugs** – Found an issue? Let us know in [GitHub Issues](https://github.com/techwolf-ai/workrb/issues)
-- **📊 Add new tasks** – Extend WTEB with new evaluation tasks
+- **📊 Add new tasks** – Extend WorkRB with new evaluation tasks
 - **🤖 Add new models** – Implement state-of-the-art models or baselines
 - **📈 Add new metrics** – Contribute evaluation metrics relevant to the work domain
-- **📚 Improve documentation** – Help make WTEB easier to use
+- **📚 Improve documentation** – Help make WorkRB easier to use
 - **✨ Suggest features** – Share ideas for improvements
 
 ## Development Setup
@@ -111,7 +111,7 @@ Project:
 4. Having questions? Add them to your Github Issue. 
 
 ### 3. Submit Your PR
-Make a pull request (PR) from your fork into the main branch of WTEB, following:
+Make a pull request (PR) from your fork into the main branch of WorkRB, following:
 
 1. **Push your branch** to your fork:
    ```bash
@@ -152,7 +152,7 @@ Make a pull request (PR) from your fork into the main branch of WTEB, following:
 
 ## Adding a New Task
 
-Tasks are the core evaluation units in WTEB. Follow these steps to add a new task:
+Tasks are the core evaluation units in WorkRB. Follow these steps to add a new task:
 
 ### Step 1: Choose the Task Type
 
@@ -289,7 +289,7 @@ Add documentation to your task class docstring:
 
 ## Adding a New Model
 
-Models in WTEB implement the `ModelInterface` for unified evaluation.
+Models in WorkRB implement the `ModelInterface` for unified evaluation.
 
 ### Step 1: Implement ModelInterface
 
@@ -583,5 +583,5 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
 
 ---
 
-Thank you for contributing to WTEB! Your efforts help make AI evaluation in the work domain more accessible and transparent for everyone. 🎉
+Thank you for contributing to WorkRB! Your efforts help make AI evaluation in the work domain more accessible and transparent for everyone. 🎉
 

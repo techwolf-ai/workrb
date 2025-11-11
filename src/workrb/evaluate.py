@@ -1,5 +1,5 @@
 """
-Main WTEB class for evaluating models on benchmark tasks.
+Main WorkRB class for evaluating models on benchmark tasks.
 
 Supports both simple single-model evaluation and advanced features like
 checkpointing, resuming, and efficient multi-model evaluation.
@@ -75,7 +75,7 @@ def evaluate(
         logger.info("All work already completed!")
         return results
 
-    logger.info(f"Running WTEB for model: {model.name}")
+    logger.info(f"Running WorkRB for model: {model.name}")
     logger.info(get_tasks_overview(tasks))
     logger.info(f"{'=' * 60}")
     logger.info(f"Pending work: {len(pending_work)} / {_get_total_evaluations(tasks)} evaluations")
@@ -110,7 +110,7 @@ def evaluate(
     config.save_final_result_artifacts(results)
 
     logger.info(f"{'=' * 60}")
-    logger.info("✓ WTEB COMPLETE")
+    logger.info("✓ WorkRB COMPLETE")
     logger.info(f"Total time: {results.metadata.total_evaluation_time:.2f}s")
     logger.info(
         format_results(

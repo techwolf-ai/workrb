@@ -1,3 +1,3 @@
 """
-Tests for WTEB checkpoint and resume functionality.
+Tests for WorkRB checkpoint and resume functionality.
 """

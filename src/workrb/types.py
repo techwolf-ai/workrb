@@ -1,4 +1,4 @@
-"""Shared types and enums used across WTEB."""
+"""Shared types and enums used across WorkRB."""
 
 from enum import Enum
 

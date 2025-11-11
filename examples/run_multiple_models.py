@@ -33,6 +33,6 @@ if __name__ == "__main__":
         models=models,
         tasks=tasks,
         output_folder_template="../results/simple_demo/{model_name}",
-        description="Simple WTEB demo",
+        description="Simple WorkRB demo",
         force_restart=True,
     )

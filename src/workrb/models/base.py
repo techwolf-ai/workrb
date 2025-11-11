@@ -1,4 +1,4 @@
-"""Model interface for WTEB."""
+"""Model interface for WorkRB."""
 
 from abc import ABC, abstractmethod
 
@@ -8,7 +8,7 @@ from workrb.types import ModelInputType
 
 
 class ModelInterface(ABC):
-    """Abstract base class for all models in WTEB."""
+    """Abstract base class for all models in WorkRB."""
 
     @property
     @abstractmethod

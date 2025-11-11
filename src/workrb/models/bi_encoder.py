@@ -1,4 +1,4 @@
-"""BiEncoder model wrapper for WTEB."""
+"""BiEncoder model wrapper for WorkRB."""
 
 import torch
 from sentence_transformers import SentenceTransformer

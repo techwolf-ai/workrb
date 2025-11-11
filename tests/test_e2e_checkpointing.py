@@ -1,7 +1,7 @@
 """
 End-to-End Checkpointing Test.
 
-This test validates the checkpointing and resume functionality of WTEB.
+This test validates the checkpointing and resume functionality of WorkRB.
 It simulates interrupted benchmark runs and validates that:
 1. Checkpoints are saved correctly after each task completion
 2. Benchmarks can be resumed from checkpoints
