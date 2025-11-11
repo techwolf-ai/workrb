@@ -1,0 +1,14 @@
+{
+    "recommendations": [
+        "charliermarsh.ruff",
+        "ms-vscode-remote.remote-ssh",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-toolsai.jupyter",
+        "ms-toolsai.jupyter-keymap",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "mechatroner.rainbow-csv",
+        "anysphere.cursorpyright", // cursor replacement for pylance
+    ],
+    "unwantedRecommendations": [],
+}

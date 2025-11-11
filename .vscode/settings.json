@@ -1,0 +1,62 @@
+{
+    "python.analysis.extraPaths": [
+        "./src"
+    ],
+    "coverage-gutters.coverageFileNames": [
+        "reports/coverage.xml"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+    },
+    "editor.formatOnSave": true,
+    "[python]": {
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.formatOnSave": true,
+    },
+    "ruff.lineLength": 100,
+    "ruff.importStrategy": "fromEnvironment",
+    "ruff.configurationPreference": "editorFirst",
+    "[toml]": {
+        "editor.formatOnSave": false
+    },
+    "editor.rulers": [
+        100
+    ],
+    "files.autoSave": "onFocusChange",
+    "jupyter.kernels.excludePythonEnvironments": [
+        "/usr/local/bin/python",
+        "/usr/local/bin/python3",
+        "/usr/bin/python",
+        "/usr/bin/python3",
+        "/bin/python",
+        "/bin/python3"
+    ],
+    "jupyter.debugging": true,
+    "jupyter.debugJustMyCode": false,
+    "notebook.codeActionsOnSave": {
+        "notebook.source.fixAll": "explicit",
+        "notebook.source.organizeImports": "explicit"
+    },
+    "notebook.formatOnSave.enabled": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.autoImportCompletions": true,
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "python.testing.pytestEnabled": true,
+    "python.debugOptions": [
+        "DebugStdLib"
+    ],
+    "python.debugJustMyCode": false,
+    "terminal.integrated.env.linux": {
+        "GIT_EDITOR": "code --wait"
+    },
+    "terminal.integrated.env.mac": {
+        "GIT_EDITOR": "code --wait"
+    },
+    "cursorpyright.analysis.autoImportCompletions": true,
+    "cursorpyright.analysis.extraPaths": [
+        "./src"
+    ],
+    "cursorpyright.analysis.typeCheckingMode": "basic"
+}
