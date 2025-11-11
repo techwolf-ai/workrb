@@ -1,6 +1,6 @@
 <div align="center">
 
-# WorkRB: Work Research Benchmark
+# WorkRB
 
 <h3 style="border-bottom: none;">Easy benchmarking of AI progress in the work domain</h3>
 
