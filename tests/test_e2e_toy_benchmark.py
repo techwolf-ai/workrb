@@ -15,11 +15,12 @@ import sys
 import time
 
 import wteb
-from tests.test_utils import create_toy_task_class
 from wteb.registry import TaskRegistry
 from wteb.tasks.abstract.base import Language, Task
 from wteb.tasks.abstract.classification_base import ClassificationTask
 from wteb.tasks.abstract.ranking_base import RankingTask
+
+from tests.test_utils import create_toy_task_class
 
 
 def get_all_tasks(split: str = "val", languages: list[str] | None = None) -> list[Task]:

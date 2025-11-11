@@ -4,7 +4,6 @@ import logging
 
 import pandas as pd
 from datasets import DatasetDict, load_dataset
-
 from wteb.data.esco import ESCO
 from wteb.registry import register_task
 from wteb.tasks.abstract.base import DatasetSplit, Language

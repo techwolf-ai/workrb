@@ -1,7 +1,6 @@
 """Test task registry system functionality."""
 
 import pytest
-
 from wteb.registry import (
     ModelRegistry,
     register_model,
