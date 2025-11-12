@@ -6,8 +6,7 @@
 
 [![syntax checking](https://github.com/techwolf-ai/workrb/actions/workflows/test.yml/badge.svg)](https://github.com/techwolf-ai/workrb/actions/workflows/test.yml)
 [![GitHub release](https://img.shields.io/github/v/release/techwolf-ai/workrb.svg)](https://github.com/techwolf-ai/workrb/releases)
-[![License](https://img.shields.io/github/license/techwolf-ai/workrb
-)](https://github.com/techwolf-ai/workrb/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/techwolf-ai/workrb)](https://github.com/techwolf-ai/workrb/blob/main/LICENSE)
 
 
 <h4>
@@ -22,7 +21,7 @@
 
 
 <p style="margin-top:-10px; margin-bottom:-10px;">
-    <img src="https://storage.googleapis.com/public-workrb/worker_bee_logo_transparent.png?raw=1" width="100px"/>
+    <img src="https://storage.googleapis.com/public-workrb/worker_bee_logo_transparent.png?raw=1" width="130px"/>
 </p>
 
 
