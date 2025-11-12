@@ -16,7 +16,7 @@
         <a href="#features">Features</a> |
         <a href="#usage-guide">Usage Guide</a> |
         <a href="#contributing">Contributing</a> |
-        <a href="#citing">Citing</a>
+        <a href="#citation">Citing</a>
     <p>
 </h4>
 
@@ -258,13 +258,29 @@ pre-commit install --install-hooks
 </details>
 
 
-<!-- ## Citation
+## Citation
 
-If you use WorkRB in your research, please cite:
+
+<details>
+<summary>WorkRB builds upon the unifying WorkBench benchmark, consider citing:</summary>
 
 ```bibtex
-UWE-PLACEHOLDER
-``` -->
+@misc{delange2025unifiedworkembeddings,
+      title={Unified Work Embeddings: Contrastive Learning of a Bidirectional Multi-task Ranker}, 
+      author={Matthias De Lange and Jens-Joris Decorte and Jeroen Van Hautte},
+      year={2025},
+      eprint={2511.07969},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2511.07969}, 
+}
+```
+</details>
+
+<details>
+<summary>WorkRB has a community paper coming up!</summary>
+WIP
+</details>
 
 ## License
 
