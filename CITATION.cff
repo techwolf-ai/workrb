@@ -1,0 +1,28 @@
+cff-version: 1.2.0
+message: "If you use this work, please cite it as below."
+title: "Unified Work Embeddings: Contrastive Learning of a Bidirectional Multi-task Ranker"
+authors:
+  - family-names: "De Lange"
+    given-names: "Matthias"
+  - family-names: "Decorte"
+    given-names: "Jens-Joris"
+  - family-names: "Van Hautte"
+    given-names: "Jeroen"
+date-released: 2025
+url: "https://arxiv.org/abs/2511.07969"
+identifiers:
+  - type: url
+    value: "https://arxiv.org/abs/2511.07969"
+preferred-citation:
+  type: article
+  title: "Unified Work Embeddings: Contrastive Learning of a Bidirectional Multi-task Ranker"
+  authors:
+    - family-names: "De Lange"
+      given-names: "Matthias"
+    - family-names: "Decorte"
+      given-names: "Jens-Joris"
+    - family-names: "Van Hautte"
+      given-names: "Jeroen"
+  year: 2025
+  notes: "arXiv:2511.07969"
+  url: "https://arxiv.org/abs/2511.07969"
