@@ -28,7 +28,7 @@ import pytest
 import workrb
 from tests.test_utils import create_toy_task_class
 from workrb.tasks import SkillMatch1kSkillSimilarityRanking
-from workrb.tasks.abstract.base import Language
+from workrb.tasks.abstract.base import DatasetSplit, Language
 
 
 def verify_checkpoint(checkpoint_path: Path, expected_completed: int, total_tasks: int):
@@ -103,9 +103,9 @@ def test_e2e_checkpointing():
             return "Skill Similarity 3"
 
     tasks = [
-        Task1(split="val", languages=["en"]),
-        Task2(split="val", languages=["en"]),
-        Task3(split="val", languages=["en"]),
+        Task1(split=DatasetSplit.VAL, languages=[Language.EN]),
+        Task2(split=DatasetSplit.VAL, languages=[Language.EN]),
+        Task3(split=DatasetSplit.VAL, languages=[Language.EN]),
     ]
 
     print(f"\n📋 Created {len(tasks)} toy tasks:")
