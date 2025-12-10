@@ -92,28 +92,16 @@ def test_e2e_checkpointing():
         def name(self):
             return "Skill Similarity 1"
         
-        @property
-        def description(self):
-            return "Skill Similarity 1"
-        
 
     class Task2(ToySkillSim):
         @property
         def name(self):
             return "Skill Similarity 2"
         
-        @property
-        def description(self):
-            return "Skill Similarity 2"
-        
 
     class Task3(ToySkillSim):
         @property
         def name(self):
-            return "Skill Similarity 3"
-        
-        @property
-        def description(self):
             return "Skill Similarity 3"
         
 
