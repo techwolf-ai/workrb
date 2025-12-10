@@ -17,7 +17,13 @@ import torch
 from tests.test_utils import create_toy_task_class
 from workrb.evaluate import evaluate_multiple_models
 from workrb.models.base import ModelInterface
-from workrb.results import BenchmarkMetadata, BenchmarkResults, MetricsResult, TaskResultMetadata, TaskResults
+from workrb.results import (
+    BenchmarkMetadata,
+    BenchmarkResults,
+    MetricsResult,
+    TaskResultMetadata,
+    TaskResults,
+)
 from workrb.tasks import SkillMatch1kSkillSimilarityRanking
 from workrb.tasks.abstract.base import DatasetSplit, Language
 from workrb.types import ModelInputType
@@ -25,18 +31,18 @@ from workrb.types import ModelInputType
 
 class ToyModel(ModelInterface):
     """Simple toy model for testing - no actual model loading required."""
-    
+
     def __init__(self, name: str):
         self._name = name
-    
+
     @property
     def name(self) -> str:
         return self._name
-    
+
     @property
     def description(self) -> str:
         return f"Toy model for testing: {self._name}"
-    
+
     def _compute_rankings(
         self,
         queries: list[str],
@@ -46,7 +52,7 @@ class ToyModel(ModelInterface):
     ) -> torch.Tensor:
         """Mock implementation - never called in these tests."""
         return torch.zeros(len(queries), len(targets))
-    
+
     def _compute_classification(
         self,
         texts: list[str],
@@ -56,7 +62,7 @@ class ToyModel(ModelInterface):
     ) -> torch.Tensor:
         """Mock implementation - never called in these tests."""
         return torch.zeros(len(texts), len(targets))
-    
+
     @property
     def classification_label_space(self) -> list[str] | None:
         return None
@@ -153,7 +159,7 @@ def test_evaluate_multiple_models_basic():
 def test_evaluate_multiple_models_with_additional_kwargs():
     """Test evaluate_multiple_models passes additional kwargs to evaluate."""
     model = create_model_with_name("test_model")
-    
+
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
@@ -182,7 +188,7 @@ def test_evaluate_multiple_models_duplicate_names():
     """Test that evaluate_multiple_models raises error for duplicate model names."""
     model1 = create_model_with_name("duplicate_name")
     model2 = create_model_with_name("duplicate_name")
-    
+
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
@@ -198,14 +204,12 @@ def test_evaluate_multiple_models_duplicate_names():
 def test_evaluate_multiple_models_missing_template_placeholder():
     """Test that evaluate_multiple_models raises error if template lacks {model_name}."""
     model = create_model_with_name("test_model")
-    
+
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
 
-    with pytest.raises(
-        AssertionError, match="Output folder template must contain {model_name}"
-    ):
+    with pytest.raises(AssertionError, match="Output folder template must contain {model_name}"):
         evaluate_multiple_models(
             models=[model],
             tasks=[task],
@@ -217,7 +221,7 @@ def test_evaluate_multiple_models_error_handling():
     """Test that evaluate_multiple_models properly handles and re-raises errors."""
     model1 = create_model_with_name("model1")
     model2 = create_model_with_name("model2")
-    
+
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
@@ -246,7 +250,7 @@ def test_evaluate_multiple_models_output_folder_overrides_kwargs():
     """Test that output_folder in run_kwargs is properly overridden per model."""
     model1 = create_model_with_name("model1")
     model2 = create_model_with_name("model2")
-    
+
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
@@ -277,7 +281,7 @@ def test_evaluate_multiple_models_output_folder_overrides_kwargs():
 def test_evaluate_multiple_models_single_model():
     """Test evaluate_multiple_models with a single model."""
     model = create_model_with_name("single_model")
-    
+
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
@@ -312,4 +316,3 @@ def test_evaluate_multiple_models_empty_models_list():
 
         assert len(results) == 0
         assert mock_evaluate.call_count == 0
-

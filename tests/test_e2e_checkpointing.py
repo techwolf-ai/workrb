@@ -91,19 +91,16 @@ def test_e2e_checkpointing():
         @property
         def name(self):
             return "Skill Similarity 1"
-        
 
     class Task2(ToySkillSim):
         @property
         def name(self):
             return "Skill Similarity 2"
-        
 
     class Task3(ToySkillSim):
         @property
         def name(self):
             return "Skill Similarity 3"
-        
 
     tasks = [
         Task1(split=DatasetSplit.VAL, languages=[Language.EN]),
