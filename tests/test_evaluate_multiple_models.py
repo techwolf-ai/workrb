@@ -302,17 +302,19 @@ def test_evaluate_multiple_models_single_model():
 
 
 def test_evaluate_multiple_models_empty_models_list():
-    """Test evaluate_multiple_models with empty models list."""
+    """Test evaluate_multiple_models with empty models list raises AssertionError."""
     # Create toy task from real task
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
 
     with patch("workrb.evaluate.evaluate") as mock_evaluate:
-        results = evaluate_multiple_models(
-            models=[],
-            tasks=[task],
-            output_folder_template="results/{model_name}",
+        with pytest.raises(AssertionError) as excinfo:
+            evaluate_multiple_models(
+                models=[],
+                tasks=[task],
+                output_folder_template="results/{model_name}",
+            )
+        assert "At least one model must be provided to evaluate multiple models." in str(
+            excinfo.value
         )
-
-        assert len(results) == 0
         assert mock_evaluate.call_count == 0

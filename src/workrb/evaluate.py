@@ -148,14 +148,14 @@ def evaluate_multiple_models(
     # Input checks
     model_names = [model.name for model in models]
     model_name_counts = Counter(model_names)
-    duplicates = [n for n, c in model_name_counts.items() if c > 1]
-    assert not duplicates, (
-        f"All models must have unique names, "
-        f"duplicates found: {', '.join(n for n, c in model_name_counts.items() if c > 1)}"
+    duplicate_model_names = [n for n, c in model_name_counts.items() if c > 1]
+    assert not duplicate_model_names, (
+        f"All models must have unique names, duplicates found: {', '.join(duplicate_model_names)}"
     )
     assert "{model_name}" in output_folder_template, (
         "Output folder template must contain {model_name}, for example: results/{model_name}"
     )
+    assert len(models) > 0, "At least one model must be provided to evaluate multiple models."
 
     all_results = {}
     for model in models:
