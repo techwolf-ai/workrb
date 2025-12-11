@@ -1,8 +1,9 @@
-"""BiEncoder model wrapper for WorkRB."""
+"""BiEncoder model wrapper for WorkRB, along with some instances of the BiEncoder model."""
 
 import torch
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import batch_to_device
+from torch.nn.utils.rnn import pad_sequence
 from tqdm.auto import tqdm
 
 from workrb.models.base import ModelInterface
@@ -25,10 +26,12 @@ class BiEncoderModel(ModelInterface):
 
     @property
     def name(self) -> str:
+        """Return the model name."""
         return f"BiEncoder-{self.base_model_name.split('/')[-1]}"
 
     @property
     def description(self) -> str:
+        """Return the model description."""
         return "BiEncoder model using sentence-transformers for ranking and classification tasks."
 
     def _compute_rankings(
@@ -127,10 +130,12 @@ class JobBERTModel(ModelInterface):
 
     @property
     def name(self) -> str:
+        """Return the model name."""
         return self.base_model_name.split("/")[-1]
 
     @property
     def description(self) -> str:
+        """Return the model description."""
         return (
             "Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2"
         )
@@ -268,4 +273,146 @@ class JobBERTModel(ModelInterface):
     url          = {{https://feast-ecmlpkdd.github.io/papers/FEAST2021_paper_6.pdf}},
     year         = {{2021}},
 }
+"""
+
+
+@register_model()
+class ConTeXTMatchModel(ModelInterface):
+    """BiEncoder model using sentence-transformers."""
+
+    _NEAR_ZERO_THRESHOLD = 1e-9
+
+    def __init__(
+        self,
+        model_name: str = "TechWolf/ConTeXT-Skill-Extraction-base",
+        temperature: float = 1.0,
+        **kwargs,
+    ):
+        self.base_model_name = model_name
+        self.model = SentenceTransformer(model_name)
+        self.temperature = temperature
+        # Move to GPU if available
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.model.to(device)
+        self.model.eval()
+
+    @staticmethod
+    def _context_match_score(
+        token_embeddings: torch.Tensor, target_embeddings: torch.Tensor, temperature: float = 1.0
+    ) -> torch.Tensor:
+        """Compute attention-weighted similarity between token embeddings and target embeddings."""
+        # token_embeddings: (B1, L, D), target_embeddings: (B2, D)
+        dot_scores = (token_embeddings @ target_embeddings.T).transpose(1, 2)  # (B1, B2, L)
+        dot_scores[dot_scores.abs() < ConTeXTMatchModel._NEAR_ZERO_THRESHOLD] = float("-inf")
+        weights = torch.softmax(dot_scores / temperature, dim=2)  # (B1, B2, L)
+
+        norm_tokens = torch.nn.functional.normalize(token_embeddings, p=2, dim=2)  # (B1, L, D)
+        norm_targets = torch.nn.functional.normalize(target_embeddings, p=2, dim=1)  # (B2, D)
+        sim_scores = (norm_tokens @ norm_targets.T).transpose(
+            1, 2
+        )  # (B1,L,B2) -> transposed to(B1, B2, L)
+
+        return (weights * sim_scores).sum(dim=2)  # (B1, B2)
+
+    @property
+    def name(self) -> str:
+        """Return the model name."""
+        return self.base_model_name.split("/")[-1]
+
+    @property
+    def description(self) -> str:
+        """Return the model description."""
+        return "ConTeXT-Skill-Extraction-base from Techwolf: https://huggingface.co/TechWolf/ConTeXT-Skill-Extraction-base"
+
+    @staticmethod
+    def encode_batch(contextmatch_model, texts) -> torch.Tensor:
+        """Encode tokens pof the texts ConTeXT-Skill-Extraction-base model."""
+        return contextmatch_model.encode(
+            texts, normalize_embeddings=False, output_value="token_embeddings"
+        ).to(contextmatch_model.device)
+
+    @staticmethod
+    def encode(
+        contextmatch_model, texts, batch_size: int = 128, mean: bool = False
+    ) -> torch.Tensor:
+        """Encode using the branch of the ConTeXT-Skill-Extraction-base model."""
+        # For token embeddings, process in batches and handle variable lengths
+        all_token_embeddings = []
+        max_len = 0
+        for i in tqdm(range(0, len(texts), batch_size)):
+            batch = texts[i : i + batch_size]
+            batch_token_embs = ConTeXTMatchModel.encode_batch(contextmatch_model, batch)
+            if mean:
+                batch_token_embs = batch_token_embs.mean(dim=1)
+            all_token_embeddings.append(batch_token_embs)
+            max_len = max(max_len, batch_token_embs.shape[1])
+
+        token_embeddings = pad_sequence(all_token_embeddings, batch_first=True)
+        return token_embeddings
+
+    @torch.no_grad()
+    def _compute_rankings(
+        self,
+        queries: list[str],
+        targets: list[str],
+        query_input_type: ModelInputType,
+        target_input_type: ModelInputType,
+    ) -> torch.Tensor:
+        """Compute ranking scores using attention-weighted similarity."""
+        query_token_embeddings = ConTeXTMatchModel.encode(self.model, queries)
+        target_token_embeddings_mean = ConTeXTMatchModel.encode(self.model, targets, mean=True)
+        return self._context_match_score(
+            query_token_embeddings, target_token_embeddings_mean, temperature=self.temperature
+        )
+
+    @torch.no_grad()
+    def _compute_classification(
+        self,
+        texts: list[str],
+        targets: list[str],
+        input_type: ModelInputType,
+        target_input_type: ModelInputType | None = None,
+    ) -> torch.Tensor:
+        """Compute classification scores by ranking texts against target labels.
+
+        Args:
+            texts: List of input texts to classify
+            targets: List of target class labels (as text)
+            input_type: Type of input (e.g., JOB_TITLE)
+            target_input_type: Type of target (e.g., SKILL_NAME). If None, uses input_type.
+
+        Returns
+        -------
+            Tensor of shape (n_texts, n_classes) with similarity scores
+        """
+        if target_input_type is None:
+            target_input_type = input_type
+
+        # Use ranking mechanism to compute similarity between texts and class labels
+        return self._compute_rankings(
+            queries=texts,
+            targets=targets,
+            query_input_type=input_type,
+            target_input_type=target_input_type,
+        )
+
+    @property
+    def classification_label_space(self) -> list[str] | None:
+        """ConTeXT-Match models do not have classification heads."""
+        return None
+
+    @property
+    def citation(self) -> str | None:
+        """ConTeXT-Match model citations."""
+        return """
+@ARTICLE{contextmatch_2025,
+  author={Decorte, Jens-Joris and van Hautte, Jeroen and Develder, Chris and Demeester, Thomas},
+  journal={IEEE Access},
+  title={Efficient Text Encoders for Labor Market Analysis},
+  year={2025},
+  volume={13},
+  number={},
+  pages={133596-133608},
+  keywords={Taxonomy;Contrastive learning;Training;Annotations;Benchmark testing;Training data;Large language models;Computational efficiency;Accuracy;Terminology;Labor market analysis;text encoders;skill extraction;job title normalization},
+  doi={10.1109/ACCESS.2025.3589147}}
 """
