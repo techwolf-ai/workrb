@@ -329,10 +329,13 @@ class ConTeXTMatchModel(ModelInterface):
     @staticmethod
     def encode_batch(contextmatch_model, texts, mean: bool = False) -> torch.Tensor:
         """Encode tokens pof the texts ConTeXT-Skill-Extraction-base model."""
-        args: dict[str, Any] = {"normalize_embeddings": False}
+        args: dict[str, Any] = {
+            "normalize_embeddings": False,
+            "convert_to_tensor": True,
+        }
         if not mean:
             args["output_value"] = "token_embeddings"
-        return contextmatch_model.encode(texts, **args).to(contextmatch_model.device)
+        return contextmatch_model.encode(texts, **args)
 
     @staticmethod
     def encode(
@@ -341,12 +344,10 @@ class ConTeXTMatchModel(ModelInterface):
         """Encode using the branch of the ConTeXT-Skill-Extraction-base model."""
         # For token embeddings, process in batches and handle variable lengths
         all_token_embeddings = []
-        max_len = 0
         for i in tqdm(range(0, len(texts), batch_size)):
             batch = texts[i : i + batch_size]
             batch_token_embs = ConTeXTMatchModel.encode_batch(contextmatch_model, batch, mean=mean)
-            all_token_embeddings.append(batch_token_embs)
-            max_len = max(max_len, batch_token_embs.shape[1])
+            all_token_embeddings.extend(batch_token_embs)
 
         token_embeddings = pad_sequence(all_token_embeddings, batch_first=True)
         return token_embeddings
