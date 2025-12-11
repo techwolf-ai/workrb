@@ -1,5 +1,7 @@
 """BiEncoder model wrapper for WorkRB, along with some instances of the BiEncoder model."""
 
+from typing import Any
+
 import torch
 from sentence_transformers import SentenceTransformer
 from sentence_transformers.util import batch_to_device
@@ -325,11 +327,12 @@ class ConTeXTMatchModel(ModelInterface):
         return "ConTeXT-Skill-Extraction-base from Techwolf: https://huggingface.co/TechWolf/ConTeXT-Skill-Extraction-base"
 
     @staticmethod
-    def encode_batch(contextmatch_model, texts) -> torch.Tensor:
+    def encode_batch(contextmatch_model, texts, mean: bool = False) -> torch.Tensor:
         """Encode tokens pof the texts ConTeXT-Skill-Extraction-base model."""
-        return contextmatch_model.encode(
-            texts, normalize_embeddings=False, output_value="token_embeddings"
-        ).to(contextmatch_model.device)
+        args: dict[str, Any] = {"normalize_embeddings": False}
+        if not mean:
+            args["output_value"] = "token_embeddings"
+        return contextmatch_model.encode(texts, **args).to(contextmatch_model.device)
 
     @staticmethod
     def encode(
@@ -341,9 +344,7 @@ class ConTeXTMatchModel(ModelInterface):
         max_len = 0
         for i in tqdm(range(0, len(texts), batch_size)):
             batch = texts[i : i + batch_size]
-            batch_token_embs = ConTeXTMatchModel.encode_batch(contextmatch_model, batch)
-            if mean:
-                batch_token_embs = batch_token_embs.mean(dim=1)
+            batch_token_embs = ConTeXTMatchModel.encode_batch(contextmatch_model, batch, mean=mean)
             all_token_embeddings.append(batch_token_embs)
             max_len = max(max_len, batch_token_embs.shape[1])
 
