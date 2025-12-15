@@ -166,13 +166,3 @@ class TestConTeXTMatchModelTechSkillExtraction:
         assert actual_rp10 == pytest.approx(
             expected_rp10, abs=rp_tolerance
         ), f"RP@10: expected {expected_rp10:.3f}, got {actual_rp10:.3f}"
-
-        # Print results for debugging
-        print(f"\n{'=' * 60}")
-        print("TECH Skill Extraction Test Set Results")
-        print(f"{'=' * 60}")
-        print(f"MRR:     {actual_mrr:.4f} (expected: {expected_mrr:.4f})")
-        print(f"RP@1:    {actual_rp1:.4f} (expected: {expected_rp1:.4f})")
-        print(f"RP@5:    {actual_rp5:.4f} (expected: {expected_rp5:.4f})")
-        print(f"RP@10:   {actual_rp10:.4f} (expected: {expected_rp10:.4f})")
-        print(f"{'=' * 60}")
