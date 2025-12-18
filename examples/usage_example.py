@@ -12,7 +12,7 @@ import workrb
 if __name__ == "__main__":
     # 1. Setup model and tasks
     model = workrb.models.BiEncoderModel("all-MiniLM-L6-v2")
-    tasks = [workrb.tasks.ESCOSkill2JobRanking(split="val", languages=[["en", "fr", "de", "nl"]])]
+    tasks = [workrb.tasks.ESCOSkill2JobRanking(split="test", languages=["en"])]
 
     # 2. Run the benchmark
     results = workrb.evaluate(
