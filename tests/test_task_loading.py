@@ -13,6 +13,7 @@ from workrb.tasks import (
     HouseSkillExtractRanking,
     JobBERTJobNormRanking,
     SkillMatch1kSkillSimilarityRanking,
+    SkillSkapeExtractRanking,
     TechSkillExtractRanking,
 )
 from workrb.tasks.abstract.base import DatasetSplit, Language, TaskType
@@ -43,6 +44,7 @@ def test_ranking_tasks_init_en_splits():
         ("JobNormRanking", JobBERTJobNormRanking),
         ("SkillExtractHouseRanking", HouseSkillExtractRanking),
         ("SkillExtractTechRanking", TechSkillExtractRanking),
+        ("SkillExtractSkillSkapeRanking", SkillSkapeExtractRanking),
         ("SkillSimilarityRanking", SkillMatch1kSkillSimilarityRanking),
     ]
 
