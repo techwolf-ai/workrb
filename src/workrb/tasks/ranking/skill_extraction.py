@@ -6,7 +6,11 @@ from datasets import Dataset, load_dataset
 from workrb.data.esco import ESCO
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
-from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+from workrb.tasks.abstract.ranking_base import (
+    RankingDataset,
+    RankingTask,
+    RankingTaskGroup,
+)
 from workrb.types import ModelInputType
 
 
@@ -199,5 +203,43 @@ class TechSkillExtractRanking(BaseESCOSkillExtractRanking):
   url          = {{https://ceur-ws.org/Vol-3218/RecSysHR2022-paper_4.pdf}},
   volume       = {{3218}},
   year         = {{2022}},
+}
+"""
+
+
+@register_task()
+class SkillSkapeExtractRanking(BaseESCOSkillExtractRanking):
+    """Skill Extraction from SkillSkape Ranking Task."""
+
+    orig_esco_version = "1.1.0"
+
+    def __init__(self, esco_version: str = "1.1.0", **kwargs):
+        self.esco_version = esco_version
+        super().__init__(hf_name="jjzha/skillskape", **kwargs)
+
+    @property
+    def name(self) -> str:
+        """Skill extraction SkillSkape task name."""
+        return "Skill Extraction SkillSkape"
+
+    @property
+    def description(self) -> str:
+        """Skill extraction from SkillSkape task description."""
+        return "Extract skills from text descriptions."
+
+    @property
+    def citation(self) -> str:
+        """Skill extraction SkillSkape task citation."""
+        return """@inproceedings{magron-etal-2024-jobskape,
+  title     = {{JobSkape: A Framework for Generating Synthetic Job Postings to Enhance Skill Matching}},
+  author    = {{Magron, Antoine and Dai, Anna and Zhang, Mike and Montariol, Syrielle and Bosselut, Antoine}},
+  editor    = {{Hruschka, Estevam and Lake, Thom and Otani, Naoki and Mitchell, Tom}},
+  booktitle = {{Proceedings of the First Workshop on Natural Language Processing for Human Resources (NLP4HR 2024)}},
+  month     = {{mar}},
+  year      = {{2024}},
+  address   = {{St. Julian's, Malta}},
+  publisher = {{Association for Computational Linguistics}},
+  url       = {{https://aclanthology.org/2024.nlp4hr-1.4/}},
+  pages     = {{43--58}}
 }
 """
