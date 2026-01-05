@@ -24,5 +24,6 @@ __all__ = [
     "HouseSkillExtractRanking",
     "JobBERTJobNormRanking",
     "SkillMatch1kSkillSimilarityRanking",
+    "SkillSkapeExtractRanking",
     "TechSkillExtractRanking",
 ]
