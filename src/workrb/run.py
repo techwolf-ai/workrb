@@ -248,16 +248,6 @@ def _get_total_evaluations(tasks: Sequence[Task]) -> int:
     return sum(len(task.languages) for task in tasks)
 
 
-def _validate_tasks(tasks: Sequence[Task]):
-    """Validate that all tasks are properly configured."""
-    if not tasks:
-        raise ValueError("At least one task must be provided")
-
-    for task in tasks:
-        if not isinstance(task, Task):
-            raise TypeError(f"All tasks must inherit from Task, got {type(task)}")
-
-
 def _init_checkpointing(
     tasks: Sequence[Task],
     config: BenchmarkConfig,
