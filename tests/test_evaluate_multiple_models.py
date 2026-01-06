@@ -8,6 +8,7 @@ This test suite validates the evaluate_multiple_models function to ensure:
 4. Results are properly structured and returned
 """
 
+import importlib
 import time
 from unittest.mock import patch
 
@@ -27,6 +28,8 @@ from workrb.results import (
 from workrb.tasks import SkillMatch1kSkillSimilarityRanking
 from workrb.tasks.abstract.base import DatasetSplit, Language
 from workrb.types import ModelInputType
+
+evaluate_module = importlib.import_module("workrb.evaluate")
 
 
 class ToyModel(ModelInterface):
@@ -118,7 +121,7 @@ def test_evaluate_multiple_models_basic():
     task_name = task.name
 
     # Mock the evaluate function
-    with patch("workrb.evaluate.evaluate") as mock_evaluate:
+    with patch.object(evaluate_module, "evaluate") as mock_evaluate:
         # Set up return values for each model
         mock_evaluate.side_effect = [
             create_mock_results("model1", task_name),
@@ -165,7 +168,7 @@ def test_evaluate_multiple_models_with_additional_kwargs():
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
     task_name = task.name
 
-    with patch("workrb.evaluate.evaluate") as mock_evaluate:
+    with patch.object(evaluate_module, "evaluate") as mock_evaluate:
         mock_evaluate.return_value = create_mock_results("test_model", task_name)
 
         results = evaluate_multiple_models(
@@ -227,7 +230,7 @@ def test_evaluate_multiple_models_error_handling():
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
     task_name = task.name
 
-    with patch("workrb.evaluate.evaluate") as mock_evaluate:
+    with patch.object(evaluate_module, "evaluate") as mock_evaluate:
         # First model succeeds, second fails
         mock_evaluate.side_effect = [
             create_mock_results("model1", task_name),
@@ -256,7 +259,7 @@ def test_evaluate_multiple_models_output_folder_overrides_kwargs():
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
     task_name = task.name
 
-    with patch("workrb.evaluate.evaluate") as mock_evaluate:
+    with patch.object(evaluate_module, "evaluate") as mock_evaluate:
         mock_evaluate.side_effect = [
             create_mock_results("model1", task_name),
             create_mock_results("model2", task_name),
@@ -287,7 +290,7 @@ def test_evaluate_multiple_models_single_model():
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
     task_name = task.name
 
-    with patch("workrb.evaluate.evaluate") as mock_evaluate:
+    with patch.object(evaluate_module, "evaluate") as mock_evaluate:
         mock_evaluate.return_value = create_mock_results("single_model", task_name)
 
         results = evaluate_multiple_models(
@@ -307,7 +310,7 @@ def test_evaluate_multiple_models_empty_models_list():
     ToyTask = create_toy_task_class(SkillMatch1kSkillSimilarityRanking)
     task = ToyTask(split=DatasetSplit.VAL, languages=[Language.EN])
 
-    with patch("workrb.evaluate.evaluate") as mock_evaluate:
+    with patch.object(evaluate_module, "evaluate") as mock_evaluate:
         with pytest.raises(AssertionError) as excinfo:
             evaluate_multiple_models(
                 models=[],
