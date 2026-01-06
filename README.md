@@ -216,12 +216,13 @@ lang_result_ci = summary["mean_per_language/en/f1_macro/ci_margin"]
 
 
 ### Models
-| Model Name | Description | Fixed Classifier |
+| Model Name | Description | Adaptive Targets |
 | --- | --- | --- |
-| BiEncoderModel | BiEncoder model using sentence-transformers for ranking and classification tasks. | ❌ |
-| JobBERTModel | Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2 | ❌ |
-| RndESCOClassificationModel | Random baseline for multi-label classification with random prediction head for ESCO. | ✅ |
-
+| BiEncoderModel | BiEncoder model using sentence-transformers for ranking and classification tasks. | ✅ |
+| JobBERTModel | Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2 | ✅ |
+| ConTeXTMatchModel | ConTeXT-Skill-Extraction-base from Techwolf: https://huggingface.co/TechWolf/ConTeXT-Skill-Extraction-base | ✅ |
+| CurriculumMatchModel | CurriculumMatch bi-encoder from Aleksandruz: https://huggingface.co/Aleksandruz/skillmatch-mpnet-curriculum-retriever | ✅ |
+| RndESCOClassificationModel | Random baseline for multi-label classification with random prediction head for ESCO. | ❌ |
 
 
 ## Contributing

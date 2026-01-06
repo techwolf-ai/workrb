@@ -55,7 +55,7 @@ def get_model_properties(model_class: type, registry_name: str, load_full: bool)
     if load_full:
         model = ModelRegistry.create(registry_name)
         props["Model Name"] = model.name
-        props["Fixed Classifier"] = "✅" if model.classification_label_space is not None else "❌"
+        props["Adaptive Targets"] = "✅" if model.classification_label_space is None else "❌"
         props["Description"] = model.description
 
     return props
@@ -167,7 +167,7 @@ if __name__ == "__main__":
 
     # Models
     model_cols = (
-        ["Class Name", "Description", "Fixed Classifier"]
+        ["Class Name", "Description", "Adaptive Targets"]
         if load_models
         else ["Class Name", "Description"]
     )
