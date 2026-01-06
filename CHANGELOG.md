@@ -1,3 +1,9 @@
+## v0.2.1 (2026-01-06)
+
+### Fix
+
+- README updated with ContextMatch and CurriculumMatchModel. CurriculumMatchModel added to pkg imports.
+
 ## v0.2.0 (2026-01-06)
 
 ### Feat
