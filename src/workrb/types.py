@@ -34,6 +34,9 @@ class Language(str, Enum):
     NO = "no"
     AR = "ar"
     UK = "uk"
+    JA = "ja"
+    KO = "ko"
+    ZH = "zh"
 
 
 class LabelType(str, Enum):

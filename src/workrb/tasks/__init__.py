@@ -9,6 +9,7 @@ from .abstract.ranking_base import RankingDataset, RankingTask
 # Task implementations
 from .classification.job2skill import ESCOJob2SkillClassification
 from .ranking.job2skill import ESCOJob2SkillRanking
+from .ranking.job_similarity import JobTitleSimilarityRanking
 from .ranking.jobnorm import JobBERTJobNormRanking
 from .ranking.skill2job import ESCOSkill2JobRanking
 from .ranking.skill_extraction import (
@@ -33,6 +34,7 @@ __all__ = [
     "ESCOSkill2JobRanking",
     "ESCOSkillNormRanking",
     "JobBERTJobNormRanking",
+    "JobTitleSimilarityRanking",
     "HouseSkillExtractRanking",
     "TechSkillExtractRanking",
     "SkillSkapeExtractRanking",
