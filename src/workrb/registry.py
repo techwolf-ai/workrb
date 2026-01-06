@@ -85,6 +85,11 @@ class TaskRegistry:
             importlib.import_module(modname)
 
 
+def list_available_tasks() -> dict[str, str]:
+    """List all available task classes that can be used in configs."""
+    return TaskRegistry.list_available()
+
+
 def register_task(name: str | None = None):
     """
     Decorator registering a task class.

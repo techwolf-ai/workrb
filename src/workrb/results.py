@@ -1,3 +1,4 @@
+import json
 import pprint
 from collections import defaultdict
 from typing import Any
@@ -355,3 +356,14 @@ class BenchmarkResults(BaseModel):
                     )
 
         return pd.DataFrame(data)
+
+
+def load_results(results_path: str = "./results.json") -> BenchmarkResults:
+    """
+    Load results from specified folder.
+
+    Useful for external usage of the results, when only the folder is available.
+    """
+    with open(results_path) as f:
+        data = json.load(f)
+    return BenchmarkResults.model_validate(data)

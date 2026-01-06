@@ -5,7 +5,6 @@ Supports both simple single-model evaluation and advanced features like
 checkpointing, resuming, and efficient multi-model evaluation.
 """
 
-import json
 import logging
 import time
 from collections import Counter
@@ -16,7 +15,6 @@ from workrb.config import BenchmarkConfig
 from workrb.logging import setup_logger
 from workrb.metrics.reporting import format_results
 from workrb.models.base import ModelInterface
-from workrb.registry import TaskRegistry
 from workrb.results import (
     BenchmarkMetadata,
     BenchmarkResults,
@@ -217,22 +215,6 @@ def get_tasks_overview(tasks: Sequence[Task]) -> str:
     lines.append("-" * 80)
 
     return "\n".join(lines)
-
-
-def load_results(results_path: str = "./results.json") -> BenchmarkResults:
-    """
-    Load results from specified folder.
-
-    Useful for external usage of the results, when only the folder is available.
-    """
-    with open(results_path) as f:
-        data = json.load(f)
-    return BenchmarkResults.model_validate(data)
-
-
-def list_available_tasks() -> dict[str, str]:
-    """List all available task classes that can be used in configs."""
-    return TaskRegistry.list_available()
 
 
 def _get_all_languages(tasks: Sequence[Task]) -> list[str]:
