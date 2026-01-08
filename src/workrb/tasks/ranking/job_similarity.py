@@ -13,7 +13,32 @@ class JobTitleSimilarityRanking(RankingTask):
     """
     Job Title Similarity ranking task based on Zbib et al. (2022) and Deniz et al. (2024).
 
-    Predict similar job titles from the datasets presented in the aforementioned papers.
+    This task evaluates a model's ability to rank job titles by semantic similarity to a
+    query job title. Given a query job title, the model must rank corpus job titles such
+    that semantically similar ones appear higher than non-similar ones.
+
+    Notes
+    -----
+    HuggingFace Dataset: https://huggingface.co/datasets/Avature/Job-Title-Similarity
+
+    Languages: en, de, es, fr, it, ja, ko, nl, pl, pt, zh.
+
+    Each language is a HuggingFace subset, and contains two splits:
+    - ``queries``: ~105 query job titles with indices of relevant corpus elements
+    - ``corpus``: ~2,500 job titles to rank
+
+    Each query has binary relevance annotations indicating which corpus job titles are
+    semantically similar (multi-label).
+
+    Example (English):
+    - Query: "Food Technologist"
+    - This query has 9 relevant corpus titles out of 2,619: "Food Scientist",
+      "Food Engineer", "Flavorist", among others.
+
+    Difference between this task and Job Normalization:
+    Job Normalization measures whether the model identifies the single canonical form of a
+    job title. Job Title Similarity measures whether the model ranks semantically similar
+    titles above dissimilar ones.
     """
 
     SUPPORTED_DATASET_LANGUAGES = [
