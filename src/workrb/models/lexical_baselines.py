@@ -5,6 +5,7 @@ establishing performance bounds and enabling rapid iteration without GPU depende
 """
 
 import random
+import unicodedata
 
 import numpy as np
 import torch
@@ -56,7 +57,8 @@ class BM25Model(ModelInterface):
         return None
 
     def _preprocess(self, text: str) -> str:
-        """Preprocess text by lowercasing."""
+        """Preprocess text by normalizing Unicode and optionally lowercasing."""
+        text = unicodedata.normalize("NFKD", text)
         if self.lowercase:
             return text.lower()
         return text
@@ -176,7 +178,8 @@ class TfIdfModel(ModelInterface):
         return None
 
     def _preprocess(self, text: str) -> str:
-        """Preprocess text by lowercasing."""
+        """Preprocess text by normalizing Unicode and optionally lowercasing."""
+        text = unicodedata.normalize("NFKD", text)
         if self.lowercase:
             return text.lower()
         return text
@@ -293,7 +296,8 @@ class EditDistanceModel(ModelInterface):
         return None
 
     def _preprocess(self, text: str) -> str:
-        """Preprocess text by lowercasing."""
+        """Preprocess text by normalizing Unicode and optionally lowercasing."""
+        text = unicodedata.normalize("NFKD", text)
         if self.lowercase:
             return text.lower()
         return text
