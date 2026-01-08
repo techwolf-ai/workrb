@@ -45,6 +45,8 @@ dependencies = [
     "PyYAML>=6.0",
     "sentence-transformers>=5.1.0",
     "pydantic>=2.11.9",
+    "rank-bm25>=0.2.2",
+    "rapidfuzz>=3.9.4",
 ]
 
 [dependency-groups] # https://docs.astral.sh/uv/concepts/projects/dependencies/#development-dependencies
