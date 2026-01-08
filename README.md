@@ -206,6 +206,7 @@ lang_result_ci = summary["mean_per_language/en/f1_macro/ci_margin"]
 | **Ranking** 
 | Job to Skills | multi_label | 3039 queries x 13939 targets | 28  |
 | Job Normalization | multi_class | 15463 queries x 2942 targets | 28  |
+| Job Title Similarity | multi_label | 105 queries x 2619 targets | 11  |
 | Skill to Job | multi_label | 13492 queries x 3039 targets | 28  |
 | Skill Extraction House | multi_label | 262 queries x 13891 targets | 28  |
 | Skill Extraction Tech | multi_label | 338 queries x 13891 targets | 28  |
