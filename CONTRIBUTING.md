@@ -81,8 +81,9 @@ Project:
 3. Ensure all linting and tests complete successfully locally before creating a PR:
    ```bash
    uv run poe lint
-   uv run pytest test/my_task_tests.py # Just your tests
-   uv run poe test # (ideally) For all tests
+   uv run pytest tests/my_task_tests.py  # Just your tests
+   uv run poe test                       # Test suite (excludes model benchmarks)
+   uv run poe test-benchmark             # Model benchmark tests only
    ```
 4. Having questions? Add them to your Github Issue. 
 
@@ -432,6 +433,53 @@ def test_my_model_ranking():
 
 If you want your model discoverable via `ModelRegistry.list_available()`, use the `@register_model()` decorator (shown in Step 1).
 
+### Step 5: Validate Model Performance (if prior paper results available)
+
+If your model has published benchmark results and a compatible (ideally small) dataset is available in WorkRB, add a performance validation test. This ensures your model reproduces expected results.
+
+Create a test in `tests/test_models/` and mark the benchmark class with `@pytest.mark.model_performance`:
+
+```python
+# tests/test_models/test_my_model.py
+
+import pytest
+from workrb.models.my_model import MyCustomModel
+from workrb.tasks import TechSkillExtractRanking  # or relevant task
+from workrb.tasks.abstract.base import DatasetSplit, Language
+
+
+@pytest.mark.model_performance
+class TestMyCustomModelBenchmark:
+    """Validate MyCustomModel against paper-reported metrics."""
+
+    def test_benchmark_metrics(self):
+        """
+        Verify model achieves results close to paper-reported metrics.
+
+        Paper: "Title" (Venue Year)
+        Reported on [dataset] test set:
+        - MRR: 0.XX
+        - RP@5: XX.X%
+        """
+        model = MyCustomModel()
+        task = TechSkillExtractRanking(split=DatasetSplit.TEST, languages=[Language.EN])
+
+        results = task.evaluate(model=model, metrics=["mrr", "rp@5"], language=Language.EN)
+
+        # Paper-reported values (allow tolerance for minor differences)
+        expected_mrr = 0.55
+        expected_rp5 = 0.60
+
+        assert results["mrr"] == pytest.approx(expected_mrr, abs=0.05)
+        assert results["rp@5"] == pytest.approx(expected_rp5, abs=0.05)
+```
+
+**See [tests/test_models/test_contextmatch_model.py](tests/test_models/test_contextmatch_model.py) for a complete example.**
+
+Tests marked with `@pytest.mark.model_performance` are excluded from `poe test` by default. To run them:
+- **Locally**: `uv run poe test-benchmark`
+- **In CI**: Contributors can trigger the **Model Benchmarks** workflow manually from GitHub Actions (Actions → Model Benchmarks → Run workflow)
+
 ## Adding New Metrics
 
 To add new evaluation metrics:
@@ -503,11 +551,16 @@ uv run poe lint
 
 ```bash
 # Run your specific tests only
-uv run pytest test/my_tests.py
+uv run pytest tests/my_tests.py
 
-# Run all tests (can take some time)
+# Run tests with coverage (excludes model benchmarks)
 uv run poe test
+
+# Run model benchmark tests only
+uv run poe test-benchmark
 ```
+
+**Model Performance Tests**: Benchmark tests in `tests/test_models/` that are marked with `@pytest.mark.model_performance` validate model scores against paper-reported results. These are excluded from `poe test` by default.
 
 ### Documentation Standards
 

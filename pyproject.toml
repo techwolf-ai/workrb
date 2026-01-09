@@ -85,7 +85,7 @@ skip_covered = true
 
 [tool.coverage.run] # https://coverage.readthedocs.io/en/latest/config.html#run
 branch = true
-command_line = "--module pytest"
+command_line = "--module pytest -m 'not model_performance'"
 data_file = "reports/.coverage"
 source = ["src"]
 
@@ -96,6 +96,9 @@ output = "reports/coverage.xml"
 addopts = "--color=yes --doctest-modules --exitfirst --failed-first --verbosity=2 --junitxml=reports/pytest.xml"
 testpaths = ["src", "tests"]
 xfail_strict = true
+markers = [
+    "model_performance: marks tests that run heavy model benchmark evaluation (excluded by default, use poe test-benchmark)",
+]
 
 [tool.ruff] # https://docs.astral.sh/ruff/settings/
 fix = true
@@ -189,7 +192,7 @@ cmd = """
     """
 
 [tool.poe.tasks.test]
-help = "Test this package"
+help = "Test this package (excludes model_performance benchmarks by default)"
 
 [[tool.poe.tasks.test.sequence]]
 cmd = "coverage run"
@@ -199,3 +202,7 @@ cmd = "coverage report"
 
 [[tool.poe.tasks.test.sequence]]
 cmd = "coverage xml"
+
+[tool.poe.tasks.test-benchmark]
+help = "Run model benchmark tests only (model_performance marked tests)"
+cmd = "pytest -m 'model_performance' -v"
