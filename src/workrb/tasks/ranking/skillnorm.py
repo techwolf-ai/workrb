@@ -55,7 +55,7 @@ class ESCOSkillNormRanking(RankingTask):
     @property
     def name(self) -> str:
         """ESCO Skill Normalization task name."""
-        return "ESCO Skill Normalization"
+        return "Skill Normalization ESCO"
 
     @property
     def description(self) -> str:
@@ -192,4 +192,9 @@ class ESCOSkillNormRanking(RankingTask):
     @property
     def citation(self) -> str:
         """Skill normalization task citation."""
-        return """UWE-PLACEHOLDER"""
+        return """@article{de2025unified,
+  title={Unified Work Embeddings: Contrastive Learning of a Bidirectional Multi-task Ranker},
+  author={De Lange, Matthias and Decorte, Jens-Joris and Van Hautte, Jeroen},
+  journal={arXiv preprint arXiv:2511.07969},
+  year={2025}
+}"""

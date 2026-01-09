@@ -204,14 +204,15 @@ lang_result_ci = summary["mean_per_language/en/f1_macro/ci_margin"]
 | Task Name | Label Type | Dataset Size (English) | Languages |
 | --- | --- | --- | --- |
 | **Ranking** 
-| Job to Skills | multi_label | 3039 queries x 13939 targets | 28  |
-| Job Normalization | multi_class | 15463 queries x 2942 targets | 28  |
-| Job Title Similarity | multi_label | 105 queries x 2619 targets | 11  |
-| Skill to Job | multi_label | 13492 queries x 3039 targets | 28  |
-| Skill Extraction House | multi_label | 262 queries x 13891 targets | 28  |
-| Skill Extraction Tech | multi_label | 338 queries x 13891 targets | 28  |
-| Skill Similarity | multi_class | 900 queries x 2648 targets | 1 |
-| ESCO Skill Normalization | multi_label | 72008 queries x 13939 targets | 28  |
+| Job to Skills WorkBench | multi_label | 3039 queries x 13939 targets | 28 |
+| Job Title Similarity | multi_label | 105 queries x 2619 targets | 11 |
+| Job Normalization | single_label | 15463 queries x 2942 targets | 28 |
+| Skill to Job WorkBench | multi_label | 13492 queries x 3039 targets | 28 |
+| Skill Extraction House | multi_label | 262 queries x 13891 targets | 28 |
+| Skill Extraction Tech | multi_label | 338 queries x 13891 targets | 28 |
+| Skill Extraction SkillSkape | multi_label | 1191 queries x 13891 targets | 28 |
+| Skill Similarity SkillMatch-1K | single_label | 900 queries x 2648 targets | 1 |
+| Skill Normalization ESCO | multi_label | 72008 queries x 13939 targets | 28 |
 | **Classification**
 | Job-Skill Classification | multi_label | 3039 samples, 13939 classes | 28  |
 

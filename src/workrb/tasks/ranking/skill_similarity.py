@@ -21,7 +21,7 @@ class SkillMatch1kSkillSimilarityRanking(RankingTask):
     @property
     def name(self) -> str:
         """Skill similarity task name."""
-        return "Skill Similarity"
+        return "Skill Similarity SkillMatch-1K"
 
     @property
     def description(self) -> str:

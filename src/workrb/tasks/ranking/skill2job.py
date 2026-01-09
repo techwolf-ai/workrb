@@ -23,7 +23,7 @@ class ESCOSkill2JobRanking(RankingTask):
     @property
     def name(self) -> str:
         """Skill to Job task name."""
-        return "Skill to Job"
+        return "Skill to Job WorkBench"
 
     @property
     def description(self) -> str:
@@ -184,4 +184,9 @@ class ESCOSkill2JobRanking(RankingTask):
     @property
     def citation(self) -> str:
         """Skill to Job task citation."""
-        return """UWE-PLACEHOLDER"""
+        return """@article{de2025unified,
+  title={Unified Work Embeddings: Contrastive Learning of a Bidirectional Multi-task Ranker},
+  author={De Lange, Matthias and Decorte, Jens-Joris and Van Hautte, Jeroen},
+  journal={arXiv preprint arXiv:2511.07969},
+  year={2025}
+}"""
