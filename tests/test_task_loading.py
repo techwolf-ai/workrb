@@ -12,6 +12,7 @@ from workrb.tasks import (
     ESCOSkillNormRanking,
     HouseSkillExtractRanking,
     JobBERTJobNormRanking,
+    JobTitleSimilarityRanking,
     SkillMatch1kSkillSimilarityRanking,
     SkillSkapeExtractRanking,
     TechSkillExtractRanking,
@@ -42,10 +43,15 @@ def test_ranking_tasks_init_en_splits():
         ("ESCOSkill2JobRanking", ESCOSkill2JobRanking),
         ("ESCOSkillNormRanking", ESCOSkillNormRanking),
         ("JobNormRanking", JobBERTJobNormRanking),
+        ("JobTitleSimilarityRanking", JobTitleSimilarityRanking),
         ("SkillExtractHouseRanking", HouseSkillExtractRanking),
         ("SkillExtractTechRanking", TechSkillExtractRanking),
         ("SkillExtractSkillSkapeRanking", SkillSkapeExtractRanking),
         ("SkillSimilarityRanking", SkillMatch1kSkillSimilarityRanking),
+    ]
+
+    tasks_with_only_test_set = [
+        "JobTitleSimilarityRanking",
     ]
 
     results = {"success": [], "failures": []}
@@ -55,6 +61,8 @@ def test_ranking_tasks_init_en_splits():
     nb_total = 0
     for split in splits:
         for task_name, task_class in ranking_tasks:
+            if split != DatasetSplit.TEST and task_name in tasks_with_only_test_set:
+                continue
             nb_total += 1
             try:
                 # Try to instantiate with minimal parameters
