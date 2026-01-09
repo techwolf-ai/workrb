@@ -1,4 +1,6 @@
-import pytest  # noqa: D100
+"""Tests for CurriculumMatchModel: loading, usage, and benchmark validation."""
+
+import pytest
 
 from workrb.models.curriculum_encoder import CurriculumMatchModel
 from workrb.tasks import TechSkillExtractRanking
