@@ -1,4 +1,6 @@
-import pytest  # noqa: D100
+"""Tests for ConTeXTMatchModel: loading, usage, and benchmark validation."""
+
+import pytest
 import torch
 
 from workrb.models.bi_encoder import ConTeXTMatchModel
