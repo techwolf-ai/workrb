@@ -244,6 +244,12 @@ source .venv/bin/activate
 
 # Install the pre-commit hooks
 pre-commit install --install-hooks
+
+# Run tests (excludes model benchmarking by default)
+uv run poe test
+
+# Run model benchmark tests only, checks reproducibility of original results
+uv run poe test-benchmark
 ```
 
 

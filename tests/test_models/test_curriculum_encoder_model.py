@@ -1,4 +1,4 @@
-import pytest
+import pytest  # noqa: D100
 
 from workrb.models.curriculum_encoder import CurriculumMatchModel
 from workrb.tasks import TechSkillExtractRanking
@@ -47,6 +47,7 @@ class TestCurriculumMatchModelLoading:
         assert model.classification_label_space is None
 
 
+@pytest.mark.model_performance
 class TestCurriculumMatchModelBenchmark:
     """Test CurriculumMatchModel performance on skill extraction benchmarks."""
 

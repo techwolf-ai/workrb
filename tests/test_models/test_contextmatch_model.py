@@ -111,6 +111,7 @@ class TestConTeXTMatchModelUsage:
         assert torch.isfinite(scores).all()
 
 
+@pytest.mark.model_performance
 class TestConTeXTMatchModelTechSkillExtraction:
     """Test ConTeXTMatchModel performance on TECH skill extraction test set."""
 
