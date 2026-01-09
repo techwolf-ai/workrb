@@ -7,7 +7,7 @@ packages = ["src/workrb"]
 
 [project]
 name = "workrb"
-version = "0.2.1"
+version = "0.3.0"
 description = "WorkRB: Work Research Benchmark. Easy benchmarking of AI progress in the work domain."
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
