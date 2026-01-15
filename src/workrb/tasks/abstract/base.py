@@ -202,6 +202,42 @@ class Task(ABC):
         """
         return ""
 
+    def get_dataset_language(self, dataset_id: str) -> Language | None:
+        """Return the language of a dataset if it's monolingual, None otherwise.
+
+        Default implementation assumes dataset_id equals language code (1:1 mapping).
+        This works for standard monolingual tasks where each dataset corresponds to
+        exactly one language.
+
+        Tasks with arbitrary dataset IDs (not 1:1 with languages) must override this
+        method to return the appropriate language for each dataset, or None for
+        cross-language datasets.
+
+        Args:
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Language enum if this is a monolingual dataset, None for cross-language datasets
+
+        Raises
+        ------
+            NotImplementedError: If dataset_id is not a valid language code and the
+                subclass has not overridden this method
+        """
+        try:
+            lang = Language(dataset_id)
+            if lang in self.languages:
+                return lang
+            return None
+        except ValueError as e:
+            raise NotImplementedError(
+                f"Dataset ID '{dataset_id}' is not a valid language code. "
+                f"Task '{self.__class__.__name__}' uses arbitrary dataset IDs (not 1:1 with languages) "
+                f"and must override the 'get_dataset_language' method to map each dataset ID "
+                f"to its corresponding language, or return None for cross-language datasets."
+            ) from e
+
     @final
     @property
     def split_val_fraction(self) -> float:

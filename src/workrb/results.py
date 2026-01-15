@@ -28,6 +28,10 @@ class MetricsResult(BaseModel):
     evaluation_time: float = Field(ge=0)
     metrics_dict: dict[str, Any] = Field(default_factory=dict)
     """ Dictionary of metric names to their computed values. """
+    language: str | None = Field(
+        default=None,
+        description="Language code if this is a monolingual dataset, None for cross-language datasets.",
+    )
 
 
 class TaskResults(BaseModel):
@@ -292,19 +296,24 @@ class BenchmarkResults(BaseModel):
     ) -> dict[ResultTagString, float]:
         """Aggregate results per language.
 
-        Collects language-specific results over all tasks, and aggregates all available results.
+        Collects results for monolingual datasets and aggregates by language across all tasks.
+        Cross-language datasets (where language is None) are excluded from this aggregation.
         Results may be imbalanced if tasks support different languages.
         """
-        # Collect metric values per task
+        # Collect metric values per language
         raw_results = defaultdict(list)
         for task_result in self.task_results.values():
-            for dataset_id, metrics_result in task_result.language_results.items():
+            for metrics_result in task_result.language_results.values():
+                # Skip cross-language datasets
+                if metrics_result.language is None:
+                    continue
+
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
-                    raw_results[(dataset_id, metric_name)].append(metric_value)
+                    raw_results[(metrics_result.language, metric_name)].append(metric_value)
 
         # Compute stats
         results = {}
-        for (dataset_id, metric_name), values in raw_results.items():
+        for (language, metric_name), values in raw_results.items():
             stats = self._compute_stats(values)
             for agg in aggregations:
                 assert agg in stats, f"Aggregation {agg} not found in stats: {stats.keys()}"
@@ -312,7 +321,7 @@ class BenchmarkResults(BaseModel):
                     name=tag_name,
                     metric_name=metric_name,
                     aggregation=agg,
-                    grouping_name=dataset_id,
+                    grouping_name=language,
                 )
                 results[tag] = stats[agg]
         return results
