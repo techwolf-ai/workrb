@@ -344,9 +344,11 @@ def _run_pending_work(
                 evaluation_time = time.time() - start_time_eval
 
                 # Store results
+                dataset_language = task.get_dataset_language(dataset_id)
                 results.task_results[task.name].language_results[dataset_id] = MetricsResult(
                     evaluation_time=evaluation_time,
                     metrics_dict=dataset_results,
+                    language=dataset_language.value if dataset_language else None,
                 )
 
                 # Save incremental results to checkpoint
