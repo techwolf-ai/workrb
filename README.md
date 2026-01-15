@@ -112,7 +112,7 @@ Feel free to make a PR to add your models & tasks to the official package! See [
 
 ### Checkpointing & Resuming
 
-WorkRB automatically saves result checkpoints after each task completion in a specific language.
+WorkRB automatically saves result checkpoints after each dataset evaluation within a task.
 
 **Automatic Resuming** - Simply rerun with the same `output_folder`:
 

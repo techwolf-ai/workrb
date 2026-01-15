@@ -208,21 +208,21 @@ class BenchmarkConfig:
     ) -> list[tuple]:
         """Determine what work still needs to be done.
 
-        Work is defined as a (task, language) combination that is not completed.
+        Work is defined as a (task, dataset_id) combination that is not completed.
         """
         pending_work = []
         for task in tasks:
-            for language in task.languages:
-                # Successful completed (task, language) combination
+            for dataset_id in task.dataset_ids:
+                # Successful completed (task, dataset_id) combination
                 if (
                     results is not None
                     and task.name in results.task_results
-                    and language in results.task_results[task.name].language_results
+                    and dataset_id in results.task_results[task.name].language_results
                 ):
                     continue
 
                 # Add to pending work
-                pending_work.append((task, language))
+                pending_work.append((task, dataset_id))
 
         return pending_work
 

@@ -55,10 +55,11 @@ class Task(ABC):
                 f"Invalid split: '{split}'. Supported splits: {list(DatasetSplit)}"
             ) from e
 
-        # Load datasets for all languages
-        self.lang_datasets = self._load_multilingual_data(
-            languages=self.languages, split=self.split
-        )
+        # Select dataset identifiers that match the requested languages
+        self.dataset_ids = self.languages_to_dataset_ids(self.languages)
+
+        # Load datasets for the selected dataset identifiers
+        self.datasets = self._load_datasets(dataset_ids=self.dataset_ids, split=self.split)
 
     def _parse_languages(
         self, languages: list[str], unsupported_lang_mode: Literal["error", "skip"]
@@ -81,6 +82,41 @@ class Task(ABC):
                     continue
             parsed_languages.append(lang)
         return parsed_languages
+
+    def languages_to_dataset_ids(self, languages: list[Language]) -> list[str]:
+        """Convert languages to dataset IDs.
+
+        Default implementation returns language codes as dataset IDs (1:1 mapping).
+        This provides automatic backward compatibility for tasks that are a union of
+        monolingual datasets.
+
+        Other tasks with multiple datasets per language can override this method to
+        return all datasets that use only languages from the provided set.
+
+        Args:
+            languages: List of Language enums requested for evaluation
+
+        Returns
+        -------
+            List of dataset identifier strings
+        """
+        return [lang.value for lang in languages]
+
+    def _load_datasets(self, dataset_ids: list[str], split: DatasetSplit) -> dict[str, Any]:
+        """Load datasets for specified IDs.
+
+        Args:
+            dataset_ids: List of dataset identifiers to load
+            split: Dataset split to load
+
+        Returns
+        -------
+            Dictionary mapping dataset_id to dataset object
+        """
+        datasets = {}
+        for dataset_id in dataset_ids:
+            datasets[dataset_id] = self.load_dataset(dataset_id=dataset_id, split=split)
+        return datasets
 
     def get_task_config(self) -> dict[str, Any]:
         """Get task configuration."""
@@ -154,8 +190,16 @@ class Task(ABC):
         """Default fraction of data to use for test split."""
         return 0.8
 
-    def get_size_oneliner(self, language: Language) -> str:
-        """Get dataset size summary to display status."""
+    def get_size_oneliner(self, dataset_id: str) -> str:
+        """Get dataset size summary to display status.
+
+        Args:
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Human-readable size string
+        """
         return ""
 
     @final
@@ -165,27 +209,35 @@ class Task(ABC):
         assert 0 <= self.split_test_fraction <= 1, "Split test fraction must be between 0 and 1"
         return 1 - self.split_test_fraction
 
-    def _load_multilingual_data(
-        self, languages: list[Language], split: DatasetSplit
-    ) -> dict[Language, Any]:
-        """Load datasets for all languages."""
-        lang_datasets: dict[Language, Any] = {}
+    @abstractmethod
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> Any:
+        """Load dataset for specific ID and split.
 
-        # Check if languages are supported
-        non_supported_languages = set(languages) - set(self.supported_languages)
-        if non_supported_languages:
-            raise ValueError(
-                f"The following languages are defined for '{self.name}' but are not supported: {non_supported_languages}. Supported languages: {self.supported_languages}"
-            )
+        For tasks that are a union of monolingual datasets: dataset_id equals
+        language code (e.g., "en", "de").
 
-        for lang in languages:
-            lang_datasets[lang] = self.load_monolingual_data(split=split, language=lang)
-        return lang_datasets
+        For other tasks: dataset_id can encode additional information like
+        country and languages (e.g., "deu_q_de_c_de").
+
+        Args:
+            dataset_id: Unique identifier for the dataset
+            split: Dataset split to load
+
+        Returns
+        -------
+            Dataset object (RankingDataset or ClassificationDataset)
+        """
 
     @abstractmethod
-    def load_monolingual_data(self, language: Language, split: DatasetSplit) -> Any:
-        pass
+    def evaluate(self, model, metrics=None, dataset_id: str = "en") -> dict[str, float]:
+        """Evaluate model on specific dataset.
 
-    @abstractmethod
-    def evaluate(self, model, metrics=None, language: Language = Language.EN) -> dict[str, float]:
-        pass
+        Args:
+            model: Model to evaluate
+            metrics: List of metric names. If None, uses default_metrics
+            dataset_id: Dataset identifier to evaluate on
+
+        Returns
+        -------
+            Dictionary of metric names to values
+        """

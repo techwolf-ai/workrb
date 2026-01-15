@@ -63,13 +63,22 @@ class SkillMatch1kSkillSimilarityRanking(RankingTask):
         """Target input type for skills."""
         return ModelInputType.SKILL_NAME
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """
-        Load skill similarity data from SkillMatch dataset.
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load skill similarity data from SkillMatch dataset.
 
         Uses only the 1k related pairs from the SkillMatch dataset, but
         uses all skills from the SkillMatch dataset for the vocabulary.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
         """
+        language = Language(dataset_id)
+
         if language != Language.EN:
             raise ValueError("The validation set of this task is only available in English.")
 
@@ -105,7 +114,7 @@ class SkillMatch1kSkillSimilarityRanking(RankingTask):
             selected_queries = query_test
             selected_labels = label_test
 
-        return RankingDataset(selected_queries, selected_labels, skill_vocab, language=language)
+        return RankingDataset(selected_queries, selected_labels, skill_vocab, dataset_id=dataset_id)
 
     @property
     def citation(self) -> str:

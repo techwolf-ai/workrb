@@ -22,7 +22,7 @@ from workrb.results import (
     TaskResultMetadata,
     TaskResults,
 )
-from workrb.tasks.abstract.base import Language, Task
+from workrb.tasks.abstract.base import Task
 
 logger = logging.getLogger(__name__)
 setup_logger(__name__, verbose=False)
@@ -80,10 +80,10 @@ def evaluate(
 
     # Group pending work by task for better organization
     work_by_task = {}
-    for task, language in pending_work:
+    for task, dataset_id in pending_work:
         if task.name not in work_by_task:
-            work_by_task[task.name] = {"task": task, "languages": []}
-        work_by_task[task.name]["languages"].append(language)
+            work_by_task[task.name] = {"task": task, "dataset_ids": []}
+        work_by_task[task.name]["dataset_ids"].append(dataset_id)
 
     # Run pending work
     start_time_benchmark = time.time()
@@ -101,7 +101,7 @@ def evaluate(
     # Update metadata
     results.metadata.total_evaluation_time = time.time() - start_time_benchmark
     results.metadata.resumed_from_checkpoint = len(pending_work) < sum(
-        len(task.languages) for task in tasks
+        len(task.dataset_ids) for task in tasks
     )
 
     # Save config and results
@@ -206,11 +206,11 @@ def get_tasks_overview(tasks: Sequence[Task]) -> str:
 
         lines.append(f"{task_name:<40} {group:<20} {task_languages:<20}")
 
-        # Add size one-liner for each language
-        for lang in task.languages:
-            size_info = task.get_size_oneliner(lang)
+        # Add size one-liner for each dataset
+        for dataset_id in task.dataset_ids:
+            size_info = task.get_size_oneliner(dataset_id)
             if size_info:
-                lines.append(f"  └─ {lang}: {size_info}")
+                lines.append(f"  └─ {dataset_id}: {size_info}")
 
     lines.append("-" * 80)
 
@@ -227,7 +227,7 @@ def _get_all_languages(tasks: Sequence[Task]) -> list[str]:
 
 def _get_total_evaluations(tasks: Sequence[Task]) -> int:
     """Get the total number of evaluations."""
-    return sum(len(task.languages) for task in tasks)
+    return sum(len(task.dataset_ids) for task in tasks)
 
 
 def _init_checkpointing(
@@ -307,12 +307,12 @@ def _run_pending_work(
     run_idx = results.get_num_evaluation_results()  # Already completed evaluations
     for work_info in work_by_task.values():
         task: Task = work_info["task"]
-        pending_languages: list[str] = work_info["languages"]
+        pending_dataset_ids: list[str] = work_info["dataset_ids"]
 
         logger.info(f"{'=' * 60}")
         logger.info(f"Evaluating task: {task.name}")
         logger.info(f"Completed {run_idx} / {_get_total_evaluations(tasks)} evaluations. ")
-        logger.info(f"Pending languages for this task: {len(pending_languages)}")
+        logger.info(f"Pending datasets for this task: {len(pending_dataset_ids)}")
 
         # Initialize task results if not exists
         if task.name not in results.task_results:
@@ -327,11 +327,9 @@ def _run_pending_work(
                 language_results={},
             )
 
-        # Evaluate pending languages
-        for language in pending_languages:
-            logger.info(
-                f"* Running language: {language} ({task.get_size_oneliner(Language(language))})"
-            )
+        # Evaluate pending datasets
+        for dataset_id in pending_dataset_ids:
+            logger.info(f"* Running dataset: {dataset_id} ({task.get_size_oneliner(dataset_id)})")
 
             # Get metrics for this task
             task_metrics = None
@@ -340,15 +338,15 @@ def _run_pending_work(
 
             try:
                 start_time_eval = time.time()
-                lang_results: dict[str, float] = task.evaluate(
-                    model=model, metrics=task_metrics, language=Language(language)
+                dataset_results: dict[str, float] = task.evaluate(
+                    model=model, metrics=task_metrics, dataset_id=dataset_id
                 )
                 evaluation_time = time.time() - start_time_eval
 
                 # Store results
-                results.task_results[task.name].language_results[language] = MetricsResult(
+                results.task_results[task.name].language_results[dataset_id] = MetricsResult(
                     evaluation_time=evaluation_time,
-                    metrics_dict=lang_results,
+                    metrics_dict=dataset_results,
                 )
 
                 # Save incremental results to checkpoint
@@ -357,7 +355,7 @@ def _run_pending_work(
 
                 # Show key metrics
                 key_metric = task.default_metrics[0]
-                logger.info(f"\t{key_metric}: {lang_results[key_metric]:.3f}")
+                logger.info(f"\t{key_metric}: {dataset_results[key_metric]:.3f}")
                 run_idx += 1
             except Exception as e:
                 logger.error(f"Error: {e}")
