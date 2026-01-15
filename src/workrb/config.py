@@ -205,7 +205,7 @@ class BenchmarkConfig:
         self,
         results: BenchmarkResults | None,
         tasks: Sequence[Task],
-    ) -> list[tuple]:
+    ) -> list[tuple[Task, str]]:
         """Determine what work still needs to be done.
 
         Work is defined as a (task, dataset_id) combination that is not completed.

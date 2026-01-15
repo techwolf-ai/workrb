@@ -6,6 +6,7 @@ with the WorkRB framework. Custom tasks should inherit from workrb.tasks.Ranking
 and implement the required abstract methods.
 """
 
+import workrb
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
