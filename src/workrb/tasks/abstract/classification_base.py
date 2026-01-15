@@ -13,7 +13,6 @@ from workrb.tasks.abstract.base import (
     BaseTaskGroup,
     DatasetSplit,
     LabelType,
-    Language,
     Task,
     TaskType,
 )
@@ -43,7 +42,7 @@ class ClassificationDataset:
         texts: list[str],
         labels: list[list[int]],
         label_space: list[str],
-        language: Language,
+        dataset_id: str,
     ):
         """Initialize classification dataset with validation.
 
@@ -52,12 +51,12 @@ class ClassificationDataset:
             labels: List with list of class indices corresponding to each text.
                 Contains just 1 item per list for single-label classification.
             label_space: List of class names/labels (e.g., ["skill1", "skill2", "skill3"])
-            language: Language enum
+            dataset_id: Unique identifier for this dataset
         """
         self.texts = self._postprocess_texts(texts)
         self.labels = self._postprocess_labels(labels)
         self.label_space = self._postprocess_texts(label_space)
-        self.language = language
+        self.dataset_id = dataset_id
         self.validate_dataset()
 
     def validate_dataset(
@@ -141,11 +140,10 @@ class ClassificationDataset:
 
 
 class ClassificationTask(Task):
-    """
-    Abstract base class for classification tasks.
+    """Abstract base class for classification tasks.
 
     Supports both binary and multi-class classification.
-    Tasks should implement load_monolingual_data() to return ClassificationDataset.
+    Tasks should implement load_dataset() to return ClassificationDataset.
     """
 
     @property
@@ -177,8 +175,16 @@ class ClassificationTask(Task):
         """Threshold to use for classification."""
 
     @abstractmethod
-    def get_output_space_size(self, language: Language) -> int:
-        """Number of output classes for this classification task."""
+    def get_output_space_size(self, dataset_id: str) -> int:
+        """Number of output classes for this classification task.
+
+        Args:
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Number of classes in the output space
+        """
 
     @property
     @abstractmethod
@@ -186,24 +192,43 @@ class ClassificationTask(Task):
         """Input type for texts in the classification task."""
 
     @abstractmethod
-    def load_monolingual_data(
-        self, split: DatasetSplit, language: Language
-    ) -> ClassificationDataset:
-        """Load dataset for a specific language."""
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> ClassificationDataset:
+        """Load dataset for specific ID and split.
 
-    def get_size_oneliner(self, language: Language) -> str:
-        """Get dataset summary to display for progress."""
-        dataset: ClassificationDataset = self.lang_datasets[language]
+        For tasks that are a union of monolingual datasets: dataset_id equals
+        language code.
+
+        For other tasks: dataset_id can encode arbitrary information.
+
+        Args:
+            dataset_id: Unique identifier for the dataset
+            split: Dataset split to load
+
+        Returns
+        -------
+            ClassificationDataset object
+        """
+
+    def get_size_oneliner(self, dataset_id: str) -> str:
+        """Get dataset summary to display for progress.
+
+        Args:
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Human-readable size string
+        """
+        dataset: ClassificationDataset = self.datasets[dataset_id]
         return f"{len(dataset.texts)} samples, {len(dataset.label_space)} classes"
 
     def evaluate(
         self,
         model: ModelInterface,
         metrics: list[str] | None = None,
-        language: Language = Language.EN,
+        dataset_id: str = "en",
     ) -> dict[str, float]:
-        """
-        Evaluate the model with threshold optimization.
+        """Evaluate the model with threshold optimization.
 
         For binary classification, this method:
         1. Optimizes threshold on validation data
@@ -213,7 +238,7 @@ class ClassificationTask(Task):
         Args:
             model: Model implementing classification interface
             metrics: List of metrics to compute
-            language: Language code for evaluation
+            dataset_id: Dataset identifier to evaluate on
 
         Returns
         -------
@@ -223,22 +248,22 @@ class ClassificationTask(Task):
             metrics = self.default_metrics
 
         # Get evaluation dataset
-        eval_dataset: ClassificationDataset = self.lang_datasets[language]
+        eval_dataset: ClassificationDataset = self.datasets[dataset_id]
 
         # Validate model output if it has a fixed classification label space
         model_label_space = model.classification_label_space
         if model_label_space is not None:
             # Model has fixed label space (e.g., classification head)
-            if len(model_label_space) != self.get_output_space_size(language):
+            if len(model_label_space) != self.get_output_space_size(dataset_id):
                 raise ValueError(
                     f"Model output size mismatch: model has {len(model_label_space)} outputs, "
-                    f"but task requires {self.get_output_space_size(language)} outputs."
+                    f"but task requires {self.get_output_space_size(dataset_id)} outputs."
                 )
             # Validate label order matches (critical for correct evaluation)
             self._validate_model_label_space(model_label_space, eval_dataset)
 
         best_threshold = (
-            self.get_threshold_on_val_data(model, language)
+            self.get_threshold_on_val_data(model, dataset_id)
             if self.best_threshold_on_val_data
             else self.threshold
         )
@@ -307,12 +332,21 @@ class ClassificationTask(Task):
                 "The model must use the exact same label ordering as the task."
             )
 
-    def get_threshold_on_val_data(self, model: ModelInterface, language: Language) -> float:
-        """Get the best threshold on validation data."""
+    def get_threshold_on_val_data(self, model: ModelInterface, dataset_id: str) -> float:
+        """Get the best threshold on validation data.
+
+        Args:
+            model: Model to evaluate
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Optimized threshold value
+        """
         # Step 1: Optimize threshold on validation data
         # Load validation data (even if we're evaluating on test)
-        logger.info(f"Optimizing threshold on validation data for {language}...")
-        val_dataset = self.load_monolingual_data(DatasetSplit.VAL, language)
+        logger.info(f"Optimizing threshold on validation data for {dataset_id}...")
+        val_dataset = self.load_dataset(dataset_id, DatasetSplit.VAL)
         val_predictions = model.compute_classification(
             texts=val_dataset.texts,
             targets=val_dataset.label_space,

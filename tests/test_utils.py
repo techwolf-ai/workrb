@@ -42,10 +42,10 @@ class GeneralRankingTestTask(Task):
     def default_metrics(self) -> list[str]:
         return ["map"]
 
-    def load_monolingual_data(self, language: Language, split: DatasetSplit) -> Any:
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> Any:
         return {}
 
-    def evaluate(self, model, metrics=None, language: Language = Language.EN) -> dict[str, float]:
+    def evaluate(self, model, metrics=None, dataset_id: str = "en") -> dict[str, float]:
         return {}
 
 
@@ -122,7 +122,7 @@ class ToyTaskMixin:
             query_texts=filtered_queries,
             target_indices=remapped_indices,
             target_space=limited_target_space,
-            language=dataset.language,
+            dataset_id=dataset.dataset_id,
         )
 
 
@@ -161,7 +161,7 @@ class ToyClassificationTaskMixin:
             texts=limited_texts,
             labels=limited_labels,
             label_space=dataset.label_space,  # Keep full label space
-            language=dataset.language,
+            dataset_id=dataset.dataset_id,
         )
 
 
@@ -184,10 +184,8 @@ def create_toy_task_class(
         class ToyRankingTask(ToyTaskMixin, base_task_class):
             """Dynamically created toy ranking task."""
 
-            def load_monolingual_data(
-                self, split: DatasetSplit, language: Language
-            ) -> RankingDataset:
-                full_dataset = super().load_monolingual_data(split=split, language=language)
+            def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+                full_dataset = super().load_dataset(dataset_id=dataset_id, split=split)
                 return self._limit_dataset(full_dataset)
 
         return_cls = ToyRankingTask
@@ -197,10 +195,8 @@ def create_toy_task_class(
         class ToyClassificationTask(ToyClassificationTaskMixin, base_task_class):
             """Dynamically created toy classification task."""
 
-            def load_monolingual_data(
-                self, split: DatasetSplit, language: Language
-            ) -> ClassificationDataset:
-                full_dataset = super().load_monolingual_data(split=split, language=language)
+            def load_dataset(self, dataset_id: str, split: DatasetSplit) -> ClassificationDataset:
+                full_dataset = super().load_dataset(dataset_id=dataset_id, split=split)
                 return self._limit_classification_dataset(full_dataset)
 
         return_cls = ToyClassificationTask

@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 import torch
 
 from workrb.metrics.ranking import calculate_ranking_metrics
-from workrb.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Language, Task, TaskType
+from workrb.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Task, TaskType
 from workrb.types import ModelInputType
 
 if TYPE_CHECKING:
@@ -30,26 +30,27 @@ class RankingTaskGroup(BaseTaskGroup, str, Enum):
 
 
 class RankingDataset:
-    """Structure for monolingualranking datasets."""
+    """Structure for ranking datasets."""
 
     def __init__(
         self,
         query_texts: list[str],
         target_indices: list[list[int]],
         target_space: list[str],
-        language: Language,
+        dataset_id: str,
     ):
         """Initialize ranking dataset with validation.
 
         Args:
-            query: List of query strings
-            target_label: List of lists containing indices into the target vocabulary
-            target: List of target vocabulary strings
+            query_texts: List of query strings
+            target_indices: List of lists containing indices into the target vocabulary
+            target_space: List of target vocabulary strings
+            dataset_id: Unique identifier for this dataset
         """
         self.query_texts = self._postprocess_texts(query_texts)
         self.target_indices = self._postprocess_indices(target_indices)
         self.target_space = self._postprocess_texts(target_space)
-        self.language = language
+        self.dataset_id = dataset_id
         self.validate_dataset()
 
     def validate_dataset(
@@ -135,26 +136,48 @@ class RankingTask(Task):
         """Input type for target texts in the ranking task."""
 
     @abstractmethod
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """Load dataset for a specific language."""
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load dataset for specific ID and split.
 
-    def get_size_oneliner(self, language: Language) -> str:
-        """Get dataset summary to display for progress."""
-        return f"{len(self.lang_datasets[language].query_texts)} queries x {len(self.lang_datasets[language].target_space)} targets"
+        For tasks that are a union of monolingual datasets: dataset_id equals
+        language code.
+
+        For other tasks: dataset_id can encode arbitrary information.
+
+        Args:
+            dataset_id: Unique identifier for the dataset
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
+        """
+
+    def get_size_oneliner(self, dataset_id: str) -> str:
+        """Get dataset summary to display for progress.
+
+        Args:
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Human-readable size string
+        """
+        dataset = self.datasets[dataset_id]
+        return f"{len(dataset.query_texts)} queries x {len(dataset.target_space)} targets"
 
     def evaluate(
         self,
         model: ModelInterface,
         metrics: list[str] | None = None,
-        language: Language = Language.EN,
+        dataset_id: str = "en",
     ) -> dict[str, float]:
-        """
-        Evaluate the model on this ranking task.
+        """Evaluate the model on this ranking task.
 
         Args:
             model: Model implementing ModelInterface (must have compute_rankings method)
             metrics: List of metrics to compute. If None, uses default_metrics
-            language: Language code for evaluation
+            dataset_id: Dataset identifier to evaluate on
 
         Returns
         -------
@@ -163,8 +186,8 @@ class RankingTask(Task):
         if metrics is None:
             metrics = self.default_metrics
 
-        # Use new dataset if available
-        dataset = self.lang_datasets[language]
+        # Retrieve dataset by ID
+        dataset = self.datasets[dataset_id]
         queries = dataset.query_texts
         targets = dataset.target_space
         labels = dataset.target_indices
@@ -181,6 +204,7 @@ class RankingTask(Task):
         if isinstance(prediction_matrix, torch.Tensor):
             prediction_matrix = prediction_matrix.cpu().numpy()
 
+        # Calculate metrics
         metric_results = calculate_ranking_metrics(
             prediction_matrix=prediction_matrix, pos_label_idxs=labels, metrics=metrics
         )

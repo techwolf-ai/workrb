@@ -61,22 +61,31 @@ class ESCOJob2SkillRanking(RankingTask):
         """Target input type for skills."""
         return ModelInputType.SKILL_NAME
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """
-        Load job-to-skills data for a specific split and language.
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load job-to-skills data for a specific split and dataset.
 
         Static validation set only available in English.
         Test set is generated from ESCO relations for the selected version and language.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
         """
+        language = Language(dataset_id)
+
         if split == DatasetSplit.TEST:
-            return self._load_test(language=language)
+            return self._load_test(language=language, dataset_id=dataset_id)
 
         if split == DatasetSplit.VAL:
-            return self._load_val(language=language)
+            return self._load_val(language=language, dataset_id=dataset_id)
 
         raise ValueError(f"Invalid split: {split}")
 
-    def _load_test(self, language: Language) -> RankingDataset:
+    def _load_test(self, language: Language, dataset_id: str) -> RankingDataset:
         """Load test data for a specific version and language."""
         target_esco = ESCO(version=self.esco_version, language=language)
         skill_vocab = target_esco.get_skills_vocabulary()
@@ -105,12 +114,11 @@ class ESCOJob2SkillRanking(RankingTask):
             query_texts=query_texts,
             target_indices=target_indices,
             target_space=skill_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
-    def _load_val(self, language: Language) -> RankingDataset:
-        """
-        Validation set based on vacancies with job titles, where description is used to extract ESCO skills.
+    def _load_val(self, language: Language, dataset_id: str) -> RankingDataset:
+        """Validation set based on vacancies with job titles, where description is used to extract ESCO skills.
 
         Static validation set only available in English.
         """
@@ -162,7 +170,7 @@ class ESCOJob2SkillRanking(RankingTask):
             query_texts=query_texts,
             target_indices=target_indices,
             target_space=skill_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
     @property
