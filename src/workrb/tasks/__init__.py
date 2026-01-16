@@ -11,6 +11,7 @@ from .classification.job2skill import ESCOJob2SkillClassification
 from .ranking.job2skill import ESCOJob2SkillRanking
 from .ranking.job_similarity import JobTitleSimilarityRanking
 from .ranking.jobnorm import JobBERTJobNormRanking
+from .ranking.melo import MELORanking
 from .ranking.skill2job import ESCOSkill2JobRanking
 from .ranking.skill_extraction import (
     HouseSkillExtractRanking,
@@ -35,6 +36,7 @@ __all__ = [
     "ESCOSkillNormRanking",
     "JobBERTJobNormRanking",
     "JobTitleSimilarityRanking",
+    "MELORanking",
     "HouseSkillExtractRanking",
     "TechSkillExtractRanking",
     "SkillSkapeExtractRanking",
