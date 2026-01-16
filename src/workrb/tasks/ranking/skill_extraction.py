@@ -68,8 +68,18 @@ class BaseESCOSkillExtractRanking(RankingTask):
         """Target input type for ESCO skills."""
         return ModelInputType.SKILL_NAME
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """Load skill extraction house data."""
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load skill extraction data for a specific split and dataset.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
+        """
+        language = Language(dataset_id)
         # Load data
         split_names = {DatasetSplit.TEST: "test", DatasetSplit.VAL: "validation"}
         dataset = load_dataset(self.hf_name, split=split_names[split])
@@ -119,7 +129,7 @@ class BaseESCOSkillExtractRanking(RankingTask):
             query_texts=filtered_queries,
             target_indices=filtered_labels,
             target_space=skill_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
 

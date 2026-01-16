@@ -68,32 +68,39 @@ class ESCOJob2SkillClassification(MultiLabelClassificationTask):
         """Input is job titles."""
         return ModelInputType.JOB_TITLE
 
-    def get_output_space_size(self, language: Language) -> int:
-        """Number of output classes (skills) for this classification task."""
-        ds: ClassificationDataset = self.lang_datasets[language]
-        return len(ds.label_space)
-
-    def load_monolingual_data(
-        self, split: DatasetSplit, language: Language
-    ) -> ClassificationDataset:
-        """
-        Load job-skill classification data for specified language and split.
+    def get_output_space_size(self, dataset_id: str) -> int:
+        """Number of output classes (skills) for this classification task.
 
         Args:
+            dataset_id: Dataset identifier
+
+        Returns
+        -------
+            Number of classes in the output space
+        """
+        ds: ClassificationDataset = self.datasets[dataset_id]
+        return len(ds.label_space)
+
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> ClassificationDataset:
+        """Load job-skill classification data for specified dataset and split.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
             split: Data split (VAL or TEST)
-            language: Language code
 
         Returns
         -------
             ClassificationDataset with job titles and multi-label skill assignments
         """
+        language = Language(dataset_id)
+
         if split == DatasetSplit.VAL:
-            return self._load_val(language)
+            return self._load_val(language=language, dataset_id=dataset_id)
         if split == DatasetSplit.TEST:
-            return self._load_test(language)
+            return self._load_test(language=language, dataset_id=dataset_id)
         raise ValueError(f"Split '{split}' not supported. Use VAL or TEST")
 
-    def _load_test(self, language: Language) -> ClassificationDataset:
+    def _load_test(self, language: Language, dataset_id: str) -> ClassificationDataset:
         """Load test data from ESCO occupation-skill relations."""
         target_esco = ESCO(version=self.esco_version, language=language)
         skill_vocab = target_esco.get_skills_vocabulary()
@@ -122,12 +129,11 @@ class ESCOJob2SkillClassification(MultiLabelClassificationTask):
             texts=texts,
             labels=labels,
             label_space=skill_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
-    def _load_val(self, language: Language) -> ClassificationDataset:
-        """
-        Load validation set based on vacancies with job titles.
+    def _load_val(self, language: Language, dataset_id: str) -> ClassificationDataset:
+        """Load validation set based on vacancies with job titles.
 
         Static validation set only available in English.
         """
@@ -187,5 +193,5 @@ class ESCOJob2SkillClassification(MultiLabelClassificationTask):
             texts=texts,
             labels=labels,
             label_space=skill_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )

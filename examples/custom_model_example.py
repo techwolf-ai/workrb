@@ -9,6 +9,7 @@ and implement the required abstract methods.
 import torch
 from sentence_transformers import SentenceTransformer
 
+import workrb
 from workrb.models.base import ModelInterface
 from workrb.registry import register_model
 from workrb.types import ModelInputType
@@ -47,10 +48,12 @@ class MyCustomModel(ModelInterface):
         self.encoder.to(device)
         self.encoder.eval()
 
+    @property
     def name(self) -> str:
         """Return the unique name of this model."""
         return f"MyCustomModel-{self.base_model_name.split('/')[-1]}"
 
+    @property
     def description(self) -> str:
         """Return the description of this model."""
         return "A custom model that demonstrates WorkRB extensibility"

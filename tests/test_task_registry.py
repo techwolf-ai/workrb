@@ -53,10 +53,10 @@ class BaseTestTask(Task):
     def default_metrics(self):
         return ["accuracy"]
 
-    def load_monolingual_data(self, language, split):
-        return {"test": "data", "language": str(language), "split": str(split)}
+    def load_dataset(self, dataset_id, split):
+        return {"test": "data", "dataset_id": dataset_id, "split": str(split)}
 
-    def evaluate(self, model, metrics=None, language="en"):
+    def evaluate(self, model, metrics=None, dataset_id="en"):
         return {"accuracy": 0.95, "test_metric": 1.0}
 
 
