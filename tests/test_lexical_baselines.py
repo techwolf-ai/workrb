@@ -28,10 +28,15 @@ class TestBM25Model:
     def test_model_properties(self):
         """Test BM25Model name and description properties."""
         model = BM25Model()
-        assert model.name == "BM25"
+        assert model.name == "BM25-lower"
         assert isinstance(model.description, str)
         assert len(model.description) > 0
         assert model.classification_label_space is None
+
+    def test_model_name_cased(self):
+        """Test BM25Model name with lowercase=False."""
+        model = BM25Model(lowercase=False)
+        assert model.name == "BM25-cased"
 
     def test_compute_rankings_basic(self):
         """Test basic BM25 ranking computation."""
@@ -117,16 +122,24 @@ class TestTfIdfModel:
     def test_model_properties_word(self):
         """Test TfIdfModel properties with word tokenization."""
         model = TfIdfModel(tokenization="word")
-        assert model.name == "TfIdf-word"
+        assert model.name == "TfIdf-word-lower"
         assert "word-level" in model.description
         assert model.classification_label_space is None
 
     def test_model_properties_char(self):
         """Test TfIdfModel properties with char tokenization."""
         model = TfIdfModel(tokenization="char")
-        assert model.name == "TfIdf-char"
+        assert model.name == "TfIdf-char-lower"
         assert "character n-gram" in model.description
         assert model.classification_label_space is None
+
+    def test_model_name_cased(self):
+        """Test TfIdfModel name with lowercase=False."""
+        model_word = TfIdfModel(lowercase=False, tokenization="word")
+        assert model_word.name == "TfIdf-word-cased"
+
+        model_char = TfIdfModel(lowercase=False, tokenization="char")
+        assert model_char.name == "TfIdf-char-cased"
 
     def test_compute_rankings_word_tokenization(self):
         """Test TF-IDF ranking with word tokenization."""
@@ -219,10 +232,15 @@ class TestEditDistanceModel:
     def test_model_properties(self):
         """Test EditDistanceModel name and description properties."""
         model = EditDistanceModel()
-        assert model.name == "EditDistance"
+        assert model.name == "EditDistance-lower"
         assert isinstance(model.description, str)
         assert "Levenshtein" in model.description
         assert model.classification_label_space is None
+
+    def test_model_name_cased(self):
+        """Test EditDistanceModel name with lowercase=False."""
+        model = EditDistanceModel(lowercase=False)
+        assert model.name == "EditDistance-cased"
 
     def test_compute_rankings_basic(self):
         """Test basic edit distance ranking computation."""

@@ -44,7 +44,8 @@ class BM25Model(ModelInterface):
     @property
     def name(self) -> str:
         """Return the model name."""
-        return "BM25"
+        suffix = "lower" if self.lowercase else "cased"
+        return f"BM25-{suffix}"
 
     @property
     def description(self) -> str:
@@ -163,7 +164,8 @@ class TfIdfModel(ModelInterface):
     @property
     def name(self) -> str:
         """Return the model name."""
-        return f"TfIdf-{self.tokenization}"
+        suffix = "lower" if self.lowercase else "cased"
+        return f"TfIdf-{self.tokenization}-{suffix}"
 
     @property
     def description(self) -> str:
@@ -283,7 +285,8 @@ class EditDistanceModel(ModelInterface):
     @property
     def name(self) -> str:
         """Return the model name."""
-        return "EditDistance"
+        suffix = "lower" if self.lowercase else "cased"
+        return f"EditDistance-{suffix}"
 
     @property
     def description(self) -> str:
