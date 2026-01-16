@@ -101,9 +101,19 @@ class ESCOSkillNormRanking(RankingTask):
         """Target input type for canonical skill names."""
         return ModelInputType.SKILL_NAME
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """Load skill normalization data from ESCO."""
-        target_esco = ESCO(version=self.esco_version, language=Language(language))
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load skill normalization data from ESCO.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
+        """
+        language = Language(dataset_id)
+        target_esco = ESCO(version=self.esco_version, language=language)
 
         # Full vocab, even those without alternatives
         skill_vocab = target_esco.get_skills_vocabulary()
@@ -121,7 +131,7 @@ class ESCOSkillNormRanking(RankingTask):
                 alt2skills, skill2label, split
             )
 
-        return RankingDataset(selected_queries, selected_labels, skill_vocab, language=language)
+        return RankingDataset(selected_queries, selected_labels, skill_vocab, dataset_id=dataset_id)
 
     def _rnd_split(
         self, alt2skills: dict[str, list[str]], skill2label: dict[str, int], split: DatasetSplit

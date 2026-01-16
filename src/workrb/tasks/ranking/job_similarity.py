@@ -104,8 +104,19 @@ class JobTitleSimilarityRanking(RankingTask):
         """Target input type for job titles."""
         return ModelInputType.JOB_TITLE
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """Load Job Title Similarity data from the HuggingFace dataset."""
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load Job Title Similarity data from the HuggingFace dataset.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
+        """
+        language = Language(dataset_id)
+
         if split != DatasetSplit.TEST:
             raise ValueError(f"Split '{split}' not supported. Use TEST")
 
@@ -118,7 +129,7 @@ class JobTitleSimilarityRanking(RankingTask):
         relevancy_labels = list(ds["queries"]["labels"])
         corpus = list(ds["corpus"]["text"])
 
-        return RankingDataset(queries, relevancy_labels, corpus, language=language)
+        return RankingDataset(queries, relevancy_labels, corpus, dataset_id=dataset_id)
 
     @property
     def citation(self) -> str:

@@ -78,7 +78,7 @@ class TestCurriculumMatchModelBenchmark:
 
         # Evaluate model on the task with the metrics from the paper
         metrics = ["mrr", "rp@1", "rp@5", "rp@10"]
-        results = task.evaluate(model=model, metrics=metrics, language=Language.EN)
+        results = task.evaluate(model=model, metrics=metrics, dataset_id=Language.EN.value)
 
         # Paper-reported values (RP metrics are percentages, convert to decimals) [TECH]
         # expected_mrr = 0.5726
