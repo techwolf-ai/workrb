@@ -46,12 +46,17 @@ class ClassificationDataset:
     ):
         """Initialize classification dataset with validation.
 
-        Args:
-            texts: List of input text strings
-            labels: List with list of class indices corresponding to each text.
-                Contains just 1 item per list for single-label classification.
-            label_space: List of class names/labels (e.g., ["skill1", "skill2", "skill3"])
-            dataset_id: Unique identifier for this dataset
+        Parameters
+        ----------
+        texts : list[str]
+            List of input text strings.
+        labels : list[list[int]]
+            List with list of class indices corresponding to each text.
+            Contains just 1 item per list for single-label classification.
+        label_space : list[str]
+            List of class names/labels (e.g., ["skill1", "skill2", "skill3"]).
+        dataset_id : str
+            Unique identifier for this dataset.
         """
         self.texts = self._postprocess_texts(texts)
         self.labels = self._postprocess_labels(labels)
@@ -178,12 +183,15 @@ class ClassificationTask(Task):
     def get_output_space_size(self, dataset_id: str) -> int:
         """Number of output classes for this classification task.
 
-        Args:
-            dataset_id: Dataset identifier
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier.
 
         Returns
         -------
-            Number of classes in the output space
+        int
+            Number of classes in the output space.
         """
 
     @property
@@ -200,24 +208,31 @@ class ClassificationTask(Task):
 
         For other tasks: dataset_id can encode arbitrary information.
 
-        Args:
-            dataset_id: Unique identifier for the dataset
-            split: Dataset split to load
+        Parameters
+        ----------
+        dataset_id : str
+            Unique identifier for the dataset.
+        split : DatasetSplit
+            Dataset split to load.
 
         Returns
         -------
-            ClassificationDataset object
+        ClassificationDataset
+            ClassificationDataset object.
         """
 
     def get_size_oneliner(self, dataset_id: str) -> str:
         """Get dataset summary to display for progress.
 
-        Args:
-            dataset_id: Dataset identifier
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier.
 
         Returns
         -------
-            Human-readable size string
+        str
+            Human-readable size string.
         """
         dataset: ClassificationDataset = self.datasets[dataset_id]
         return f"{len(dataset.texts)} samples, {len(dataset.label_space)} classes"
@@ -235,14 +250,19 @@ class ClassificationTask(Task):
         2. Applies optimized threshold to test predictions
         3. Calculates metrics on test data
 
-        Args:
-            model: Model implementing classification interface
-            metrics: List of metrics to compute
-            dataset_id: Dataset identifier to evaluate on
+        Parameters
+        ----------
+        model : ModelInterface
+            Model implementing classification interface.
+        metrics : list[str] or None, optional
+            List of metrics to compute.
+        dataset_id : str, optional
+            Dataset identifier to evaluate on. Default is "en".
 
         Returns
         -------
-            Dictionary containing metric scores and evaluation metadata
+        dict[str, float]
+            Dictionary containing metric scores and evaluation metadata.
         """
         if metrics is None:
             metrics = self.default_metrics
@@ -335,13 +355,17 @@ class ClassificationTask(Task):
     def get_threshold_on_val_data(self, model: ModelInterface, dataset_id: str) -> float:
         """Get the best threshold on validation data.
 
-        Args:
-            model: Model to evaluate
-            dataset_id: Dataset identifier
+        Parameters
+        ----------
+        model : ModelInterface
+            Model to evaluate.
+        dataset_id : str
+            Dataset identifier.
 
         Returns
         -------
-            Optimized threshold value
+        float
+            Optimized threshold value.
         """
         # Step 1: Optimize threshold on validation data
         # Load validation data (even if we're evaluating on test)
@@ -431,8 +455,10 @@ class MulticlassClassificationTask(ClassificationTask):
     ):
         """Initialize classification task.
 
-        Args:
-            **kwargs: Arguments passed to parent Task class (languages, split, etc.)
+        Parameters
+        ----------
+        **kwargs
+            Arguments passed to parent Task class (languages, split, etc.).
         """
         super().__init__(**kwargs)
 

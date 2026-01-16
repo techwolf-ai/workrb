@@ -93,25 +93,32 @@ class Task(ABC):
         Other tasks with multiple datasets per language can override this method to
         return all datasets that use only languages from the provided set.
 
-        Args:
-            languages: List of Language enums requested for evaluation
+        Parameters
+        ----------
+        languages : list[Language]
+            List of Language enums requested for evaluation.
 
         Returns
         -------
-            List of dataset identifier strings
+        list[str]
+            List of dataset identifier strings.
         """
         return [lang.value for lang in languages]
 
     def _load_datasets(self, dataset_ids: list[str], split: DatasetSplit) -> dict[str, Any]:
         """Load datasets for specified IDs.
 
-        Args:
-            dataset_ids: List of dataset identifiers to load
-            split: Dataset split to load
+        Parameters
+        ----------
+        dataset_ids : list[str]
+            List of dataset identifiers to load.
+        split : DatasetSplit
+            Dataset split to load.
 
         Returns
         -------
-            Dictionary mapping dataset_id to dataset object
+        dict[str, Any]
+            Dictionary mapping dataset_id to dataset object.
         """
         datasets = {}
         for dataset_id in dataset_ids:
@@ -193,12 +200,15 @@ class Task(ABC):
     def get_size_oneliner(self, dataset_id: str) -> str:
         """Get dataset size summary to display status.
 
-        Args:
-            dataset_id: Dataset identifier
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier.
 
         Returns
         -------
-            Human-readable size string
+        str
+            Human-readable size string.
         """
         return ""
 
@@ -213,17 +223,21 @@ class Task(ABC):
         method to return the appropriate language for each dataset, or None for
         cross-language datasets.
 
-        Args:
-            dataset_id: Dataset identifier
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier.
 
         Returns
         -------
-            Language enum if this is a monolingual dataset, None for cross-language datasets
+        Language or None
+            Language enum if this is a monolingual dataset, None for cross-language datasets.
 
         Raises
         ------
-            NotImplementedError: If dataset_id is not a valid language code and the
-                subclass has not overridden this method
+        NotImplementedError
+            If dataset_id is not a valid language code and the subclass has not
+            overridden this method.
         """
         try:
             lang = Language(dataset_id)
@@ -255,25 +269,34 @@ class Task(ABC):
         For other tasks: dataset_id can encode additional information like
         country and languages (e.g., "deu_q_de_c_de").
 
-        Args:
-            dataset_id: Unique identifier for the dataset
-            split: Dataset split to load
+        Parameters
+        ----------
+        dataset_id : str
+            Unique identifier for the dataset.
+        split : DatasetSplit
+            Dataset split to load.
 
         Returns
         -------
-            Dataset object (RankingDataset or ClassificationDataset)
+        Any
+            Dataset object (RankingDataset or ClassificationDataset).
         """
 
     @abstractmethod
     def evaluate(self, model, metrics=None, dataset_id: str = "en") -> dict[str, float]:
         """Evaluate model on specific dataset.
 
-        Args:
-            model: Model to evaluate
-            metrics: List of metric names. If None, uses default_metrics
-            dataset_id: Dataset identifier to evaluate on
+        Parameters
+        ----------
+        model : ModelInterface
+            Model to evaluate.
+        metrics : list[str] or None, optional
+            List of metric names. If None, uses default_metrics.
+        dataset_id : str, optional
+            Dataset identifier to evaluate on. Default is "en".
 
         Returns
         -------
-            Dictionary of metric names to values
+        dict[str, float]
+            Dictionary of metric names to values.
         """
