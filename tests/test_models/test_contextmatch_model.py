@@ -1,4 +1,6 @@
-import pytest  # noqa: D100
+"""Tests for ConTeXTMatchModel: loading, usage, and benchmark validation."""
+
+import pytest
 import torch
 
 from workrb.models.bi_encoder import ConTeXTMatchModel
@@ -111,6 +113,7 @@ class TestConTeXTMatchModelUsage:
         assert torch.isfinite(scores).all()
 
 
+@pytest.mark.model_performance
 class TestConTeXTMatchModelTechSkillExtraction:
     """Test ConTeXTMatchModel performance on TECH skill extraction test set."""
 

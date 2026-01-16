@@ -1,3 +1,5 @@
+"""Tests for CurriculumMatchModel: loading, usage, and benchmark validation."""
+
 import pytest
 
 from workrb.models.curriculum_encoder import CurriculumMatchModel
@@ -47,6 +49,7 @@ class TestCurriculumMatchModelLoading:
         assert model.classification_label_space is None
 
 
+@pytest.mark.model_performance
 class TestCurriculumMatchModelBenchmark:
     """Test CurriculumMatchModel performance on skill extraction benchmarks."""
 

@@ -81,8 +81,9 @@ Project:
 3. Ensure all linting and tests complete successfully locally before creating a PR:
    ```bash
    uv run poe lint
-   uv run pytest test/my_task_tests.py # Just your tests
-   uv run poe test # (ideally) For all tests
+   uv run pytest tests/my_task_tests.py  # Just your tests
+   uv run poe test                       # Test suite (excludes model benchmarks)
+   uv run poe test-benchmark             # Model benchmark tests only
    ```
 4. Having questions? Add them to your Github Issue. 
 
@@ -397,40 +398,93 @@ __all__ = [
 
 ### Step 3: Test Your Model
 
+Create a test file in `tests/test_models/`. This file contains both unit tests and (optionally) benchmark validation tests in a single file:
+
 ```python
-# tests/test_my_model.py
+# tests/test_models/test_my_model.py
 
 import pytest
-import workrb
+from workrb.models.my_model import MyCustomModel
+from workrb.tasks import TechSkillExtractRanking
+from workrb.tasks.abstract.base import DatasetSplit, Language
+from workrb.types import ModelInputType
 
 
-def test_my_model_initialization():
-    """Test model initialization"""
-    model = workrb.models.MyCustomModel("all-MiniLM-L6-v2")
-    assert model.name is not None
+class TestMyCustomModelLoading:
+    """Test model loading and basic properties."""
 
+    def test_model_initialization(self):
+        """Test model initialization"""
+        model = MyCustomModel()
+        assert model.name is not None
 
-def test_my_model_ranking():
-    """Test ranking computation"""
-    model = workrb.models.MyCustomModel("all-MiniLM-L6-v2")
-    from workrb.types import ModelInputType
-    
-    queries = ["Software Engineer", "Data Scientist"]
-    targets = ["Python", "Machine Learning", "SQL"]
-    
-    scores = model.compute_rankings(
-        queries=queries,
-        targets=targets,
-        query_input_type=ModelInputType.JOB_TITLE,
-        target_input_type=ModelInputType.SKILL_NAME,
-    )
-    
-    assert scores.shape == (len(queries), len(targets))
+    def test_model_ranking(self):
+        """Test ranking computation"""
+        model = MyCustomModel()
+        queries = ["Software Engineer", "Data Scientist"]
+        targets = ["Python", "Machine Learning", "SQL"]
+
+        scores = model._compute_rankings(
+            queries=queries,
+            targets=targets,
+            query_input_type=ModelInputType.JOB_TITLE,
+            target_input_type=ModelInputType.SKILL_NAME,
+        )
+
+        assert scores.shape == (len(queries), len(targets))
 ```
 
-### Step 4: Register Your Model (if using registry)
+### Step 4: Validate Model Performance (if prior paper results available)
 
-If you want your model discoverable via `ModelRegistry.list_available()`, use the `@register_model()` decorator (shown in Step 1).
+If your model has published benchmark results and a compatible (ideally small) dataset is available in WorkRB, add a benchmark validation test **in the same test file**. Mark the benchmark class with `@pytest.mark.model_performance`:
+
+```python
+# tests/test_models/test_my_model.py (continued)
+
+@pytest.mark.model_performance
+class TestMyCustomModelBenchmark:
+    """Validate MyCustomModel against paper-reported metrics."""
+
+    def test_benchmark_metrics(self):
+        """
+        Verify model achieves results close to paper-reported metrics.
+
+        Paper: "Title" (Venue Year)
+        Reported on [dataset] test set:
+        - MRR: 0.XX
+        - RP@5: XX.X%
+        """
+        model = MyCustomModel()
+        task = TechSkillExtractRanking(split=DatasetSplit.TEST, languages=[Language.EN])
+
+        results = task.evaluate(model=model, metrics=["mrr", "rp@5"], language=Language.EN)
+
+        # Paper-reported values (allow tolerance for minor differences)
+        expected_mrr = 0.55
+        expected_rp5 = 0.60
+
+        assert results["mrr"] == pytest.approx(expected_mrr, abs=0.05)
+        assert results["rp@5"] == pytest.approx(expected_rp5, abs=0.05)
+```
+
+**See [tests/test_models/test_contextmatch_model.py](tests/test_models/test_contextmatch_model.py) for a complete example.**
+
+Tests marked with `@pytest.mark.model_performance` are excluded from `poe test` by default. To run them:
+- **Locally**: `uv run poe test-benchmark`
+- **In CI**: Contributors can trigger the **Model Benchmarks** workflow manually from GitHub Actions (Actions → Model Benchmarks → Run workflow)
+
+### Step 5: Register Your Model
+Make sure to use the `@register_model()` decorator (shown in Step 1), this will make your model discoverable via `ModelRegistry.list_available()`.
+
+### Step 6: Document Your Model
+
+Add your model to the **Models** table in [README.md](README.md). You can either:
+
+1. **Manually** add a row to the table with your model's name, description, and whether it supports adaptive targets
+2. **Generate** a table over all registered models using the helper script:
+   ```bash
+   uv run python examples/list_available_tasks_and_models.py
+   ```
 
 ## Adding New Metrics
 
@@ -503,11 +557,16 @@ uv run poe lint
 
 ```bash
 # Run your specific tests only
-uv run pytest test/my_tests.py
+uv run pytest tests/my_tests.py
 
-# Run all tests (can take some time)
+# Run tests with coverage (excludes model benchmarks)
 uv run poe test
+
+# Run model benchmark tests only
+uv run poe test-benchmark
 ```
+
+**Model Performance Tests**: Benchmark tests in `tests/test_models/` that are marked with `@pytest.mark.model_performance` validate model scores against paper-reported results. These are excluded from `poe test` by default.
 
 ### Documentation Standards
 
