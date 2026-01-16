@@ -41,11 +41,16 @@ class RankingDataset:
     ):
         """Initialize ranking dataset with validation.
 
-        Args:
-            query_texts: List of query strings
-            target_indices: List of lists containing indices into the target vocabulary
-            target_space: List of target vocabulary strings
-            dataset_id: Unique identifier for this dataset
+        Parameters
+        ----------
+        query_texts : list[str]
+            List of query strings.
+        target_indices : list[list[int]]
+            List of lists containing indices into the target vocabulary.
+        target_space : list[str]
+            List of target vocabulary strings.
+        dataset_id : str
+            Unique identifier for this dataset.
         """
         self.query_texts = self._postprocess_texts(query_texts)
         self.target_indices = self._postprocess_indices(target_indices)
@@ -118,10 +123,10 @@ class RankingTask(Task):
     ):
         """Initialize ranking task.
 
-        Args:
-            mode: Evaluation mode ("test" or "val")
-            language: Language code
-            **kwargs: Additional arguments for legacy compatibility
+        Parameters
+        ----------
+        **kwargs
+            Additional arguments passed to parent Task class.
         """
         super().__init__(**kwargs)
 
@@ -144,24 +149,31 @@ class RankingTask(Task):
 
         For other tasks: dataset_id can encode arbitrary information.
 
-        Args:
-            dataset_id: Unique identifier for the dataset
-            split: Dataset split to load
+        Parameters
+        ----------
+        dataset_id : str
+            Unique identifier for the dataset.
+        split : DatasetSplit
+            Dataset split to load.
 
         Returns
         -------
-            RankingDataset object
+        RankingDataset
+            RankingDataset object.
         """
 
     def get_size_oneliner(self, dataset_id: str) -> str:
         """Get dataset summary to display for progress.
 
-        Args:
-            dataset_id: Dataset identifier
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier.
 
         Returns
         -------
-            Human-readable size string
+        str
+            Human-readable size string.
         """
         dataset = self.datasets[dataset_id]
         return f"{len(dataset.query_texts)} queries x {len(dataset.target_space)} targets"
@@ -174,14 +186,19 @@ class RankingTask(Task):
     ) -> dict[str, float]:
         """Evaluate the model on this ranking task.
 
-        Args:
-            model: Model implementing ModelInterface (must have compute_rankings method)
-            metrics: List of metrics to compute. If None, uses default_metrics
-            dataset_id: Dataset identifier to evaluate on
+        Parameters
+        ----------
+        model : ModelInterface
+            Model implementing ModelInterface (must have compute_rankings method).
+        metrics : list[str] or None, optional
+            List of metrics to compute. If None, uses default_metrics.
+        dataset_id : str, optional
+            Dataset identifier to evaluate on. Default is "en".
 
         Returns
         -------
-            Dictionary containing metric scores and evaluation metadata
+        dict[str, float]
+            Dictionary containing metric scores and evaluation metadata.
         """
         if metrics is None:
             metrics = self.default_metrics
