@@ -1,4 +1,4 @@
-"""Job Normalization ranking task using datasets from MELO (Retyk et al., 2024)."""
+"""Skill Normalization ranking task using datasets inspired in MELO (Retyk et al., 2024)."""
 
 from datasets import load_dataset
 
@@ -9,92 +9,49 @@ from workrb.types import ModelInputType
 
 
 @register_task()
-class MELORanking(RankingTask):
+class MELSRanking(RankingTask):
     """
-    MELO: Job Normalization ranking task using datasets from MELO (Retyk et al., 2024).
+    MELS (Multilingual Entity Linking of Skills): Skills Normalization ranking task using datasets
+    that were inspired in MELO (Retyk et al., 2024).
 
-    This task includes datasets from the MELO Benchmark, which involve Entity Linking
-    of occupations (job titles) into ESCO, posed as a ranking task.
+    MELS is a sibling dataset to MELO (Multilingual Entity Linking of Occupations). Both datasets
+    were built using the same methodology and the same type of source data: crosswalks between
+    national taxonomies and ESCO, published by official labor-related organizations from EU member
+    states.
+
+    The difference is the entity type:
+     - MELO links occupation mentions (job titles) to ESCO Occupations
+     - MELS links skill mentions to ESCO Skills
     """
 
-    MELO_LANGUAGES = [
-        Language.BG,
-        Language.CS,
-        Language.DA,
+    MELS_LANGUAGES = [
         Language.DE,
         Language.EN,
-        Language.ES,
-        Language.ET,
         Language.FR,
-        Language.HR,
-        Language.HU,
-        Language.IT,
-        Language.LT,
-        Language.LV,
         Language.NL,
-        Language.NO,
-        Language.PL,
-        Language.PT,
-        Language.RO,
-        Language.SK,
-        Language.SL,
         Language.SV,
     ]
 
     LANGUAGE_TO_DATASETS = [
-        "bgr_q_bg_c_bg",
-        "bgr_q_bg_c_en",
-        "cze_q_cs_c_cs",
-        "cze_q_cs_c_en",
+        "bel_q_fr_c_fr",
+        "bel_q_fr_c_en",
+        "bel_q_nl_c_nl",
+        "bel_q_nl_c_en",
         "deu_q_de_c_de",
         "deu_q_de_c_en",
-        "dnk_q_da_c_da",
-        "dnk_q_da_c_en",
-        "esp_q_es_c_en",
-        "esp_q_es_c_es",
-        "est_q_et_c_en",
-        "est_q_et_c_et",
-        "fra_q_fr_c_en",
-        "fra_q_fr_c_fr",
-        "hrv_q_hr_c_en",
-        "hrv_q_hr_c_hr",
-        "hun_q_hu_c_en",
-        "hun_q_hu_c_hu",
-        "ita_q_it_c_en",
-        "ita_q_it_c_it",
-        "ltu_q_lt_c_en",
-        "ltu_q_lt_c_lt",
-        "lva_q_lv_c_en",
-        "lva_q_lv_c_lv",
-        "nld_q_nl_c_en",
-        "nld_q_nl_c_nl",
-        "nor_q_no_c_en",
-        "nor_q_no_c_no",
-        "pol_q_pl_c_en",
-        "pol_q_pl_c_pl",
-        "prt_q_pt_c_en",
-        "prt_q_pt_c_pt",
-        "rou_q_ro_c_en",
-        "rou_q_ro_c_ro",
-        "svk_q_sk_c_en",
-        "svk_q_sk_c_sk",
-        "svn_q_sl_c_en",
-        "svn_q_sl_c_sl",
-        "swe_q_sv_c_en",
         "swe_q_sv_c_sv",
-        "usa_q_en_c_de_en_es_fr_it_nl_pl_pt",
-        "usa_q_en_c_en",
+        "swe_q_sv_c_en",
     ]
 
     @property
     def name(self) -> str:
-        """MELO task name."""
-        return "MELO"
+        """MELS task name."""
+        return "MELS"
 
     @property
     def description(self) -> str:
-        """MELO task description."""
-        return "Job Normalization ranking task into ESCO."
+        """MELS task description."""
+        return "Skill Normalization ranking task into ESCO."
 
     @property
     def default_metrics(self) -> list[str]:
@@ -102,18 +59,18 @@ class MELORanking(RankingTask):
 
     @property
     def task_group(self) -> RankingTaskGroup:
-        """Job Normalization task group."""
-        return RankingTaskGroup.JOB_NORMALIZATION
+        """Skill Normalization task group."""
+        return RankingTaskGroup.SKILL_NORMALIZATION
 
     @property
     def supported_query_languages(self) -> list[Language]:
         """Supported query languages."""
-        return self.MELO_LANGUAGES
+        return self.MELS_LANGUAGES
 
     @property
     def supported_target_languages(self) -> list[Language]:
         """Supported target languages."""
-        return self.MELO_LANGUAGES
+        return self.MELS_LANGUAGES
 
     @property
     def split_test_fraction(self) -> float:
@@ -122,18 +79,18 @@ class MELORanking(RankingTask):
 
     @property
     def label_type(self) -> LabelType:
-        """Multi-label ranking for Job Normalization."""
+        """Multi-label ranking for Skill Normalization."""
         return LabelType.MULTI_LABEL
 
     @property
     def query_input_type(self) -> ModelInputType:
-        """Query input type for job titles."""
-        return ModelInputType.JOB_TITLE
+        """Query input type for skill names."""
+        return ModelInputType.SKILL_NAME
 
     @property
     def target_input_type(self) -> ModelInputType:
-        """Target input type for job titles."""
-        return ModelInputType.JOB_TITLE
+        """Target input type for skill names."""
+        return ModelInputType.SKILL_NAME
 
     def _parse_dataset_id(self, dataset_id: str) -> tuple[str, list[str]]:
         """Parse dataset_id into query language and corpus languages.
@@ -205,7 +162,7 @@ class MELORanking(RankingTask):
         return Language(query_lang)
 
     def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
-        """Load MELO data from the HuggingFace dataset.
+        """Load MELS data from the HuggingFace dataset.
 
         Parameters
         ----------
@@ -225,7 +182,7 @@ class MELORanking(RankingTask):
         if dataset_id not in self.dataset_ids:
             raise ValueError(f"Dataset '{dataset_id}' not supported.")
 
-        ds = load_dataset("Avature/MELO-Benchmark", dataset_id)
+        ds = load_dataset("Avature/MELS-Benchmark", dataset_id)
 
         queries = list(ds["queries"]["text"])
         relevancy_labels = list(ds["queries"]["labels"])
@@ -237,7 +194,7 @@ class MELORanking(RankingTask):
 
     @property
     def citation(self) -> str:
-        """MELO task citation."""
+        """MELS task citation."""
         return """
 @inproceedings{retyk2024melo,
   title        = {{MELO: An Evaluation Benchmark for Multilingual Entity Linking of Occupations}},

@@ -14,6 +14,7 @@ from workrb.tasks import (
     JobBERTJobNormRanking,
     JobTitleSimilarityRanking,
     MELORanking,
+    MELSRanking,
     SkillMatch1kSkillSimilarityRanking,
     SkillSkapeExtractRanking,
     TechSkillExtractRanking,
@@ -46,6 +47,7 @@ def test_ranking_tasks_init_en_splits():
         ("JobNormRanking", JobBERTJobNormRanking),
         ("JobTitleSimilarityRanking", JobTitleSimilarityRanking),
         ("MELORanking", MELORanking),
+        ("MELSRanking", MELSRanking),
         ("SkillExtractHouseRanking", HouseSkillExtractRanking),
         ("SkillExtractTechRanking", TechSkillExtractRanking),
         ("SkillExtractSkillSkapeRanking", SkillSkapeExtractRanking),
@@ -55,6 +57,7 @@ def test_ranking_tasks_init_en_splits():
     tasks_with_only_test_set = [
         "JobTitleSimilarityRanking",
         "MELORanking",
+        "MELSRanking",
     ]
 
     results = {"success": [], "failures": []}
