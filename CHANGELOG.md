@@ -1,3 +1,15 @@
+## v0.3.0 (2026-01-09)
+
+### Feat
+
+- SkillSkape dataset as ranking task
+- Job title similarity as a ranking task
+
+### Refactor
+
+- move functions centered in run.py for public api to registry.py and results.py.
+- rename evaluate.py to run.py to remove ambiguity with workrb.evaluate function
+
 ## v0.2.1 (2026-01-06)
 
 ### Fix
