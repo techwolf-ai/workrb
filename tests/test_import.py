@@ -1,6 +1,10 @@
 """Test basic import functionality."""
 
+import importlib
+
+from workrb import tasks
 from workrb.config import BenchmarkConfig
+from workrb.registry import TaskRegistry
 from workrb.tasks import (
     ESCOJob2SkillClassification,
     ESCOJob2SkillRanking,
@@ -13,6 +17,7 @@ from workrb.tasks import (
     SkillMatch1kSkillSimilarityRanking,
     Task,
     TechSkillExtractRanking,
+    ranking,
 )
 
 
@@ -49,6 +54,40 @@ def test_task_ranking_imports():
     assert isinstance(TechSkillExtractRanking.__name__, str)
 
     print("✓ Successfully imported ranking task classes")
+
+
+def test_task_package_exports():
+    """Test that all registered tasks are imported into workrb.tasks."""
+    TaskRegistry.auto_discover()
+    registered = TaskRegistry.list_available().values()
+
+    missing = []
+    for module_path in registered:
+        module_name, class_name = module_path.rsplit(".", 1)
+        module = importlib.import_module(module_name)
+        task_class = getattr(module, class_name)
+        if not hasattr(tasks, task_class.__name__):
+            missing.append(task_class.__name__)
+
+    assert not missing, f"Missing task imports in workrb.tasks: {missing}"
+
+
+def test_ranking_package_exports():
+    """Test that all registered ranking tasks are imported into workrb.tasks.ranking."""
+    TaskRegistry.auto_discover()
+    registered = TaskRegistry.list_available().values()
+
+    missing = []
+    for module_path in registered:
+        module_name, class_name = module_path.rsplit(".", 1)
+        if not module_name.startswith("workrb.tasks.ranking."):
+            continue
+        module = importlib.import_module(module_name)
+        task_class = getattr(module, class_name)
+        if not hasattr(ranking, task_class.__name__):
+            missing.append(task_class.__name__)
+
+    assert not missing, f"Missing task imports in workrb.tasks.ranking: {missing}"
 
 
 if __name__ == "__main__":
