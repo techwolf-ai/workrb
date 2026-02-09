@@ -13,6 +13,7 @@ from workrb.tasks.ranking.jobnorm import JobBERTJobNormRanking
 from workrb.tasks.ranking.skill2job import ESCOSkill2JobRanking
 from workrb.tasks.ranking.skill_extraction import (
     HouseSkillExtractRanking,
+    SkillSkapeExtractRanking,
     TechSkillExtractRanking,
 )
 from workrb.tasks.ranking.skill_similarity import SkillMatch1kSkillSimilarityRanking
