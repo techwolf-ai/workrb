@@ -37,6 +37,7 @@ class Language(str, Enum):
     JA = "ja"
     KO = "ko"
     ZH = "zh"
+    CROSS = "cross_lingual"
 
 
 class LabelType(str, Enum):
@@ -73,4 +74,19 @@ class ModelInputType(str, Enum):
     """
     Sentence describing or containing a skill.
     For example, a skill description or job ad sentence.
+    """
+
+    PROJECT_BRIEF_STRING = "brief_string"
+    """
+    A few sentence describing a project
+    """
+
+    SEARCH_QUERY_STRING = "search_query_string"
+    """
+    A few input word to search for a profile
+    """
+
+    PROFILE_STRING = "profile_string"
+    """
+    A few sentences describing an applicant profile
     """

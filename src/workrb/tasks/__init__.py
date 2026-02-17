@@ -8,6 +8,10 @@ from .abstract.ranking_base import RankingDataset, RankingTask
 
 # Task implementations
 from .classification.job2skill import ESCOJob2SkillClassification
+from .ranking.freelancer_project_matching import (
+    ProjectCandidateRanking,
+    SearchQueryCandidateRanking,
+)
 from .ranking.job2skill import ESCOJob2SkillRanking
 from .ranking.job_similarity import JobTitleSimilarityRanking
 from .ranking.jobnorm import JobBERTJobNormRanking
@@ -39,4 +43,6 @@ __all__ = [
     "TechSkillExtractRanking",
     "SkillSkapeExtractRanking",
     "SkillMatch1kSkillSimilarityRanking",
+    "ProjectCandidateRanking",
+    "SearchQueryCandidateRanking",
 ]
