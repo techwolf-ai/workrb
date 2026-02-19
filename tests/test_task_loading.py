@@ -13,6 +13,8 @@ from workrb.tasks import (
     HouseSkillExtractRanking,
     JobBERTJobNormRanking,
     JobTitleSimilarityRanking,
+    MELORanking,
+    MELSRanking,
     SkillMatch1kSkillSimilarityRanking,
     SkillSkapeExtractRanking,
     TechSkillExtractRanking,
@@ -44,6 +46,8 @@ def test_ranking_tasks_init_en_splits():
         ("ESCOSkillNormRanking", ESCOSkillNormRanking),
         ("JobNormRanking", JobBERTJobNormRanking),
         ("JobTitleSimilarityRanking", JobTitleSimilarityRanking),
+        ("MELORanking", MELORanking),
+        ("MELSRanking", MELSRanking),
         ("SkillExtractHouseRanking", HouseSkillExtractRanking),
         ("SkillExtractTechRanking", TechSkillExtractRanking),
         ("SkillExtractSkillSkapeRanking", SkillSkapeExtractRanking),
@@ -52,6 +56,8 @@ def test_ranking_tasks_init_en_splits():
 
     tasks_with_only_test_set = [
         "JobTitleSimilarityRanking",
+        "MELORanking",
+        "MELSRanking",
     ]
 
     results = {"success": [], "failures": []}
@@ -208,3 +214,73 @@ class TestTaskLanguageSupport:
             split=self.split,
             unsupported_lang_mode=unsupported_lang_mode,
         )
+
+
+class TestMELORankingDatasetIds:
+    """Test MELORanking.languages_to_dataset_ids filtering logic."""
+
+    @pytest.mark.parametrize(
+        "languages,expected_dataset_ids",
+        [
+            # Single language: only monolingual English dataset
+            (
+                [Language.EN],
+                {"usa_q_en_c_en"},
+            ),
+            # Bulgarian only: only monolingual Bulgarian dataset
+            (
+                [Language.BG],
+                {"bgr_q_bg_c_bg"},
+            ),
+            # Bulgarian + English: monolingual + cross-lingual datasets for both
+            (
+                [Language.BG, Language.EN],
+                {"bgr_q_bg_c_bg", "bgr_q_bg_c_en", "usa_q_en_c_en"},
+            ),
+            # Czech + English: monolingual + cross-lingual datasets
+            (
+                [Language.CS, Language.EN],
+                {"cze_q_cs_c_cs", "cze_q_cs_c_en", "usa_q_en_c_en"},
+            ),
+            # All languages needed for usa_q_en_c_de_en_es_fr_it_nl_pl_pt
+            (
+                [
+                    Language.EN,
+                    Language.DE,
+                    Language.ES,
+                    Language.FR,
+                    Language.IT,
+                    Language.NL,
+                    Language.PL,
+                    Language.PT,
+                ],
+                {
+                    "deu_q_de_c_de",
+                    "deu_q_de_c_en",
+                    "esp_q_es_c_en",
+                    "esp_q_es_c_es",
+                    "fra_q_fr_c_en",
+                    "fra_q_fr_c_fr",
+                    "ita_q_it_c_en",
+                    "ita_q_it_c_it",
+                    "nld_q_nl_c_en",
+                    "nld_q_nl_c_nl",
+                    "pol_q_pl_c_en",
+                    "pol_q_pl_c_pl",
+                    "prt_q_pt_c_en",
+                    "prt_q_pt_c_pt",
+                    "usa_q_en_c_de_en_es_fr_it_nl_pl_pt",
+                    "usa_q_en_c_en",
+                },
+            ),
+            # Two languages without cross-lingual datasets between them
+            (
+                [Language.BG, Language.CS],
+                {"bgr_q_bg_c_bg", "cze_q_cs_c_cs"},
+            ),
+        ],
+    )
+    def test_languages_to_dataset_ids(self, languages, expected_dataset_ids):
+        """Test that dataset_ids matches expected for given language combinations."""
+        task = MELORanking(split="test", languages=[lang.value for lang in languages])
+        assert set(task.dataset_ids) == expected_dataset_ids

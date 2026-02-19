@@ -62,7 +62,8 @@ def get_all_tasks(split: str = "val", languages: list[str] | None = None) -> lis
             # Some tasks may have required parameters beyond split/languages
             try:
                 task_instance = toy_task_class(split=split, languages=languages)
-                toy_tasks.append(task_instance)
+                if len(task_instance.datasets) > 0:
+                    toy_tasks.append(task_instance)
             except TypeError as e:
                 # Task might require additional parameters
                 skipped_tasks.append((task_name, f"Instantiation error: {e}"))

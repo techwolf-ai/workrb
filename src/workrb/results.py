@@ -22,20 +22,24 @@ class TaskResultMetadata(BaseModel):
 class MetricsResult(BaseModel):
     """Metric results for a single evaluation run.
 
-    In the becnhmark, this is a single evaluation run for a single language.
+    In the benchmark, this is a single evaluation run for a single dataset.
     """
 
     evaluation_time: float = Field(ge=0)
     metrics_dict: dict[str, Any] = Field(default_factory=dict)
     """ Dictionary of metric names to their computed values. """
+    language: str | None = Field(
+        default=None,
+        description="Language code if this is a monolingual dataset, None for cross-language datasets.",
+    )
 
 
 class TaskResults(BaseModel):
     """Results for a task."""
 
     metadata: TaskResultMetadata
-    language_results: dict[str, MetricsResult]  # language -> results
-    """ Dictionary of language codes to their computed results. """
+    language_results: dict[str, MetricsResult]  # dataset_id -> results
+    """Dictionary of dataset IDs to their computed results."""
 
 
 class BenchmarkMetadata(BaseModel):
@@ -292,15 +296,20 @@ class BenchmarkResults(BaseModel):
     ) -> dict[ResultTagString, float]:
         """Aggregate results per language.
 
-        Collects language-specific results over all tasks, and aggregates all availble results.
+        Collects results for monolingual datasets and aggregates by language across all tasks.
+        Cross-language datasets (where language is None) are excluded from this aggregation.
         Results may be imbalanced if tasks support different languages.
         """
-        # Collect metric values per task
+        # Collect metric values per language
         raw_results = defaultdict(list)
         for task_result in self.task_results.values():
-            for language, metrics_result in task_result.language_results.items():
+            for metrics_result in task_result.language_results.values():
+                # Skip cross-language datasets
+                if metrics_result.language is None:
+                    continue
+
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
-                    raw_results[(language, metric_name)].append(metric_value)
+                    raw_results[(metrics_result.language, metric_name)].append(metric_value)
 
         # Compute stats
         results = {}
@@ -309,7 +318,10 @@ class BenchmarkResults(BaseModel):
             for agg in aggregations:
                 assert agg in stats, f"Aggregation {agg} not found in stats: {stats.keys()}"
                 tag = ResultTagString(
-                    name=tag_name, metric_name=metric_name, aggregation=agg, grouping_name=language
+                    name=tag_name,
+                    metric_name=metric_name,
+                    aggregation=agg,
+                    grouping_name=language,
                 )
                 results[tag] = stats[agg]
         return results
@@ -340,7 +352,7 @@ class BenchmarkResults(BaseModel):
         """Get flat dataframe of the benchmark results with each metric value as a separate row."""
         data = []
         for task_name, task_result in self.task_results.items():
-            for language, metrics_result in task_result.language_results.items():
+            for dataset_id, metrics_result in task_result.language_results.items():
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
                     data.append(
                         {
@@ -349,7 +361,7 @@ class BenchmarkResults(BaseModel):
                             "task_type": str(task_result.metadata.task_type),
                             # "task_label_type": str(task_result.metadata.label_type),
                             # "task_split": str(task_result.metadata.split),
-                            "task_language": str(language),
+                            "dataset_id": str(dataset_id),
                             "metric_name": str(metric_name),
                             "metric_value": float(metric_value),
                         }

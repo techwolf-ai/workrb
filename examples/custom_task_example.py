@@ -6,6 +6,7 @@ with the WorkRB framework. Custom tasks should inherit from workrb.tasks.Ranking
 and implement the required abstract methods.
 """
 
+import workrb
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
@@ -78,14 +79,14 @@ class MyCustomRankingTask(workrb.tasks.RankingTask):
         """Supported target languages are English."""
         return [Language.EN]
 
-    def load_monolingual_data(self, language: Language, split: DatasetSplit) -> RankingDataset:
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
         """
         Load data for evaluation.
 
         This method must return a RankingDataset.
 
         Args:
-            language: Language code (e.g., "en", "de", "fr")
+            dataset_id: Dataset identifier (e.g., "en", "de", "fr" for language-based tasks)
             split: Data split ("test", "validation", "train")
 
         Returns
@@ -121,7 +122,7 @@ class MyCustomRankingTask(workrb.tasks.RankingTask):
             query_texts=queries,
             target_indices=labels,
             target_space=targets,
-            language=language,
+            dataset_id=dataset_id,
         )
 
     # Note: The evaluate() method is inherited from RankingTask and doesn't need
