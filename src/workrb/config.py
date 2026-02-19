@@ -217,7 +217,7 @@ class BenchmarkConfig:
                 if (
                     results is not None
                     and task.name in results.task_results
-                    and dataset_id in results.task_results[task.name].language_results
+                    and dataset_id in results.task_results[task.name].datasetid_results
                 ):
                     continue
 

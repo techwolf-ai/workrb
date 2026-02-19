@@ -168,11 +168,11 @@ def test_e2e_toy_benchmark():
         task_result = results.task_results[task_name]
 
         # Check if language results exist
-        if Language.EN not in task_result.language_results:
+        if Language.EN not in task_result.datasetid_results:
             validation_errors.append(f"Missing language results for {task_name} (en)")
             continue
 
-        lang_result = task_result.language_results[Language.EN]
+        lang_result = task_result.datasetid_results[Language.EN]
 
         # Validate metrics based on task type
         assert len(lang_result.metrics_dict) > 0, f"No metrics found for {task_name}"

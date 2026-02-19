@@ -38,7 +38,7 @@ class TaskResults(BaseModel):
     """Results for a task."""
 
     metadata: TaskResultMetadata
-    language_results: dict[str, MetricsResult]  # dataset_id -> results
+    datasetid_results: dict[str, MetricsResult]  # dataset_id -> results
     """Dictionary of dataset IDs to their computed results."""
 
 
@@ -99,7 +99,7 @@ class BenchmarkResults(BaseModel):
 
     def get_num_evaluation_results(self) -> int:
         """Get the total number of evaluation results."""
-        return sum(len(task.language_results) for task in self.task_results.values())
+        return sum(len(task.datasetid_results) for task in self.task_results.values())
 
     def get_summary_metrics(self, aggregations: tuple = ("mean", "ci_margin")) -> dict[str, float]:
         """
@@ -139,7 +139,7 @@ class BenchmarkResults(BaseModel):
         # Collect metric values per task
         raw_results = defaultdict(list)
         for task_name, task_result in self.task_results.items():
-            for lang_metrics_result in task_result.language_results.values():
+            for lang_metrics_result in task_result.datasetid_results.values():
                 for metric_name, metric_value in lang_metrics_result.metrics_dict.items():
                     raw_results[(task_name, metric_name)].append(metric_value)
 
@@ -303,7 +303,7 @@ class BenchmarkResults(BaseModel):
         # Collect metric values per language
         raw_results = defaultdict(list)
         for task_result in self.task_results.values():
-            for metrics_result in task_result.language_results.values():
+            for metrics_result in task_result.datasetid_results.values():
                 # Skip cross-language datasets
                 if metrics_result.language is None:
                     continue
@@ -352,7 +352,7 @@ class BenchmarkResults(BaseModel):
         """Get flat dataframe of the benchmark results with each metric value as a separate row."""
         data = []
         for task_name, task_result in self.task_results.items():
-            for dataset_id, metrics_result in task_result.language_results.items():
+            for dataset_id, metrics_result in task_result.datasetid_results.items():
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
                     data.append(
                         {

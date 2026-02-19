@@ -47,7 +47,7 @@ def verify_checkpoint(checkpoint_path: Path, expected_completed: int, total_task
     # Count completed task-language combinations
     completed_count = 0
     for task_result in task_results.values():
-        completed_count += len(task_result.get("language_results", {}))
+        completed_count += len(task_result.get("datasetid_results", {}))
 
     print(f"  ✓ Checkpoint has {completed_count}/{total_tasks} completed task(s)")
     assert completed_count == expected_completed, (
@@ -164,11 +164,11 @@ def test_e2e_checkpointing():
             f"Task '{task.name}' missing from final results"
         )
         task_result = end_results.task_results[task.name]
-        assert Language.EN in task_result.language_results, (
+        assert Language.EN in task_result.datasetid_results, (
             f"Language 'en' missing for task '{task.name}'"
         )
 
-        lang_result = task_result.language_results[Language.EN]
+        lang_result = task_result.datasetid_results[Language.EN]
         assert len(lang_result.metrics_dict) > 0, f"No metrics for task '{task.name}'"
         print(f"  ✓ Task '{task.name}' has complete results")
 
