@@ -324,7 +324,7 @@ def _run_pending_work(
                     description=task.description,
                     split=task.split.value,
                 ),
-                language_results={},
+                datasetid_results={},
             )
 
         # Evaluate pending datasets
@@ -345,7 +345,7 @@ def _run_pending_work(
 
                 # Store results
                 dataset_language = task.get_dataset_language(dataset_id)
-                results.task_results[task.name].language_results[dataset_id] = MetricsResult(
+                results.task_results[task.name].datasetid_results[dataset_id] = MetricsResult(
                     evaluation_time=evaluation_time,
                     metrics_dict=dataset_results,
                     language=dataset_language.value if dataset_language else None,
