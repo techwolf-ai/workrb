@@ -78,15 +78,65 @@ class ModelInputType(str, Enum):
 
     PROJECT_BRIEF_STRING = "brief_string"
     """
-    A few sentence describing a project
+    Full natural-language description of a freelance or consulting opportunity.
+
+    Context:
+        Used as the primary input to candidate-matching pipelines.
+        Represents a concrete project (not a permanent job position).
+
+    Content:
+        Typically includes business context, scope, required skills,
+        expectations, and optional soft requirements.
+
+    Example:
+        Lead Dev for Greenfield B2B Material Platform (Next.js/GraphQL)
+
+        We are Architech Innovations, a scale-up in the AEC tech space. ...
+        We are building a greenfield MVP from the ground up. ...
+        We are looking for a developer who have a proven track record ...
+        skills: Strong decision-making, ...
     """
 
     SEARCH_QUERY_STRING = "search_query_string"
     """
-    A few input word to search for a profile
+    Short keyword-based query used to retrieve candidate profiles.
+
+    Context:
+        Used when a full project brief is not available, or as a
+        lightweight input to narrow down candidates before deeper matching.
+
+    Content:
+        Minimal, high-signal keywords describing a role, skillset,
+        or professional focus.
+
+    Example:
+        IT financial controller
     """
 
-    PROFILE_STRING = "profile_string"
+    CANDIDATE_PROFILE_STRING = "candidate_profile_string"
     """
-    A few sentences describing an applicant profile
+    Structured natural-language summary of a candidate’s professional background.
+
+    Context:
+        Retrieved from the candidate database and evaluated for relevance
+        against PROJECT_BRIEF_TEXT or SEARCH_QUERY_TEXT.
+
+    Content:
+        Include title, bio, skills, experience history.
+
+    Example:
+        Expert Shopify Developer
+
+        Bio:
+        I build and optimize Shopify Plus environments, ...
+
+        Skills:
+        Shopify Plus,Headless Commerce, ...
+
+        Experiences:
+        Lead Shopify Developer
+        I led the development of a headless e-commerce site ...
+        Shopify Plus, ...
+
+        ...
     """
