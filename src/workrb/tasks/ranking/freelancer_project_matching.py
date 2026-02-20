@@ -89,11 +89,11 @@ class _BaseCandidateRanking(RankingTask, ABC):
     @property
     def target_input_type(self) -> ModelInputType:
         """Target input type for profiles."""
-        return ModelInputType.PROFILE_STRING
+        return ModelInputType.CANDIDATE_PROFILE_STRING
 
     @staticmethod
     def _candidate_profile_to_str(candidate: dict[str, Any]) -> str:
-        experiences = "\n".join(
+        experiences = "\n\n".join(
             f"{exp['title']}\n{exp['description']}\n{', '.join(exp['skills'])}"
             for exp in candidate["experiences"]
         )
@@ -223,7 +223,7 @@ class ProjectCandidateRanking(_BaseCandidateRanking):
     @property
     def name(self) -> str:
         """Project candidate matching task name."""
-        return "Project-candidate matching"
+        return "Project-Candidate Matching"
 
     @property
     def description(self) -> str:
@@ -280,7 +280,7 @@ class SearchQueryCandidateRanking(_BaseCandidateRanking):
     @property
     def name(self) -> str:
         """Project candidate matching task name."""
-        return "Project-candidate matching"
+        return "Query-Candidate Matching"
 
     @property
     def description(self) -> str:
