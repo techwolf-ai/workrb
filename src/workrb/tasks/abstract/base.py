@@ -213,14 +213,16 @@ class Task(ABC):
         return ""
 
     def get_dataset_language(self, dataset_id: str) -> Language | None:
-        """Return the language of a dataset if it's monolingual, None otherwise.
+        """Map a dataset ID to its language for per-language metric aggregation.
 
-        Default implementation assumes dataset_id equals language code (1:1 mapping).
-        This works for standard monolingual tasks where each dataset corresponds to
-        exactly one language.
+        This method is used during metric aggregation to group results by language.
+        The default implementation assumes a 1:1 mapping between dataset IDs and
+        language codes, which works for standard monolingual tasks.
 
-        Tasks with arbitrary dataset IDs (not 1:1 with languages) must override this
-        method to return the appropriate language for each dataset, or None for
+        Override this method in tasks where dataset IDs do not correspond directly to
+        language codes (e.g., MELO tasks use compound dataset IDs like
+        ``"ita_q_it_c_it"`` for a monolingual Italian dataset). The override should
+        return the appropriate ``Language`` for monolingual datasets, or ``None`` for
         cross-language datasets.
 
         Parameters
