@@ -113,6 +113,7 @@ class _BaseCandidateRanking(RankingTask, ABC):
         self,
         split: DatasetSplit,
         language: Language,
+        dataset_id: str,
         query_key: str,
         score_key: str,
         query_id_column: str,
@@ -162,7 +163,7 @@ class _BaseCandidateRanking(RankingTask, ABC):
         ]
         corpus = [self._candidate_profile_to_str(p) for p in candidate_df.to_dict(orient="records")]
 
-        return RankingDataset(queries, relevancy_labels, corpus, language=language)
+        return RankingDataset(queries, relevancy_labels, corpus, dataset_id=dataset_id)
 
     @property
     def citation(self) -> str:
@@ -239,9 +240,12 @@ class ProjectCandidateRanking(_BaseCandidateRanking):
     def _input_to_str(input_dict: dict[str, str]) -> str:
         return f"{input_dict['title']}\n\n{input_dict['description']}"
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
         """Load Job Title Similarity data from the HuggingFace dataset."""
-        return self._load_and_format_data(split, language, "briefs", "brief_scores", "brief_id")
+        language = Language(dataset_id)
+        return self._load_and_format_data(
+            split, language, dataset_id, "briefs", "brief_scores", "brief_id"
+        )
 
 
 @register_task()
@@ -296,6 +300,9 @@ class SearchQueryCandidateRanking(_BaseCandidateRanking):
     def _input_to_str(input_dict: dict[str, str]) -> str:
         return input_dict["value"]
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
         """Load Job Title Similarity data from the HuggingFace dataset."""
-        return self._load_and_format_data(split, language, "queries", "query_scores", "query_id")
+        language = Language(dataset_id)
+        return self._load_and_format_data(
+            split, language, dataset_id, "queries", "query_scores", "query_id"
+        )
