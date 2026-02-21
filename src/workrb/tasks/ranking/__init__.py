@@ -7,12 +7,17 @@ This module contains improved implementations of ranking tasks that:
 - Minimize external dependencies
 """
 
+from workrb.tasks.ranking.freelancer_project_matching import (
+    ProjectCandidateRanking,
+    SearchQueryCandidateRanking,
+)
 from workrb.tasks.ranking.job2skill import ESCOJob2SkillRanking
 from workrb.tasks.ranking.job_similarity import JobTitleSimilarityRanking
 from workrb.tasks.ranking.jobnorm import JobBERTJobNormRanking
 from workrb.tasks.ranking.skill2job import ESCOSkill2JobRanking
 from workrb.tasks.ranking.skill_extraction import (
     HouseSkillExtractRanking,
+    SkillSkapeExtractRanking,
     TechSkillExtractRanking,
 )
 from workrb.tasks.ranking.skill_similarity import SkillMatch1kSkillSimilarityRanking
@@ -25,6 +30,8 @@ __all__ = [
     "HouseSkillExtractRanking",
     "JobBERTJobNormRanking",
     "JobTitleSimilarityRanking",
+    "ProjectCandidateRanking",
+    "SearchQueryCandidateRanking",
     "SkillMatch1kSkillSimilarityRanking",
     "SkillSkapeExtractRanking",
     "TechSkillExtractRanking",
