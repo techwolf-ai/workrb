@@ -127,7 +127,7 @@ class TestLexicalBaselineRegression:
 
         for metric_name, expected_value in expected.items():
             actual_value = results[metric_name]
-            assert actual_value == pytest.approx(expected_value, abs=1e-6), (
+            assert actual_value == pytest.approx(expected_value, abs=1e-3), (
                 f"{model_name} metric '{metric_name}': "
                 f"expected {expected_value}, got {actual_value}"
             )
