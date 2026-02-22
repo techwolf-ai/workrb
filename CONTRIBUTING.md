@@ -181,10 +181,10 @@ class MyCustomRankingTask(RankingTask):
         """Override default metrics if needed"""
         return ["map", "mrr", "recall@5", "recall@10"]
     
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
         """
-        Load dataset for a specific language and split.
-        
+        Load dataset for a specific dataset ID and split.
+
         Returns:
             RankingDataset with query_texts, target_indices, and target_space
         """
@@ -196,12 +196,12 @@ class MyCustomRankingTask(RankingTask):
             [0, 2],  # Software Engineer -> Python, SQL
             [0, 1],  # Data Scientist -> Python, Machine Learning
         ]
-        
+
         return RankingDataset(
             query_texts=query_texts,
             target_indices=target_indices,
             target_space=target_space,
-            language=language,
+            dataset_id=dataset_id,
         )
 ```
 

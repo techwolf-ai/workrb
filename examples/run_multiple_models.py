@@ -2,6 +2,8 @@
 Reproduce benchmark results.
 """
 
+import workrb
+
 if __name__ == "__main__":
     # 1. Setup model and tasks
     models = [

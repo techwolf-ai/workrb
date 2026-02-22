@@ -60,22 +60,31 @@ class ESCOSkill2JobRanking(RankingTask):
         """Target input type for jobs."""
         return ModelInputType.JOB_TITLE
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """
-        Load skill-to-job data for a specific split and language.
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load skill-to-job data for a specific split and dataset.
 
         Validation set is static and only available in English.
         Test set is generated from ESCO relations for the selected version and language.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
         """
+        language = Language(dataset_id)
+
         if split == DatasetSplit.TEST:
-            return self._load_test(language=language)
+            return self._load_test(language=language, dataset_id=dataset_id)
 
         if split == DatasetSplit.VAL:
-            return self._load_val(language=language)
+            return self._load_val(language=language, dataset_id=dataset_id)
 
         raise ValueError(f"Invalid split: {split}")
 
-    def _load_test(self, language: Language) -> RankingDataset:
+    def _load_test(self, language: Language, dataset_id: str) -> RankingDataset:
         """Load test data for a specific version and language."""
         target_esco = ESCO(version=self.esco_version, language=language)
 
@@ -109,10 +118,10 @@ class ESCOSkill2JobRanking(RankingTask):
             query_texts=query_texts,
             target_indices=target_indices,
             target_space=job_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
-    def _load_val(self, language: Language) -> RankingDataset:
+    def _load_val(self, language: Language, dataset_id: str) -> RankingDataset:
         """
         Use vacancies with job titles where descriptions yield ESCO skills.
 
@@ -178,7 +187,7 @@ class ESCOSkill2JobRanking(RankingTask):
             query_texts=query_texts,
             target_indices=target_indices,
             target_space=job_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
     @property

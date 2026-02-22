@@ -61,8 +61,18 @@ class JobBERTJobNormRanking(RankingTask):
         """Target input type for ESCO occupations."""
         return ModelInputType.JOB_TITLE
 
-    def load_monolingual_data(self, split: DatasetSplit, language: Language) -> RankingDataset:
-        """Load job normalization data."""
+    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
+        """Load job normalization data for a specific split and dataset.
+
+        Args:
+            dataset_id: Dataset identifier (language code for this task)
+            split: Dataset split to load
+
+        Returns
+        -------
+            RankingDataset object
+        """
+        language = Language(dataset_id)
         # Login using e.g. `huggingface-cli login` to access this dataset
         ds = load_dataset("TechWolf/JobBERT-evaluation-dataset")
         assert isinstance(ds, DatasetDict)
@@ -115,7 +125,7 @@ class JobBERTJobNormRanking(RankingTask):
             query_texts=query_texts,
             target_indices=label_indices,
             target_space=job_vocab,
-            language=language,
+            dataset_id=dataset_id,
         )
 
     @property

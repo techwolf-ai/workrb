@@ -41,7 +41,7 @@ class TestClassificationTaskWithBiEncoder:
         model = BiEncoderModel("all-MiniLM-L6-v2")
 
         # Should work - BiEncoder computes similarity between texts and label space
-        results = task.evaluate(model, language=Language.EN)
+        results = task.evaluate(model, dataset_id=Language.EN.value)
 
         # Validate results
         assert "f1_macro" in results
@@ -56,7 +56,7 @@ class TestClassificationTaskWithBiEncoder:
         model = BiEncoderModel("all-MiniLM-L6-v2")
 
         # Get dataset
-        dataset: ClassificationDataset = task.lang_datasets[Language.EN]
+        dataset: ClassificationDataset = task.datasets[Language.EN.value]
 
         # Compute predictions
         predictions = model.compute_classification(
@@ -80,7 +80,7 @@ class TestClassificationTaskWithClassificationModel:
         task = ToyJobSkill(split="val", languages=["en"])
 
         # Get the label space from the task
-        dataset = task.lang_datasets[Language.EN]
+        dataset = task.datasets[Language.EN.value]
         label_space = dataset.label_space
 
         # Create classification model with matching label space
@@ -90,7 +90,7 @@ class TestClassificationTaskWithClassificationModel:
         )
 
         # Should work - model has classification head with matching label space
-        results = task.evaluate(model, language=Language.EN)
+        results = task.evaluate(model, dataset_id=Language.EN.value)
 
         # Validate results
         assert "f1_macro" in results
@@ -112,7 +112,7 @@ class TestClassificationTaskWithClassificationModel:
 
         # Should fail with clear error about size mismatch
         with pytest.raises(ValueError, match="Model output size mismatch"):
-            task.evaluate(model, language=Language.EN)
+            task.evaluate(model, dataset_id=Language.EN.value)
 
     def test_classification_task_label_space_order_mismatch_fails(self):
         """Classification model with wrong label order should fail."""
@@ -120,7 +120,7 @@ class TestClassificationTaskWithClassificationModel:
         task = ToyJobSkill(split="val", languages=["en"])
 
         # Get the label space and shuffle it
-        dataset = task.lang_datasets[Language.EN]
+        dataset = task.datasets[Language.EN.value]
         wrong_order_labels = list(reversed(dataset.label_space))
 
         model = RndESCOClassificationModel(
@@ -130,7 +130,7 @@ class TestClassificationTaskWithClassificationModel:
 
         # Should fail with clear error about order mismatch
         with pytest.raises(ValueError, match="label order doesn't match"):
-            task.evaluate(model, language=Language.EN)
+            task.evaluate(model, dataset_id=Language.EN.value)
 
 
 class TestRankingTaskWithBiEncoder:
@@ -146,7 +146,7 @@ class TestRankingTaskWithBiEncoder:
         model = BiEncoderModel("all-MiniLM-L6-v2")
 
         # Should work - standard ranking behavior
-        results = task.evaluate(model, language=Language.EN)
+        results = task.evaluate(model, dataset_id=Language.EN.value)
 
         # Validate results
         assert "map" in results
@@ -161,7 +161,7 @@ class TestRankingTaskWithBiEncoder:
         model = BiEncoderModel("all-MiniLM-L6-v2")
 
         # Get dataset
-        dataset = task.lang_datasets[Language.EN]
+        dataset = task.datasets[Language.EN.value]
 
         # Compute predictions
         predictions = model.compute_rankings(
@@ -186,7 +186,7 @@ class TestRankingTaskWithClassificationModel:
         task = ToySkillSim(split="val", languages=["en"])
 
         # Get the target space from the task
-        dataset = task.lang_datasets[Language.EN]
+        dataset = task.datasets[Language.EN.value]
         target_space = dataset.target_space
 
         # Create classification model with matching label space
@@ -196,7 +196,7 @@ class TestRankingTaskWithClassificationModel:
         )
 
         # Should work - model's label space matches ranking target space
-        results = task.evaluate(model, language=Language.EN)
+        results = task.evaluate(model, dataset_id=Language.EN.value)
 
         # Validate results
         assert "map" in results
@@ -218,7 +218,7 @@ class TestRankingTaskWithClassificationModel:
 
         # Should fail with clear error about size mismatch
         with pytest.raises(ValueError, match="target space size mismatch"):
-            task.evaluate(model, language=Language.EN)
+            task.evaluate(model, dataset_id=Language.EN.value)
 
     def test_ranking_task_with_classification_model_label_mismatch_fails(self):
         """Classification model with wrong labels should fail."""
@@ -226,7 +226,7 @@ class TestRankingTaskWithClassificationModel:
         task = ToySkillSim(split="val", languages=["en"])
 
         # Get target space and create different labels with same size
-        dataset = task.lang_datasets[Language.EN]
+        dataset = task.datasets[Language.EN.value]
         wrong_labels = [f"WrongLabel_{i}" for i in range(len(dataset.target_space))]
 
         model = RndESCOClassificationModel(
@@ -236,7 +236,7 @@ class TestRankingTaskWithClassificationModel:
 
         # Should fail with clear error about label mismatch
         with pytest.raises(ValueError, match="target labels don't match"):
-            task.evaluate(model, language=Language.EN)
+            task.evaluate(model, dataset_id=Language.EN.value)
 
     def test_ranking_task_with_classification_model_order_mismatch_fails(self):
         """Classification model with wrong label order should fail."""
@@ -244,7 +244,7 @@ class TestRankingTaskWithClassificationModel:
         task = ToySkillSim(split="val", languages=["en"])
 
         # Get target space and reverse order
-        dataset = task.lang_datasets[Language.EN]
+        dataset = task.datasets[Language.EN.value]
         wrong_order_labels = list(reversed(dataset.target_space))
 
         model = RndESCOClassificationModel(
@@ -254,7 +254,7 @@ class TestRankingTaskWithClassificationModel:
 
         # Should fail with clear error about order mismatch
         with pytest.raises(ValueError, match="target label order doesn't match"):
-            task.evaluate(model, language=Language.EN)
+            task.evaluate(model, dataset_id=Language.EN.value)
 
 
 class TestModelTaskCompatibilitySummary:
@@ -273,8 +273,8 @@ class TestModelTaskCompatibilitySummary:
         biencoder_model = BiEncoderModel("all-MiniLM-L6-v2")
 
         # Get label spaces
-        class_dataset = classification_task.lang_datasets[Language.EN]
-        rank_dataset = ranking_task.lang_datasets[Language.EN]
+        class_dataset = classification_task.datasets[Language.EN.value]
+        rank_dataset = ranking_task.datasets[Language.EN.value]
 
         classification_model_for_class = RndESCOClassificationModel(
             base_model_name="all-MiniLM-L6-v2",
@@ -290,23 +290,25 @@ class TestModelTaskCompatibilitySummary:
 
         # 1. Classification Task + BiEncoder (NEW)
         results["class_biencoder"] = classification_task.evaluate(
-            biencoder_model, language=Language.EN
+            biencoder_model, dataset_id=Language.EN.value
         )
         assert "f1_macro" in results["class_biencoder"]
 
         # 2. Classification Task + Classification Model (EXISTING)
         results["class_classification"] = classification_task.evaluate(
-            classification_model_for_class, language=Language.EN
+            classification_model_for_class, dataset_id=Language.EN.value
         )
         assert "f1_macro" in results["class_classification"]
 
         # 3. Ranking Task + BiEncoder (EXISTING)
-        results["rank_biencoder"] = ranking_task.evaluate(biencoder_model, language=Language.EN)
+        results["rank_biencoder"] = ranking_task.evaluate(
+            biencoder_model, dataset_id=Language.EN.value
+        )
         assert "map" in results["rank_biencoder"]
 
         # 4. Ranking Task + Classification Model (CONDITIONAL)
         results["rank_classification"] = ranking_task.evaluate(
-            classification_model_for_rank, language=Language.EN
+            classification_model_for_rank, dataset_id=Language.EN.value
         )
         assert "map" in results["rank_classification"]
 
