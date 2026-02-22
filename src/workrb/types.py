@@ -1,6 +1,7 @@
 """Shared types and enums used across WorkRB."""
 
 from enum import Enum
+from typing import NamedTuple
 
 
 class Language(str, Enum):
@@ -38,6 +39,57 @@ class Language(str, Enum):
     KO = "ko"
     ZH = "zh"
     CROSS = "cross_lingual"
+
+
+class DatasetLanguages(NamedTuple):
+    """Languages associated with a dataset for metric aggregation.
+
+    Describes the input and output languages of a dataset. Used by
+    ``_aggregate_per_language`` to group results by language.
+
+    Examples
+    --------
+    Monolingual (e.g. English-only):
+        ``DatasetLanguages(input_languages=frozenset({Language.EN}),
+                          output_languages=frozenset({Language.EN}))``
+
+    Cross-lingual (e.g. English queries, German targets):
+        ``DatasetLanguages(input_languages=frozenset({Language.EN}),
+                          output_languages=frozenset({Language.DE}))``
+
+    Multilingual (e.g. queries in multiple languages, targets in one):
+        ``DatasetLanguages(input_languages=frozenset({Language.EN, Language.FR}),
+                          output_languages=frozenset({Language.DE}))``
+    """
+
+    input_languages: frozenset[Language]
+    output_languages: frozenset[Language]
+
+
+class LanguageAggregationMode(str, Enum):
+    """Mode for grouping datasets by language during metric aggregation.
+
+    Controls how ``_aggregate_per_language`` determines the grouping language
+    for each dataset result.
+    """
+
+    MONOLINGUAL_ONLY = "monolingual_only"
+    """Only aggregate monolingual datasets (singleton input == singleton output).
+
+    Cross-lingual or multilingual datasets are skipped.
+    """
+
+    CROSSLINGUAL_GROUP_INPUT_LANGUAGES = "crosslingual_group_input_languages"
+    """Group by the input language (requires singleton input_languages).
+
+    Datasets with multiple input languages are skipped.
+    """
+
+    CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES = "crosslingual_group_output_languages"
+    """Group by the output language (requires singleton output_languages).
+
+    Datasets with multiple output languages are skipped.
+    """
 
 
 class LabelType(str, Enum):

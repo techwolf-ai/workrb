@@ -6,11 +6,20 @@ to return multiple dataset identifiers for each language, supporting use cases
 like MELO benchmark where datasets encode additional metadata beyond language.
 """
 
+import time
+
 import pytest
 
 from workrb.models import BiEncoderModel
+from workrb.results import (
+    BenchmarkMetadata,
+    BenchmarkResults,
+    MetricsResult,
+    TaskResultMetadata,
+    TaskResults,
+)
 from workrb.tasks import ESCOJob2SkillRanking, RankingDataset
-from workrb.types import Language
+from workrb.types import DatasetLanguages, Language, LanguageAggregationMode
 
 
 class TestMultiDatasetTask:
@@ -171,6 +180,201 @@ class TestMultiDatasetTask:
         # Verify dataset objects have correct dataset_id
         assert task.datasets["en_region_a"].dataset_id == "en_region_a"
         assert task.datasets["en_region_b"].dataset_id == "en_region_b"
+
+
+def _make_benchmark_results(
+    dataset_entries: list[tuple[str, str, dict[str, float], list[str], list[str]]],
+) -> BenchmarkResults:
+    """Build a BenchmarkResults with controlled MetricsResult entries.
+
+    Parameters
+    ----------
+    dataset_entries : list of tuples
+        Each tuple is ``(task_name, dataset_id, metrics_dict, input_languages, output_languages)``.
+    """
+    task_results: dict[str, TaskResults] = {}
+    for task_name, dataset_id, metrics_dict, inp_langs, out_langs in dataset_entries:
+        if task_name not in task_results:
+            task_results[task_name] = TaskResults(
+                metadata=TaskResultMetadata(
+                    task_group="test_group",
+                    task_type="ranking",
+                    label_type="single_label",
+                    description="test",
+                    split="val",
+                ),
+                datasetid_results={},
+            )
+        task_results[task_name].datasetid_results[dataset_id] = MetricsResult(
+            evaluation_time=0.1,
+            metrics_dict=metrics_dict,
+            input_languages=inp_langs,
+            output_languages=out_langs,
+        )
+    return BenchmarkResults(
+        task_results=task_results,
+        metadata=BenchmarkMetadata(
+            model_name="test_model",
+            total_evaluation_time=1.0,
+            timestamp=time.time(),
+            num_tasks=len(task_results),
+            languages=["en"],
+        ),
+    )
+
+
+class TestGetDatasetLanguages:
+    """Tests for Task.get_dataset_languages()."""
+
+    def test_default_monolingual(self):
+        """Default implementation returns matching DatasetLanguages for standard language IDs."""
+
+        class MonoTask(ESCOJob2SkillRanking):
+            def load_dataset(self, dataset_id, split):
+                return RankingDataset(
+                    query_texts=["q"],
+                    target_indices=[[0]],
+                    target_space=["t"],
+                    dataset_id=dataset_id,
+                )
+
+        task = MonoTask(split="val", languages=["en"])
+        result = task.get_dataset_languages("en")
+        assert result == DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset({Language.EN}),
+        )
+
+    def test_raises_for_non_standard_ids(self):
+        """Default implementation raises NotImplementedError for arbitrary dataset IDs."""
+
+        class ArbitraryIdTask(ESCOJob2SkillRanking):
+            def languages_to_dataset_ids(self, languages):
+                return ["custom_dataset_1"]
+
+            def load_dataset(self, dataset_id, split):
+                return RankingDataset(
+                    query_texts=["q"],
+                    target_indices=[[0]],
+                    target_space=["t"],
+                    dataset_id=dataset_id,
+                )
+
+        task = ArbitraryIdTask(split="val", languages=["en"])
+        with pytest.raises(NotImplementedError, match="not a valid language code"):
+            task.get_dataset_languages("custom_dataset_1")
+
+
+class TestAggregationModes:
+    """Tests for _aggregate_per_language aggregation modes."""
+
+    def test_monolingual_only_with_monolingual_datasets(self):
+        """MONOLINGUAL_ONLY correctly groups monolingual datasets by language."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "de", {"map": 0.6}, ["de"], ["de"]),
+                ("task2", "en", {"map": 0.9}, ["en"], ["en"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        assert "mean_per_language/en/map/mean" in result_str
+        assert "mean_per_language/de/map/mean" in result_str
+        # en: mean of 0.8 and 0.9 = 0.85
+        assert result_str["mean_per_language/en/map/mean"] == pytest.approx(0.85)
+        # de: single value 0.6
+        assert result_str["mean_per_language/de/map/mean"] == pytest.approx(0.6)
+
+    def test_monolingual_only_skips_crosslingual_dataset(self):
+        """MONOLINGUAL_ONLY skips cross-lingual datasets."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en_de", {"map": 0.7}, ["en"], ["de"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+        )
+        assert result == {}
+
+    def test_monolingual_only_skips_multilingual_dataset(self):
+        """MONOLINGUAL_ONLY skips multilingual datasets."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "multi", {"map": 0.7}, ["en", "fr"], ["en", "fr"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+        )
+        assert result == {}
+
+    def test_crosslingual_group_input_languages(self):
+        """CROSSLINGUAL_GROUP_INPUT_LANGUAGES groups by input language."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en_to_de", {"map": 0.7}, ["en"], ["de"]),
+                ("task1", "en_to_fr", {"map": 0.9}, ["en"], ["fr"]),
+                ("task1", "de_to_fr", {"map": 0.5}, ["de"], ["fr"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES,
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        assert "mean_per_language/en/map/mean" in result_str
+        assert "mean_per_language/de/map/mean" in result_str
+        # en: mean of 0.7 and 0.9 = 0.8
+        assert result_str["mean_per_language/en/map/mean"] == pytest.approx(0.8)
+        # de: single value 0.5
+        assert result_str["mean_per_language/de/map/mean"] == pytest.approx(0.5)
+
+    def test_crosslingual_group_input_skips_multi_input(self):
+        """CROSSLINGUAL_GROUP_INPUT_LANGUAGES skips datasets with multiple input langs."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "multi_in", {"map": 0.7}, ["en", "fr"], ["de"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES,
+        )
+        assert result == {}
+
+    def test_crosslingual_group_output_languages(self):
+        """CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES groups by output language."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en_to_de", {"map": 0.7}, ["en"], ["de"]),
+                ("task1", "fr_to_de", {"map": 0.9}, ["fr"], ["de"]),
+                ("task1", "en_to_fr", {"map": 0.5}, ["en"], ["fr"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES,
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        assert "mean_per_language/de/map/mean" in result_str
+        assert "mean_per_language/fr/map/mean" in result_str
+        # de: mean of 0.7 and 0.9 = 0.8
+        assert result_str["mean_per_language/de/map/mean"] == pytest.approx(0.8)
+        # fr: single value 0.5
+        assert result_str["mean_per_language/fr/map/mean"] == pytest.approx(0.5)
+
+    def test_crosslingual_group_output_skips_multi_output(self):
+        """CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES skips datasets with multiple output langs."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "multi_out", {"map": 0.7}, ["en"], ["de", "fr"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES,
+        )
+        assert result == {}
 
 
 if __name__ == "__main__":

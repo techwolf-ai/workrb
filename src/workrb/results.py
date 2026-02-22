@@ -8,6 +8,8 @@ import pandas as pd
 from pydantic import BaseModel, Field
 from scipy import stats
 
+from workrb.types import LanguageAggregationMode
+
 
 class TaskResultMetadata(BaseModel):
     """Metadata for a task result."""
@@ -28,9 +30,13 @@ class MetricsResult(BaseModel):
     evaluation_time: float = Field(ge=0)
     metrics_dict: dict[str, Any] = Field(default_factory=dict)
     """ Dictionary of metric names to their computed values. """
-    language: str | None = Field(
-        default=None,
-        description="Language code if this is a monolingual dataset, None for cross-language datasets.",
+    input_languages: list[str] = Field(
+        default_factory=list,
+        description="Input language codes for this dataset (e.g. query languages).",
+    )
+    output_languages: list[str] = Field(
+        default_factory=list,
+        description="Output language codes for this dataset (e.g. target languages).",
     )
 
 
@@ -289,27 +295,87 @@ class BenchmarkResults(BaseModel):
                 metric_results[tag] = stats[agg]
         return metric_results
 
+    @staticmethod
+    def _get_language_grouping_key(
+        metrics_result: "MetricsResult",
+        mode: LanguageAggregationMode,
+    ) -> str | None:
+        """Determine the grouping language for a dataset result.
+
+        Returns ``None`` when the dataset is incompatible with the requested
+        mode, so that the caller can skip it during aggregation.
+
+        Parameters
+        ----------
+        metrics_result : MetricsResult
+            The metrics result to extract a language key from.
+        mode : LanguageAggregationMode
+            The aggregation mode controlling how the language key is derived.
+
+        Returns
+        -------
+        str or None
+            Language code to group by, or ``None`` if the dataset is
+            incompatible with the mode.
+        """
+        input_languages = metrics_result.input_languages
+        output_languages = metrics_result.output_languages
+
+        if mode == LanguageAggregationMode.MONOLINGUAL_ONLY:
+            if (
+                len(input_languages) != 1
+                or len(output_languages) != 1
+                or input_languages[0] != output_languages[0]
+            ):
+                return None
+            return input_languages[0]
+
+        if mode == LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES:
+            if len(input_languages) != 1:
+                return None
+            return input_languages[0]
+
+        if mode == LanguageAggregationMode.CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES:
+            if len(output_languages) != 1:
+                return None
+            return output_languages[0]
+
+        return None
+
     def _aggregate_per_language(
         self,
         tag_name: str = "mean_per_language",
         aggregations: tuple = ("mean", "stderr", "ci_margin"),
+        aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
     ) -> dict[ResultTagString, float]:
         """Aggregate results per language.
 
-        Collects results for monolingual datasets and aggregates by language across all tasks.
-        Cross-language datasets (where language is None) are excluded from this aggregation.
-        Results may be imbalanced if tasks support different languages.
+        Groups dataset results by language across all tasks and computes
+        aggregate statistics. The ``aggregation_mode`` parameter controls how
+        the grouping language is determined for each dataset.
+
+        Parameters
+        ----------
+        tag_name : str
+            Prefix for the result tag strings.
+        aggregations : tuple
+            Statistics to compute (e.g. ``"mean"``, ``"stderr"``).
+        aggregation_mode : LanguageAggregationMode
+            How to determine the grouping language for each dataset result.
+            Defaults to ``MONOLINGUAL_ONLY`` (backward compatible for benchmarks
+            with only monolingual datasets).
+            Datasets incompatible with the chosen mode are silently skipped.
         """
         # Collect metric values per language
         raw_results = defaultdict(list)
         for task_result in self.task_results.values():
             for metrics_result in task_result.datasetid_results.values():
-                # Skip cross-language datasets
-                if metrics_result.language is None:
+                language_key = self._get_language_grouping_key(metrics_result, aggregation_mode)
+                if language_key is None:
+                    # Skip if incompatible with the aggregation mode
                     continue
-
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
-                    raw_results[(metrics_result.language, metric_name)].append(metric_value)
+                    raw_results[(language_key, metric_name)].append(metric_value)
 
         # Compute stats
         results = {}
