@@ -67,3 +67,6 @@ uv.lock
 # Outputs
 tmp/
 results/
+
+# AI-assistant configs
+CLAUDE.md
