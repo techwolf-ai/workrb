@@ -1,4 +1,5 @@
 import json
+import logging
 import pprint
 from collections import defaultdict
 from typing import Any
@@ -7,6 +8,10 @@ import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field
 from scipy import stats
+
+from workrb.types import LanguageAggregationMode, get_language_grouping_key
+
+logger = logging.getLogger(__name__)
 
 
 class TaskResultMetadata(BaseModel):
@@ -28,9 +33,13 @@ class MetricsResult(BaseModel):
     evaluation_time: float = Field(ge=0)
     metrics_dict: dict[str, Any] = Field(default_factory=dict)
     """ Dictionary of metric names to their computed values. """
-    language: str | None = Field(
-        default=None,
-        description="Language code if this is a monolingual dataset, None for cross-language datasets.",
+    input_languages: list[str] = Field(
+        default_factory=list,
+        description="Input language codes for this dataset (e.g. query languages).",
+    )
+    output_languages: list[str] = Field(
+        default_factory=list,
+        description="Output language codes for this dataset (e.g. target languages).",
     )
 
 
@@ -38,7 +47,7 @@ class TaskResults(BaseModel):
     """Results for a task."""
 
     metadata: TaskResultMetadata
-    language_results: dict[str, MetricsResult]  # dataset_id -> results
+    datasetid_results: dict[str, MetricsResult]  # dataset_id -> results
     """Dictionary of dataset IDs to their computed results."""
 
 
@@ -99,11 +108,23 @@ class BenchmarkResults(BaseModel):
 
     def get_num_evaluation_results(self) -> int:
         """Get the total number of evaluation results."""
-        return sum(len(task.language_results) for task in self.task_results.values())
+        return sum(len(task.datasetid_results) for task in self.task_results.values())
 
-    def get_summary_metrics(self, aggregations: tuple = ("mean", "ci_margin")) -> dict[str, float]:
+    def get_summary_metrics(
+        self,
+        aggregations: tuple = ("mean", "ci_margin"),
+        language_aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
+    ) -> dict[str, float]:
         """
         Get summary metrics for the benchmark results.
+
+        Parameters
+        ----------
+        aggregations : tuple
+            Statistics to compute (e.g. ``"mean"``, ``"ci_margin"``).
+        language_aggregation_mode : LanguageAggregationMode
+            How to determine the grouping language for per-language aggregation.
+            Defaults to ``MONOLINGUAL_ONLY``.
         """
         mean_per_task = self._aggregate_per_task(
             aggregations=aggregations,
@@ -119,6 +140,7 @@ class BenchmarkResults(BaseModel):
         )
         mean_per_language = self._aggregate_per_language(
             aggregations=aggregations,
+            aggregation_mode=language_aggregation_mode,
         )
 
         combined = {
@@ -139,7 +161,7 @@ class BenchmarkResults(BaseModel):
         # Collect metric values per task
         raw_results = defaultdict(list)
         for task_name, task_result in self.task_results.items():
-            for lang_metrics_result in task_result.language_results.values():
+            for lang_metrics_result in task_result.datasetid_results.values():
                 for metric_name, metric_value in lang_metrics_result.metrics_dict.items():
                     raw_results[(task_name, metric_name)].append(metric_value)
 
@@ -289,27 +311,80 @@ class BenchmarkResults(BaseModel):
                 metric_results[tag] = stats[agg]
         return metric_results
 
+    @staticmethod
+    def _get_language_grouping_key(
+        metrics_result: "MetricsResult",
+        mode: LanguageAggregationMode,
+    ) -> str | None:
+        """Determine the grouping language for a dataset result.
+
+        Delegates to :func:`workrb.types.get_language_grouping_key`.
+
+        Returns ``None`` when the dataset is incompatible with the requested
+        mode, so that the caller can skip it during aggregation.
+
+        Parameters
+        ----------
+        metrics_result : MetricsResult
+            The metrics result to extract a language key from.
+        mode : LanguageAggregationMode
+            The aggregation mode controlling how the language key is derived.
+
+        Returns
+        -------
+        str or None
+            Language code to group by, or ``None`` if the dataset is
+            incompatible with the mode.
+        """
+        return get_language_grouping_key(
+            metrics_result.input_languages,
+            metrics_result.output_languages,
+            mode,
+        )
+
     def _aggregate_per_language(
         self,
         tag_name: str = "mean_per_language",
         aggregations: tuple = ("mean", "stderr", "ci_margin"),
+        aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
     ) -> dict[ResultTagString, float]:
         """Aggregate results per language.
 
-        Collects results for monolingual datasets and aggregates by language across all tasks.
-        Cross-language datasets (where language is None) are excluded from this aggregation.
-        Results may be imbalanced if tasks support different languages.
+        Groups dataset results by language across all tasks and computes
+        aggregate statistics. The ``aggregation_mode`` parameter controls how
+        the grouping language is determined for each dataset.
+
+        Parameters
+        ----------
+        tag_name : str
+            Prefix for the result tag strings.
+        aggregations : tuple
+            Statistics to compute (e.g. ``"mean"``, ``"stderr"``).
+        aggregation_mode : LanguageAggregationMode
+            How to determine the grouping language for each dataset result.
+            Defaults to ``MONOLINGUAL_ONLY`` (backward compatible for benchmarks
+            with only monolingual datasets).
+            Datasets incompatible with the chosen mode are skipped with a warning.
         """
         # Collect metric values per language
         raw_results = defaultdict(list)
-        for task_result in self.task_results.values():
-            for metrics_result in task_result.language_results.values():
-                # Skip cross-language datasets
-                if metrics_result.language is None:
+        for task_name, task_result in self.task_results.items():
+            for dataset_id, metrics_result in task_result.datasetid_results.items():
+                language_key = self._get_language_grouping_key(metrics_result, aggregation_mode)
+                if language_key is None:
+                    logger.warning(
+                        "Skipping dataset '%s' of task '%s' in per-language aggregation: "
+                        "incompatible with mode '%s' "
+                        "(input_languages=%s, output_languages=%s).",
+                        dataset_id,
+                        task_name,
+                        aggregation_mode.value,
+                        metrics_result.input_languages,
+                        metrics_result.output_languages,
+                    )
                     continue
-
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
-                    raw_results[(metrics_result.language, metric_name)].append(metric_value)
+                    raw_results[(language_key, metric_name)].append(metric_value)
 
         # Compute stats
         results = {}
@@ -352,7 +427,7 @@ class BenchmarkResults(BaseModel):
         """Get flat dataframe of the benchmark results with each metric value as a separate row."""
         data = []
         for task_name, task_result in self.task_results.items():
-            for dataset_id, metrics_result in task_result.language_results.items():
+            for dataset_id, metrics_result in task_result.datasetid_results.items():
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
                     data.append(
                         {

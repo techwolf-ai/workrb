@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Literal, final
 
-from workrb.types import DatasetSplit, LabelType, Language
+from workrb.types import DatasetLanguages, DatasetSplit, LabelType, Language
 
 logger = logging.getLogger(__name__)
 
@@ -212,16 +212,19 @@ class Task(ABC):
         """
         return ""
 
-    def get_dataset_language(self, dataset_id: str) -> Language | None:
-        """Return the language of a dataset if it's monolingual, None otherwise.
+    def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
+        """Map a dataset ID to its input/output languages for metric aggregation.
 
-        Default implementation assumes dataset_id equals language code (1:1 mapping).
-        This works for standard monolingual tasks where each dataset corresponds to
-        exactly one language.
+        This method is used during metric aggregation to group results by language.
+        The default implementation assumes that each dataset is monolingual and
+        that the dataset ID is the language code (e.g., ``"en"``, ``"de"``). It
+        returns that language as both input and output.
 
-        Tasks with arbitrary dataset IDs (not 1:1 with languages) must override this
-        method to return the appropriate language for each dataset, or None for
-        cross-language datasets.
+        Override this method in tasks where dataset IDs do not correspond directly to
+        language codes (e.g., MELO tasks use compound dataset IDs like
+        ``"ita_q_it_c_it"`` for a monolingual Italian dataset or ``"ita_q_it_c_en"``
+        for a cross-lingual Italian-English dataset). The override should return a
+        ``DatasetLanguages`` with the appropriate input and output language sets.
 
         Parameters
         ----------
@@ -230,8 +233,8 @@ class Task(ABC):
 
         Returns
         -------
-        Language or None
-            Language enum if this is a monolingual dataset, None for cross-language datasets.
+        DatasetLanguages
+            Named tuple with ``input_languages`` and ``output_languages`` frozensets.
 
         Raises
         ------
@@ -241,16 +244,19 @@ class Task(ABC):
         """
         try:
             lang = Language(dataset_id)
-            if lang in self.languages:
-                return lang
-            return None
         except ValueError as e:
             raise NotImplementedError(
                 f"Dataset ID '{dataset_id}' is not a valid language code. "
-                f"Task '{self.__class__.__name__}' uses arbitrary dataset IDs (not 1:1 with languages) "
-                f"and must override the 'get_dataset_language' method to map each dataset ID "
-                f"to its corresponding language, or return None for cross-language datasets."
+                f"The default implementation assumes that each dataset is "
+                f"monolingual and that the dataset ID is the language code. "
+                f"Task '{self.__class__.__name__}' violates this assumption "
+                f"and must override 'get_dataset_languages' to map each "
+                f"dataset ID to its corresponding DatasetLanguages."
             ) from e
+        return DatasetLanguages(
+            input_languages=frozenset({lang}),
+            output_languages=frozenset({lang}),
+        )
 
     @final
     @property

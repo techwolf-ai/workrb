@@ -85,10 +85,12 @@ def create_mock_results(model_name: str, task_name: str) -> BenchmarkResults:
                     description="Find similar skills using the SkillMatch-1K dataset",
                     split="val",
                 ),
-                language_results={
+                datasetid_results={
                     "en": MetricsResult(
                         evaluation_time=1.0,
                         metrics_dict={"map": 0.5},
+                        input_languages=["en"],
+                        output_languages=["en"],
                     )
                 },
             )
