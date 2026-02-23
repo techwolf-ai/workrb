@@ -20,6 +20,7 @@ from workrb.tasks import (
     TechSkillExtractRanking,
 )
 from workrb.tasks.abstract.base import DatasetSplit, Language, TaskType
+from workrb.types import DatasetLanguages
 
 
 class StubSupportedLanguagesRankingTask(GeneralRankingTestTask):
@@ -284,3 +285,111 @@ class TestMELORankingDatasetIds:
         """Test that dataset_ids matches expected for given language combinations."""
         task = MELORanking(split="test", languages=[lang.value for lang in languages])
         assert set(task.dataset_ids) == expected_dataset_ids
+
+
+class TestMELOGetDatasetLanguages:
+    """Test MELORanking.get_dataset_languages for all dataset IDs."""
+
+    def test_all_dataset_ids_return_valid_dataset_languages(self):
+        """get_dataset_languages returns a valid DatasetLanguages for every MELO dataset ID."""
+        task = MELORanking(
+            split="test",
+            languages=[lang.value for lang in MELORanking.MELO_LANGUAGES],
+        )
+        for dataset_id in task.dataset_ids:
+            result = task.get_dataset_languages(dataset_id)
+            assert isinstance(result, DatasetLanguages), (
+                f"Expected DatasetLanguages for '{dataset_id}', got {type(result)}"
+            )
+            assert len(result.input_languages) >= 1
+            assert len(result.output_languages) >= 1
+
+    @pytest.mark.parametrize(
+        "dataset_id,expected_input,expected_output",
+        [
+            # Monolingual: query and corpus in the same language
+            ("bgr_q_bg_c_bg", frozenset({Language.BG}), frozenset({Language.BG})),
+            ("usa_q_en_c_en", frozenset({Language.EN}), frozenset({Language.EN})),
+            # Cross-lingual: query in one language, corpus in another
+            ("bgr_q_bg_c_en", frozenset({Language.BG}), frozenset({Language.EN})),
+            ("deu_q_de_c_en", frozenset({Language.DE}), frozenset({Language.EN})),
+            ("fra_q_fr_c_fr", frozenset({Language.FR}), frozenset({Language.FR})),
+            # Multilingual corpus
+            (
+                "usa_q_en_c_de_en_es_fr_it_nl_pl_pt",
+                frozenset({Language.EN}),
+                frozenset(
+                    {
+                        Language.DE,
+                        Language.EN,
+                        Language.ES,
+                        Language.FR,
+                        Language.IT,
+                        Language.NL,
+                        Language.PL,
+                        Language.PT,
+                    }
+                ),
+            ),
+        ],
+    )
+    def test_specific_dataset_languages(self, dataset_id, expected_input, expected_output):
+        """get_dataset_languages returns correct input/output languages for specific datasets."""
+        task = MELORanking(
+            split="test",
+            languages=[lang.value for lang in MELORanking.MELO_LANGUAGES],
+        )
+        result = task.get_dataset_languages(dataset_id)
+        assert result.input_languages == expected_input, (
+            f"Input mismatch for '{dataset_id}': {result.input_languages} != {expected_input}"
+        )
+        assert result.output_languages == expected_output, (
+            f"Output mismatch for '{dataset_id}': {result.output_languages} != {expected_output}"
+        )
+
+
+class TestMELSGetDatasetLanguages:
+    """Test MELSRanking.get_dataset_languages for all dataset IDs."""
+
+    def test_all_dataset_ids_return_valid_dataset_languages(self):
+        """get_dataset_languages returns a valid DatasetLanguages for every MELS dataset ID."""
+        task = MELSRanking(
+            split="test",
+            languages=[lang.value for lang in MELSRanking.MELS_LANGUAGES],
+        )
+        for dataset_id in task.dataset_ids:
+            result = task.get_dataset_languages(dataset_id)
+            assert isinstance(result, DatasetLanguages), (
+                f"Expected DatasetLanguages for '{dataset_id}', got {type(result)}"
+            )
+            assert len(result.input_languages) >= 1
+            assert len(result.output_languages) >= 1
+
+    @pytest.mark.parametrize(
+        "dataset_id,expected_input,expected_output",
+        [
+            # Monolingual
+            ("deu_q_de_c_de", frozenset({Language.DE}), frozenset({Language.DE})),
+            ("bel_q_fr_c_fr", frozenset({Language.FR}), frozenset({Language.FR})),
+            ("bel_q_nl_c_nl", frozenset({Language.NL}), frozenset({Language.NL})),
+            ("swe_q_sv_c_sv", frozenset({Language.SV}), frozenset({Language.SV})),
+            # Cross-lingual
+            ("bel_q_fr_c_en", frozenset({Language.FR}), frozenset({Language.EN})),
+            ("bel_q_nl_c_en", frozenset({Language.NL}), frozenset({Language.EN})),
+            ("deu_q_de_c_en", frozenset({Language.DE}), frozenset({Language.EN})),
+            ("swe_q_sv_c_en", frozenset({Language.SV}), frozenset({Language.EN})),
+        ],
+    )
+    def test_specific_dataset_languages(self, dataset_id, expected_input, expected_output):
+        """get_dataset_languages returns correct input/output languages for specific datasets."""
+        task = MELSRanking(
+            split="test",
+            languages=[lang.value for lang in MELSRanking.MELS_LANGUAGES],
+        )
+        result = task.get_dataset_languages(dataset_id)
+        assert result.input_languages == expected_input, (
+            f"Input mismatch for '{dataset_id}': {result.input_languages} != {expected_input}"
+        )
+        assert result.output_languages == expected_output, (
+            f"Output mismatch for '{dataset_id}': {result.output_languages} != {expected_output}"
+        )

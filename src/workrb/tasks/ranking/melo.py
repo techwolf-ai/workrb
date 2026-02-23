@@ -5,7 +5,7 @@ from datasets import load_dataset
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
-from workrb.types import ModelInputType
+from workrb.types import DatasetLanguages, ModelInputType
 
 
 @register_task()
@@ -41,7 +41,7 @@ class MELORanking(RankingTask):
         Language.SV,
     ]
 
-    LANGUAGE_TO_DATASETS = [
+    MELO_DATASET_IDS = [
         "bgr_q_bg_c_bg",
         "bgr_q_bg_c_en",
         "cze_q_cs_c_cs",
@@ -174,7 +174,7 @@ class MELORanking(RankingTask):
         lang_codes = {lang.value for lang in languages}
 
         result = []
-        for dataset_id in self.LANGUAGE_TO_DATASETS:
+        for dataset_id in self.MELO_DATASET_IDS:
             query_lang, corpus_langs = self._parse_dataset_id(dataset_id)
             # Check if all involved languages are in the target set
             all_langs = {query_lang} | set(corpus_langs)
@@ -183,26 +183,24 @@ class MELORanking(RankingTask):
 
         return result
 
-    def get_dataset_language(self, dataset_id: str) -> Language | None:
-        """Return the language of a dataset if it's monolingual, None otherwise.
+    def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
+        """Map a dataset ID to its input/output languages.
 
         Parameters
         ----------
         dataset_id : str
-            Dataset identifier.
+            Dataset identifier in format: ``<country>_q_<query_lang>_c_<corpus_lang>[_<more>]``.
 
         Returns
         -------
-        Language or None
-            Language enum if this is a monolingual dataset, None for cross-language datasets.
+        DatasetLanguages
+            Named tuple with ``input_languages`` (query) and ``output_languages`` (corpus).
         """
         query_lang, corpus_langs = self._parse_dataset_id(dataset_id)
-
-        # Not monolingual if multiple corpus languages or query != corpus
-        if len(corpus_langs) != 1 or query_lang != corpus_langs[0]:
-            return None
-
-        return Language(query_lang)
+        return DatasetLanguages(
+            input_languages=frozenset({Language(query_lang)}),
+            output_languages=frozenset(Language(lang) for lang in corpus_langs),
+        )
 
     def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
         """Load MELO data from the HuggingFace dataset.
