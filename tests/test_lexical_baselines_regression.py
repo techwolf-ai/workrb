@@ -120,7 +120,7 @@ class TestLexicalBaselineRegression:
     def test_metrics_match_expected(self, job_similarity_task, model_name, model_factory):
         """Assert that evaluation metrics match pre-recorded expected values."""
         model = model_factory()
-        results = job_similarity_task.evaluate(model, language=Language.EN)
+        results = job_similarity_task.evaluate(model, dataset_id=Language.EN.value)
 
         expected = EXPECTED_METRICS[model_name]
         print(f"\n[{model_name}] actual metrics: {results}")
@@ -135,7 +135,7 @@ class TestLexicalBaselineRegression:
     def test_all_default_metrics_present(self, job_similarity_task, model_name, model_factory):
         """Assert that all default ranking metrics appear in results."""
         model = model_factory()
-        results = job_similarity_task.evaluate(model, language=Language.EN)
+        results = job_similarity_task.evaluate(model, dataset_id=Language.EN.value)
 
         for metric_name in job_similarity_task.default_metrics:
             assert metric_name in results, (
