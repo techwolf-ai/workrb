@@ -14,6 +14,8 @@ Usage:
 import sys
 import time
 
+import pytest
+
 import workrb
 from tests.test_utils import create_toy_task_class
 from workrb.registry import TaskRegistry
@@ -84,6 +86,7 @@ def get_all_tasks(split: str = "val", languages: list[str] | None = None) -> lis
     return toy_tasks
 
 
+@pytest.mark.filterwarnings("ignore::sklearn.exceptions.UndefinedMetricWarning")
 def test_e2e_toy_benchmark():
     """
     End-to-end test of all available tasks (ranking and classification) with toy datasets.
