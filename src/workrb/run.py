@@ -23,6 +23,7 @@ from workrb.results import (
     TaskResults,
 )
 from workrb.tasks.abstract.base import Task
+from workrb.types import ExecutionMode, LanguageAggregationMode, get_language_grouping_key
 
 logger = logging.getLogger(__name__)
 setup_logger(__name__, verbose=False)
@@ -35,6 +36,8 @@ def evaluate(
     metrics: dict[str, list[str]] | None = None,
     description: str = "",
     force_restart: bool = False,
+    language_aggregation_mode: LanguageAggregationMode | None = None,
+    execution_mode: ExecutionMode = ExecutionMode.LAZY,
 ) -> BenchmarkResults:
     """
     Run benchmark evaluation for a single model.
@@ -46,9 +49,15 @@ def evaluate(
         metrics: Optional dict mapping task names to custom metrics lists
         description: Description for the benchmark run
         force_restart: If True, ignore checkpoints and restart from beginning
-        unsupported_lang_mode: If the task does not support a language,
-            "error" will raise an error, stopping execution.
-            "skip" will skip the language in the evaluation, and final results.
+        language_aggregation_mode: How per-language results should be grouped
+            when calling ``get_summary_metrics()`` on the returned results.
+            When set and ``execution_mode`` is ``LAZY``, datasets that are
+            incompatible with the chosen mode are also skipped before
+            evaluation to avoid unnecessary compute.
+            Defaults to ``None`` (no filtering).
+        execution_mode: Controls whether incompatible datasets are skipped
+            (``LAZY``, default) or evaluated regardless (``ALL``).
+            Only effective when ``language_aggregation_mode`` is not ``None``.
 
     Returns
     -------
@@ -68,6 +77,9 @@ def evaluate(
         model=model,
         force_restart=force_restart,
     )
+
+    if language_aggregation_mode is not None and execution_mode == ExecutionMode.LAZY:
+        pending_work = _filter_pending_work(pending_work, language_aggregation_mode)
 
     if len(pending_work) == 0:
         logger.info("All work already completed!")
@@ -228,6 +240,45 @@ def _get_all_languages(tasks: Sequence[Task]) -> list[str]:
 def _get_total_evaluations(tasks: Sequence[Task]) -> int:
     """Get the total number of evaluations."""
     return sum(len(task.dataset_ids) for task in tasks)
+
+
+def _filter_pending_work(
+    pending_work: list[tuple[Task, str]],
+    language_aggregation_mode: LanguageAggregationMode,
+) -> list[tuple[Task, str]]:
+    """Filter pending work items to only those compatible with the aggregation mode.
+
+    Parameters
+    ----------
+    pending_work : list of (Task, dataset_id) tuples
+        The pending evaluations to filter.
+    language_aggregation_mode : LanguageAggregationMode
+        The aggregation mode to check compatibility against.
+
+    Returns
+    -------
+    list of (Task, dataset_id) tuples
+        Filtered list containing only compatible work items.
+    """
+    filtered = []
+    for task, dataset_id in pending_work:
+        dataset_languages = task.get_dataset_languages(dataset_id)
+        input_langs = sorted(lang.value for lang in dataset_languages.input_languages)
+        output_langs = sorted(lang.value for lang in dataset_languages.output_languages)
+        key = get_language_grouping_key(input_langs, output_langs, language_aggregation_mode)
+        if key is None:
+            logger.warning(
+                "Skipping dataset '%s' of task '%s': incompatible with "
+                "language_aggregation_mode '%s' (input_languages=%s, output_languages=%s).",
+                dataset_id,
+                task.name,
+                language_aggregation_mode.value,
+                input_langs,
+                output_langs,
+            )
+        else:
+            filtered.append((task, dataset_id))
+    return filtered
 
 
 def _init_checkpointing(

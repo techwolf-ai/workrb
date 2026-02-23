@@ -1,5 +1,6 @@
 """Shared types and enums used across WorkRB."""
 
+from collections.abc import Sequence
 from enum import Enum
 from typing import NamedTuple
 
@@ -90,6 +91,68 @@ class LanguageAggregationMode(str, Enum):
 
     Datasets with multiple output languages are skipped.
     """
+
+
+def get_language_grouping_key(
+    input_languages: Sequence[str],
+    output_languages: Sequence[str],
+    mode: LanguageAggregationMode,
+) -> str | None:
+    """Determine the grouping language for a dataset given its languages.
+
+    Returns ``None`` when the dataset is incompatible with the requested
+    mode, so that the caller can skip it.
+
+    Parameters
+    ----------
+    input_languages : Sequence[str]
+        Input language codes for the dataset (e.g. query languages).
+    output_languages : Sequence[str]
+        Output language codes for the dataset (e.g. target languages).
+    mode : LanguageAggregationMode
+        The aggregation mode controlling how the language key is derived.
+
+    Returns
+    -------
+    str or None
+        Language code to group by, or ``None`` if the dataset is
+        incompatible with the mode.
+    """
+    if mode == LanguageAggregationMode.MONOLINGUAL_ONLY:
+        if (
+            len(input_languages) != 1
+            or len(output_languages) != 1
+            or input_languages[0] != output_languages[0]
+        ):
+            return None
+        return input_languages[0]
+
+    if mode == LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES:
+        if len(input_languages) != 1:
+            return None
+        return input_languages[0]
+
+    if mode == LanguageAggregationMode.CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES:
+        if len(output_languages) != 1:
+            return None
+        return output_languages[0]
+
+    return None
+
+
+class ExecutionMode(str, Enum):
+    """Controls whether ``evaluate()`` skips datasets incompatible with the language aggregation.
+
+    When a ``LanguageAggregationMode`` is specified, ``LAZY`` (the default) avoids
+    running datasets that would be discarded during aggregation, saving compute.
+    ``ALL`` evaluates every dataset regardless.
+    """
+
+    LAZY = "lazy"
+    """Skip datasets incompatible with the chosen aggregation mode (default)."""
+
+    ALL = "all"
+    """Evaluate all datasets regardless of aggregation compatibility."""
 
 
 class LabelType(str, Enum):

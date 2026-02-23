@@ -1,4 +1,5 @@
 import json
+import logging
 import pprint
 from collections import defaultdict
 from typing import Any
@@ -8,7 +9,9 @@ import pandas as pd
 from pydantic import BaseModel, Field
 from scipy import stats
 
-from workrb.types import LanguageAggregationMode
+from workrb.types import LanguageAggregationMode, get_language_grouping_key
+
+logger = logging.getLogger(__name__)
 
 
 class TaskResultMetadata(BaseModel):
@@ -107,9 +110,21 @@ class BenchmarkResults(BaseModel):
         """Get the total number of evaluation results."""
         return sum(len(task.datasetid_results) for task in self.task_results.values())
 
-    def get_summary_metrics(self, aggregations: tuple = ("mean", "ci_margin")) -> dict[str, float]:
+    def get_summary_metrics(
+        self,
+        aggregations: tuple = ("mean", "ci_margin"),
+        language_aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
+    ) -> dict[str, float]:
         """
         Get summary metrics for the benchmark results.
+
+        Parameters
+        ----------
+        aggregations : tuple
+            Statistics to compute (e.g. ``"mean"``, ``"ci_margin"``).
+        language_aggregation_mode : LanguageAggregationMode
+            How to determine the grouping language for per-language aggregation.
+            Defaults to ``MONOLINGUAL_ONLY``.
         """
         mean_per_task = self._aggregate_per_task(
             aggregations=aggregations,
@@ -125,6 +140,7 @@ class BenchmarkResults(BaseModel):
         )
         mean_per_language = self._aggregate_per_language(
             aggregations=aggregations,
+            aggregation_mode=language_aggregation_mode,
         )
 
         combined = {
@@ -302,6 +318,8 @@ class BenchmarkResults(BaseModel):
     ) -> str | None:
         """Determine the grouping language for a dataset result.
 
+        Delegates to :func:`workrb.types.get_language_grouping_key`.
+
         Returns ``None`` when the dataset is incompatible with the requested
         mode, so that the caller can skip it during aggregation.
 
@@ -318,29 +336,11 @@ class BenchmarkResults(BaseModel):
             Language code to group by, or ``None`` if the dataset is
             incompatible with the mode.
         """
-        input_languages = metrics_result.input_languages
-        output_languages = metrics_result.output_languages
-
-        if mode == LanguageAggregationMode.MONOLINGUAL_ONLY:
-            if (
-                len(input_languages) != 1
-                or len(output_languages) != 1
-                or input_languages[0] != output_languages[0]
-            ):
-                return None
-            return input_languages[0]
-
-        if mode == LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES:
-            if len(input_languages) != 1:
-                return None
-            return input_languages[0]
-
-        if mode == LanguageAggregationMode.CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES:
-            if len(output_languages) != 1:
-                return None
-            return output_languages[0]
-
-        return None
+        return get_language_grouping_key(
+            metrics_result.input_languages,
+            metrics_result.output_languages,
+            mode,
+        )
 
     def _aggregate_per_language(
         self,
@@ -364,15 +364,24 @@ class BenchmarkResults(BaseModel):
             How to determine the grouping language for each dataset result.
             Defaults to ``MONOLINGUAL_ONLY`` (backward compatible for benchmarks
             with only monolingual datasets).
-            Datasets incompatible with the chosen mode are silently skipped.
+            Datasets incompatible with the chosen mode are skipped with a warning.
         """
         # Collect metric values per language
         raw_results = defaultdict(list)
-        for task_result in self.task_results.values():
-            for metrics_result in task_result.datasetid_results.values():
+        for task_name, task_result in self.task_results.items():
+            for dataset_id, metrics_result in task_result.datasetid_results.items():
                 language_key = self._get_language_grouping_key(metrics_result, aggregation_mode)
                 if language_key is None:
-                    # Skip if incompatible with the aggregation mode
+                    logger.warning(
+                        "Skipping dataset '%s' of task '%s' in per-language aggregation: "
+                        "incompatible with mode '%s' "
+                        "(input_languages=%s, output_languages=%s).",
+                        dataset_id,
+                        task_name,
+                        aggregation_mode.value,
+                        metrics_result.input_languages,
+                        metrics_result.output_languages,
+                    )
                     continue
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
                     raw_results[(language_key, metric_name)].append(metric_value)
