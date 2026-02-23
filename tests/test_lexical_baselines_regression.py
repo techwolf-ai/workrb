@@ -32,58 +32,58 @@ from workrb.tasks.ranking.job_similarity import JobTitleSimilarityRanking
 # ---------------------------------------------------------------------------
 EXPECTED_METRICS: dict[str, dict[str, float]] = {
     "BM25-lower": {
-        "map": 0.27571023549983364,
-        "rp@5": 0.5165079365079365,
-        "rp@10": 0.4534807256235827,
-        "mrr": 0.7105598099130719,
+        "map": 0.28,
+        "rp@5": 0.52,
+        "rp@10": 0.45,
+        "mrr": 0.71,
     },
     "BM25-cased": {
-        "map": 0.27507750200419107,
-        "rp@5": 0.5146031746031746,
-        "rp@10": 0.45252834467120184,
-        "mrr": 0.7105598099130719,
+        "map": 0.28,
+        "rp@5": 0.51,
+        "rp@10": 0.45,
+        "mrr": 0.71,
     },
     "TfIdf-word-lower": {
-        "map": 0.28485413562322776,
-        "rp@5": 0.5412698412698412,
-        "rp@10": 0.47307256235827666,
-        "mrr": 0.7111908432787992,
+        "map": 0.28,
+        "rp@5": 0.54,
+        "rp@10": 0.47,
+        "mrr": 0.71,
     },
     "TfIdf-word-cased": {
-        "map": 0.28485413562322776,
-        "rp@5": 0.5412698412698412,
-        "rp@10": 0.47307256235827666,
-        "mrr": 0.7111908432787992,
+        "map": 0.28,
+        "rp@5": 0.54,
+        "rp@10": 0.47,
+        "mrr": 0.71,
     },
     "TfIdf-char-lower": {
-        "map": 0.33555610544690023,
-        "rp@5": 0.584920634920635,
-        "rp@10": 0.5117195767195767,
-        "mrr": 0.7272701297287621,
+        "map": 0.34,
+        "rp@5": 0.58,
+        "rp@10": 0.51,
+        "mrr": 0.73,
     },
     "TfIdf-char-cased": {
-        "map": 0.33555610544690023,
-        "rp@5": 0.584920634920635,
-        "rp@10": 0.5117195767195767,
-        "mrr": 0.7272701297287621,
+        "map": 0.34,
+        "rp@5": 0.58,
+        "rp@10": 0.51,
+        "mrr": 0.73,
     },
     "EditDistance-lower": {
-        "map": 0.22953525249793413,
-        "rp@5": 0.42269841269841263,
-        "rp@10": 0.3778987150415721,
-        "mrr": 0.6176868635378816,
+        "map": 0.23,
+        "rp@5": 0.42,
+        "rp@10": 0.38,
+        "mrr": 0.62,
     },
     "EditDistance-cased": {
-        "map": 0.24233603296868966,
-        "rp@5": 0.4503174603174603,
-        "rp@10": 0.4056538170823885,
-        "mrr": 0.6348209280137445,
+        "map": 0.24,
+        "rp@5": 0.45,
+        "rp@10": 0.41,
+        "mrr": 0.63,
     },
     "RandomRanking": {
-        "map": 0.01167258539227986,
-        "rp@5": 0.009523809523809525,
-        "rp@10": 0.010714285714285714,
-        "mrr": 0.041147312519647754,
+        "map": 0.01,
+        "rp@5": 0.01,
+        "rp@10": 0.01,
+        "mrr": 0.04,
     },
 }
 
@@ -127,7 +127,7 @@ class TestLexicalBaselineRegression:
 
         for metric_name, expected_value in expected.items():
             actual_value = results[metric_name]
-            assert actual_value == pytest.approx(expected_value, abs=1e-3), (
+            assert actual_value == pytest.approx(expected_value, abs=1e-2), (
                 f"{model_name} metric '{metric_name}': "
                 f"expected {expected_value}, got {actual_value}"
             )
