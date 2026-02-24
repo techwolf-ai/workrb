@@ -9,7 +9,7 @@ from datasets import load_dataset
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
-from workrb.types import ModelInputType
+from workrb.types import DatasetLanguages, ModelInputType
 
 
 class _BaseCandidateRanking(RankingTask, ABC):
@@ -26,7 +26,7 @@ class _BaseCandidateRanking(RankingTask, ABC):
     HuggingFace Dataset: https://huggingface.co/datasets/MaltCompany/Freelancer-Project-Matching
 
     Languages: en, de, es, fr, nl.
-    + cross_lingual to test language agnostic matching
+    + multilingual corpus to test language-agnostic matching.
 
     The dataset contains:
     - ``queries``: 200 search queries
@@ -46,14 +46,34 @@ class _BaseCandidateRanking(RankingTask, ABC):
     A threshold is applied on the score to binarize the interactions into relevant and non-relevant pairs.
     """
 
-    SUPPORTED_DATASET_LANGUAGES = [
-        Language.DE,
-        Language.EN,
-        Language.ES,
-        Language.FR,
-        Language.NL,
-        Language.CROSS,
-    ]
+    DATASET_LANGUAGES_MAP: dict[str, DatasetLanguages] = {
+        "en": DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset({Language.EN}),
+        ),
+        "de": DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset({Language.DE}),
+        ),
+        "es": DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset({Language.ES}),
+        ),
+        "fr": DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset({Language.FR}),
+        ),
+        "nl": DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset({Language.NL}),
+        ),
+        "multilingual": DatasetLanguages(
+            input_languages=frozenset({Language.EN}),
+            output_languages=frozenset(
+                {Language.EN, Language.DE, Language.ES, Language.FR, Language.NL}
+            ),
+        ),
+    }
 
     RELEVANCE_SCORE_THRESHOLD = 0.8
 
@@ -74,7 +94,7 @@ class _BaseCandidateRanking(RankingTask, ABC):
     @property
     def supported_target_languages(self) -> list[Language]:
         """Supported target languages."""
-        return self.SUPPORTED_DATASET_LANGUAGES
+        return [Language.DE, Language.EN, Language.ES, Language.FR, Language.NL]
 
     @property
     def split_test_fraction(self) -> float:
@@ -90,6 +110,49 @@ class _BaseCandidateRanking(RankingTask, ABC):
     def target_input_type(self) -> ModelInputType:
         """Target input type for profiles."""
         return ModelInputType.CANDIDATE_PROFILE_STRING
+
+    def languages_to_dataset_ids(self, languages: list[Language]) -> list[str]:
+        """Filter datasets based on the requested languages.
+
+        A dataset is included when all of its input and output languages are
+        within the requested set.
+
+        Parameters
+        ----------
+        languages : list[Language]
+            List of Language enums requested for evaluation.
+
+        Returns
+        -------
+        list[str]
+            List of dataset identifier strings.
+        """
+        lang_codes = {lang.value for lang in languages}
+        result = []
+        for dataset_id, ds_langs in self.DATASET_LANGUAGES_MAP.items():
+            all_langs = {
+                lang.value for lang in ds_langs.input_languages | ds_langs.output_languages
+            }
+            if all_langs <= lang_codes:
+                result.append(dataset_id)
+        return result
+
+    def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
+        """Map a dataset ID to its input/output languages.
+
+        Parameters
+        ----------
+        dataset_id : str
+            One of ``"en"``, ``"de"``, ``"es"``, ``"fr"``, ``"nl"``, or
+            ``"multilingual"``.
+
+        Returns
+        -------
+        DatasetLanguages
+            Named tuple with ``input_languages`` (query) and
+            ``output_languages`` (corpus).
+        """
+        return self.DATASET_LANGUAGES_MAP[dataset_id]
 
     @staticmethod
     def _candidate_profile_to_str(candidate: dict[str, Any]) -> str:
@@ -112,7 +175,6 @@ class _BaseCandidateRanking(RankingTask, ABC):
     def _load_and_format_data(
         self,
         split: DatasetSplit,
-        language: Language,
         dataset_id: str,
         query_key: str,
         score_key: str,
@@ -121,8 +183,8 @@ class _BaseCandidateRanking(RankingTask, ABC):
         if split != DatasetSplit.TEST:
             raise ValueError(f"Split '{split}' not supported. Use TEST")
 
-        if language not in self.SUPPORTED_DATASET_LANGUAGES:
-            raise ValueError(f"Language '{language}' not supported.")
+        if dataset_id not in self.DATASET_LANGUAGES_MAP:
+            raise ValueError(f"Dataset '{dataset_id}' not supported.")
 
         query_df = pd.DataFrame(
             load_dataset("MaltCompany/Freelancer-Project-Matching", query_key)["test"]
@@ -134,8 +196,10 @@ class _BaseCandidateRanking(RankingTask, ABC):
             load_dataset("MaltCompany/Freelancer-Project-Matching", score_key)["test"]
         )
 
-        if language != Language.CROSS:
-            candidate_df = candidate_df[candidate_df["language"] == language.value]
+        # For monolingual datasets, filter candidates to the target language.
+        # For the "multilingual" dataset, use all candidates.
+        if dataset_id != "multilingual":
+            candidate_df = candidate_df[candidate_df["language"] == dataset_id]
 
         # create labels
         candidate_df = (
@@ -241,11 +305,8 @@ class ProjectCandidateRanking(_BaseCandidateRanking):
         return f"{input_dict['title']}\n\n{input_dict['description']}"
 
     def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
-        """Load Job Title Similarity data from the HuggingFace dataset."""
-        language = Language(dataset_id)
-        return self._load_and_format_data(
-            split, language, dataset_id, "briefs", "brief_scores", "brief_id"
-        )
+        """Load project-candidate matching data from the HuggingFace dataset."""
+        return self._load_and_format_data(split, dataset_id, "briefs", "brief_scores", "brief_id")
 
 
 @register_task()
@@ -262,7 +323,7 @@ class SearchQueryCandidateRanking(_BaseCandidateRanking):
     HuggingFace Dataset: https://huggingface.co/datasets/MaltCompany/Freelancer-Project-Matching
 
     Languages: en, de, es, fr, nl.
-    + cross_lingual to test language agnostic matching
+    + multilingual corpus to test language-agnostic matching.
 
     The dataset contains:
         - ``queries``: 200 search queries
@@ -301,8 +362,5 @@ class SearchQueryCandidateRanking(_BaseCandidateRanking):
         return input_dict["value"]
 
     def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
-        """Load Job Title Similarity data from the HuggingFace dataset."""
-        language = Language(dataset_id)
-        return self._load_and_format_data(
-            split, language, dataset_id, "queries", "query_scores", "query_id"
-        )
+        """Load query-candidate matching data from the HuggingFace dataset."""
+        return self._load_and_format_data(split, dataset_id, "queries", "query_scores", "query_id")

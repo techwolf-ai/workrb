@@ -39,7 +39,6 @@ class Language(str, Enum):
     JA = "ja"
     KO = "ko"
     ZH = "zh"
-    CROSS = "cross_lingual"
 
 
 class DatasetLanguages(NamedTuple):
