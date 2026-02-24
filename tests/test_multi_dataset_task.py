@@ -18,7 +18,7 @@ from workrb.results import (
     TaskResultMetadata,
     TaskResults,
 )
-from workrb.run import _filter_pending_work
+from workrb.run import _get_dataset_ids_to_evaluate
 from workrb.tasks import ESCOJob2SkillRanking, RankingDataset
 from workrb.types import (
     DatasetLanguages,
@@ -447,21 +447,22 @@ class TestGetLanguageGroupingKey:
 
 
 class _MockTask:
-    """Minimal mock task for testing _filter_pending_work."""
+    """Minimal mock task for testing _get_dataset_ids_to_evaluate."""
 
     def __init__(self, name: str, dataset_languages_map: dict[str, DatasetLanguages]):
         self.name = name
         self._dataset_languages_map = dataset_languages_map
+        self.dataset_ids = list(dataset_languages_map.keys())
 
     def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
         return self._dataset_languages_map[dataset_id]
 
 
-class TestExecutionModeFiltering:
-    """Tests for _filter_pending_work()."""
+class TestGetDatasetIdsToEvaluate:
+    """Tests for _get_dataset_ids_to_evaluate()."""
 
-    def test_lazy_monolingual_skips_crosslingual(self):
-        """LAZY + MONOLINGUAL_ONLY skips cross-lingual datasets."""
+    def test_monolingual_only_skips_crosslingual(self):
+        """MONOLINGUAL_ONLY skips cross-lingual datasets."""
         task = _MockTask(
             "task1",
             {
@@ -475,12 +476,10 @@ class TestExecutionModeFiltering:
                 ),
             },
         )
-        pending = [(task, "en"), (task, "en_de")]
-        result = _filter_pending_work(pending, LanguageAggregationMode.MONOLINGUAL_ONLY)
-        assert len(result) == 1
-        assert result[0][1] == "en"
+        result = _get_dataset_ids_to_evaluate([task], LanguageAggregationMode.MONOLINGUAL_ONLY)
+        assert result == {"task1": ["en"]}
 
-    def test_lazy_group_input_keeps_crosslingual_singleton_input(self):
+    def test_group_input_keeps_crosslingual_singleton_input(self):
         """CROSSLINGUAL_GROUP_INPUT_LANGUAGES keeps cross-lingual datasets with singleton input."""
         task = _MockTask(
             "task1",
@@ -495,12 +494,10 @@ class TestExecutionModeFiltering:
                 ),
             },
         )
-        pending = [(task, "en_de"), (task, "multi_in")]
-        result = _filter_pending_work(
-            pending, LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES
+        result = _get_dataset_ids_to_evaluate(
+            [task], LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES
         )
-        assert len(result) == 1
-        assert result[0][1] == "en_de"
+        assert result == {"task1": ["en_de"]}
 
     def test_monolingual_only_mixed_task_keeps_only_monolingual(self):
         """MONOLINGUAL_ONLY keeps monolingual datasets and filters all cross-lingual ones.
@@ -534,16 +531,8 @@ class TestExecutionModeFiltering:
                 ),
             },
         )
-        pending = [
-            (task, "en"),
-            (task, "de"),
-            (task, "en_de"),
-            (task, "fr_de"),
-            (task, "multilingual"),
-        ]
-        result = _filter_pending_work(pending, LanguageAggregationMode.MONOLINGUAL_ONLY)
-        kept_ids = [dataset_id for _, dataset_id in result]
-        assert kept_ids == ["en", "de"]
+        result = _get_dataset_ids_to_evaluate([task], LanguageAggregationMode.MONOLINGUAL_ONLY)
+        assert result == {"melo_task": ["en", "de"]}
 
     def test_group_input_mixed_task_keeps_singleton_input(self):
         """CROSSLINGUAL_GROUP_INPUT_LANGUAGES keeps datasets with a single input language.
@@ -572,25 +561,18 @@ class TestExecutionModeFiltering:
                 ),
             },
         )
-        pending = [
-            (task, "en"),
-            (task, "en_de"),
-            (task, "fr_de"),
-            (task, "multilingual"),
-        ]
-        result = _filter_pending_work(
-            pending, LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES
+        result = _get_dataset_ids_to_evaluate(
+            [task], LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES
         )
-        kept_ids = [dataset_id for _, dataset_id in result]
-        assert kept_ids == ["en", "en_de", "fr_de"]
+        assert result == {"melo_task": ["en", "en_de", "fr_de"]}
 
-    def test_empty_pending_work(self):
-        """Empty pending work returns empty list."""
-        result = _filter_pending_work([], LanguageAggregationMode.MONOLINGUAL_ONLY)
-        assert result == []
+    def test_no_tasks(self):
+        """Empty task list returns empty dict."""
+        result = _get_dataset_ids_to_evaluate([], LanguageAggregationMode.MONOLINGUAL_ONLY)
+        assert result == {}
 
-    def test_all_datasets_filtered(self):
-        """All datasets incompatible with the mode results in empty list."""
+    def test_all_datasets_incompatible(self):
+        """All datasets incompatible with the mode results in empty list for the task."""
         task = _MockTask(
             "task1",
             {
@@ -604,9 +586,8 @@ class TestExecutionModeFiltering:
                 ),
             },
         )
-        pending = [(task, "en_de"), (task, "fr_es")]
-        result = _filter_pending_work(pending, LanguageAggregationMode.MONOLINGUAL_ONLY)
-        assert result == []
+        result = _get_dataset_ids_to_evaluate([task], LanguageAggregationMode.MONOLINGUAL_ONLY)
+        assert result == {"task1": []}
 
 
 if __name__ == "__main__":
