@@ -36,7 +36,7 @@ def evaluate(
     metrics: dict[str, list[str]] | None = None,
     description: str = "",
     force_restart: bool = False,
-    language_aggregation_mode: LanguageAggregationMode | None = None,
+    language_aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
     execution_mode: ExecutionMode = ExecutionMode.LAZY,
 ) -> BenchmarkResults:
     """
@@ -51,13 +51,12 @@ def evaluate(
         force_restart: If True, ignore checkpoints and restart from beginning
         language_aggregation_mode: How per-language results should be grouped
             when calling ``get_summary_metrics()`` on the returned results.
-            When set and ``execution_mode`` is ``LAZY``, datasets that are
+            When ``execution_mode`` is ``LAZY``, datasets that are
             incompatible with the chosen mode are also skipped before
             evaluation to avoid unnecessary compute.
-            Defaults to ``None`` (no filtering).
+            Defaults to ``MONOLINGUAL_ONLY``.
         execution_mode: Controls whether incompatible datasets are skipped
             (``LAZY``, default) or evaluated regardless (``ALL``).
-            Only effective when ``language_aggregation_mode`` is not ``None``.
 
     Returns
     -------
@@ -76,19 +75,26 @@ def evaluate(
         config=config,
         model=model,
         force_restart=force_restart,
+        language_aggregation_mode=language_aggregation_mode,
     )
 
-    if language_aggregation_mode is not None and execution_mode == ExecutionMode.LAZY:
-        pending_work = _filter_pending_work(pending_work, language_aggregation_mode)
+    # Determine which datasets are in scope for this run
+    if execution_mode == ExecutionMode.LAZY:
+        dataset_ids_to_evaluate = _get_dataset_ids_to_evaluate(tasks, language_aggregation_mode)
+    else:
+        dataset_ids_to_evaluate = {task.name: list(task.dataset_ids) for task in tasks}
+
+    pending_work = _filter_pending_work(pending_work, dataset_ids_to_evaluate)
+    total_evaluations = sum(len(dids) for dids in dataset_ids_to_evaluate.values())
 
     if len(pending_work) == 0:
         logger.info("All work already completed!")
         return results
 
     logger.info(f"Running WorkRB for model: {model.name}")
-    logger.info(get_tasks_overview(tasks))
+    logger.info(get_tasks_overview(tasks, dataset_ids_to_evaluate=dataset_ids_to_evaluate))
     logger.info(f"{'=' * 60}")
-    logger.info(f"Pending work: {len(pending_work)} / {_get_total_evaluations(tasks)} evaluations")
+    logger.info(f"Pending work: {len(pending_work)} / {total_evaluations} evaluations")
 
     # Group pending work by task for better organization
     work_by_task = {}
@@ -100,21 +106,19 @@ def evaluate(
     # Run pending work
     start_time_benchmark = time.time()
     results = _run_pending_work(
-        tasks=tasks,
         config=config,
         work_by_task=work_by_task,
         results=results,
         model=model,
         metrics=metrics,
+        total_evaluations=total_evaluations,
     )
     if results.metadata.resumed_from_checkpoint:
         logger.info("✓ Successfully resuming from checkpoint")
 
     # Update metadata
     results.metadata.total_evaluation_time = time.time() - start_time_benchmark
-    results.metadata.resumed_from_checkpoint = len(pending_work) < sum(
-        len(task.dataset_ids) for task in tasks
-    )
+    results.metadata.resumed_from_checkpoint = len(pending_work) < total_evaluations
 
     # Save config and results
     config.save_final_result_artifacts(results)
@@ -129,6 +133,7 @@ def evaluate(
             display_per_task_group=False,
             display_per_language=False,
             display_overall=True,
+            language_aggregation_mode=language_aggregation_mode,
         )
     )
     logger.info(f"{'=' * 60}")
@@ -188,8 +193,25 @@ def evaluate_multiple_models(
     return all_results
 
 
-def get_tasks_overview(tasks: Sequence[Task]) -> str:
-    """Get information about configured tasks as a formatted string summary."""
+def get_tasks_overview(
+    tasks: Sequence[Task],
+    dataset_ids_to_evaluate: dict[str, list[str]] | None = None,
+) -> str:
+    """Get information about configured tasks as a formatted string summary.
+
+    Parameters
+    ----------
+    tasks : Sequence[Task]
+        All tasks configured for this benchmark run.
+    dataset_ids_to_evaluate : dict[str, list[str]] or None
+        When provided, only tasks present as keys with non-empty lists are
+        shown, and only the listed dataset IDs appear under each task.
+        When ``None``, all tasks and their full ``dataset_ids`` are shown.
+    """
+    # When filtering, only keep tasks that have at least one dataset to evaluate
+    if dataset_ids_to_evaluate is not None:
+        tasks = [t for t in tasks if dataset_ids_to_evaluate.get(t.name)]
+
     # Calculate summary statistics
     num_tasks = len(tasks)
     task_groups = {task.task_group for task in tasks if task.task_group}
@@ -219,7 +241,12 @@ def get_tasks_overview(tasks: Sequence[Task]) -> str:
         lines.append(f"{task_name:<40} {group:<20} {task_languages:<20}")
 
         # Add size one-liner for each dataset
-        for dataset_id in task.dataset_ids:
+        dataset_ids = (
+            dataset_ids_to_evaluate[task.name]
+            if dataset_ids_to_evaluate is not None
+            else task.dataset_ids
+        )
+        for dataset_id in dataset_ids:
             size_info = task.get_size_oneliner(dataset_id)
             if size_info:
                 lines.append(f"  └─ {dataset_id}: {size_info}")
@@ -237,48 +264,77 @@ def _get_all_languages(tasks: Sequence[Task]) -> list[str]:
     return sorted([str(lang) for lang in languages])
 
 
-def _get_total_evaluations(tasks: Sequence[Task]) -> int:
-    """Get the total number of evaluations."""
-    return sum(len(task.dataset_ids) for task in tasks)
-
-
-def _filter_pending_work(
-    pending_work: list[tuple[Task, str]],
+def _get_dataset_ids_to_evaluate(
+    tasks: Sequence[Task],
     language_aggregation_mode: LanguageAggregationMode,
-) -> list[tuple[Task, str]]:
-    """Filter pending work items to only those compatible with the aggregation mode.
+) -> dict[str, list[str]]:
+    """Compute which dataset IDs per task are compatible with the aggregation mode.
+
+    This is the single source of truth for the run's scope when
+    ``execution_mode`` is ``LAZY``.  The returned dict drives the overview
+    display, total-evaluation count, and pending-work filtering.
 
     Parameters
     ----------
-    pending_work : list of (Task, dataset_id) tuples
-        The pending evaluations to filter.
+    tasks : Sequence[Task]
+        All tasks configured for this benchmark run.
     language_aggregation_mode : LanguageAggregationMode
         The aggregation mode to check compatibility against.
 
     Returns
     -------
-    list of (Task, dataset_id) tuples
-        Filtered list containing only compatible work items.
+    dict[str, list[str]]
+        Mapping of task name → list of dataset IDs to evaluate.
+        Tasks whose datasets are all incompatible still appear as keys
+        with an empty list.
     """
-    filtered = []
-    for task, dataset_id in pending_work:
-        dataset_languages = task.get_dataset_languages(dataset_id)
-        input_langs = sorted(lang.value for lang in dataset_languages.input_languages)
-        output_langs = sorted(lang.value for lang in dataset_languages.output_languages)
-        key = get_language_grouping_key(input_langs, output_langs, language_aggregation_mode)
-        if key is None:
-            logger.warning(
-                "Skipping dataset '%s' of task '%s': incompatible with "
-                "language_aggregation_mode '%s' (input_languages=%s, output_languages=%s).",
-                dataset_id,
-                task.name,
-                language_aggregation_mode.value,
-                input_langs,
-                output_langs,
-            )
-        else:
-            filtered.append((task, dataset_id))
-    return filtered
+    result: dict[str, list[str]] = {}
+    for task in tasks:
+        filtered = []
+        for dataset_id in task.dataset_ids:
+            dataset_languages = task.get_dataset_languages(dataset_id)
+            input_langs = sorted(lang.value for lang in dataset_languages.input_languages)
+            output_langs = sorted(lang.value for lang in dataset_languages.output_languages)
+            key = get_language_grouping_key(input_langs, output_langs, language_aggregation_mode)
+            if key is None:
+                logger.warning(
+                    "Skipping dataset '%s' of task '%s': incompatible with "
+                    "language_aggregation_mode '%s' (input_languages=%s, output_languages=%s).",
+                    dataset_id,
+                    task.name,
+                    language_aggregation_mode.value,
+                    input_langs,
+                    output_langs,
+                )
+            else:
+                filtered.append(dataset_id)
+        result[task.name] = filtered
+    return result
+
+
+def _filter_pending_work(
+    pending_work: list[tuple[Task, str]],
+    dataset_ids_to_evaluate: dict[str, list[str]],
+) -> list[tuple[Task, str]]:
+    """Keep only pending work items whose dataset ID is in the evaluation scope.
+
+    Parameters
+    ----------
+    pending_work : list of (Task, dataset_id) tuples
+        The pending evaluations (already filtered by checkpoint).
+    dataset_ids_to_evaluate : dict[str, list[str]]
+        Mapping of task name → dataset IDs that are in scope for this run,
+        as returned by :func:`_get_dataset_ids_to_evaluate`.
+
+    Returns
+    -------
+    list of (Task, dataset_id) tuples
+        Filtered list containing only in-scope work items.
+    """
+    scope = {
+        (task_name, did) for task_name, dids in dataset_ids_to_evaluate.items() for did in dids
+    }
+    return [(task, did) for task, did in pending_work if (task.name, did) in scope]
 
 
 def _init_checkpointing(
@@ -286,8 +342,22 @@ def _init_checkpointing(
     config: BenchmarkConfig,
     model: ModelInterface,
     force_restart: bool,
+    language_aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
 ) -> tuple[BenchmarkResults, list[tuple[Task, str]]]:
     """Initialize checkpointing.
+
+    Parameters
+    ----------
+    tasks : Sequence[Task]
+        Tasks to evaluate.
+    config : BenchmarkConfig
+        Benchmark configuration.
+    model : ModelInterface
+        Model to evaluate.
+    force_restart : bool
+        If True, ignore checkpoints and restart from beginning.
+    language_aggregation_mode : LanguageAggregationMode
+        Language aggregation mode to store in the results metadata.
 
     Returns
     -------
@@ -309,6 +379,17 @@ def _init_checkpointing(
             logger.info(
                 f"Restored {len(existing_results.task_results)} completed tasks from checkpoint"
             )
+            # Warn if the checkpoint was saved with a different aggregation mode
+            stored_mode = existing_results.metadata.language_aggregation_mode
+            if stored_mode != language_aggregation_mode.value:
+                logger.warning(
+                    "Checkpoint was saved with language_aggregation_mode='%s', "
+                    "but current call uses '%s'. Updating stored mode to '%s'.",
+                    stored_mode,
+                    language_aggregation_mode.value,
+                    language_aggregation_mode.value,
+                )
+            existing_results.metadata.language_aggregation_mode = language_aggregation_mode.value
 
     pending_work = config.get_pending_work(
         results=existing_results,
@@ -332,6 +413,7 @@ def _init_checkpointing(
                 num_tasks=len(tasks),
                 languages=_get_all_languages(tasks),
                 resumed_from_checkpoint=False,
+                language_aggregation_mode=language_aggregation_mode.value,
             ),
             key_metrics_by_task_group=key_metrics_by_task_group,
         )
@@ -339,20 +421,22 @@ def _init_checkpointing(
 
 
 def _run_pending_work(
-    tasks: Sequence[Task],
     config: BenchmarkConfig,
     work_by_task: dict[str, dict[str, Any]],
     results: BenchmarkResults,
     model: ModelInterface,
     metrics: dict[str, list[str]] | None,
+    total_evaluations: int,
 ) -> BenchmarkResults:
     """Run pending evaluations.
 
     Args:
-        work_by_task: Dictionary of task names to their pending languages.
+        config: Benchmark configuration for checkpointing.
+        work_by_task: Dictionary of task names to their pending datasets.
         results: BenchmarkResults object to store results.
         model: ModelInterface object to evaluate.
         metrics: Dictionary of task names to their custom metrics.
+        total_evaluations: Total number of compatible evaluations (for progress display).
     """
     # Run pending evaluations
     run_idx = results.get_num_evaluation_results()  # Already completed evaluations
@@ -362,7 +446,7 @@ def _run_pending_work(
 
         logger.info(f"{'=' * 60}")
         logger.info(f"Evaluating task: {task.name}")
-        logger.info(f"Completed {run_idx} / {_get_total_evaluations(tasks)} evaluations. ")
+        logger.info(f"Completed {run_idx} / {total_evaluations} evaluations. ")
         logger.info(f"Pending datasets for this task: {len(pending_dataset_ids)}")
 
         # Initialize task results if not exists
@@ -419,5 +503,5 @@ def _run_pending_work(
                 logger.error(f"Error: {e}")
                 raise e
 
-    logger.info(f"Completed {run_idx} / {_get_total_evaluations(tasks)} evaluations. ")
+    logger.info(f"Completed {run_idx} / {total_evaluations} evaluations. ")
     return results

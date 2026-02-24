@@ -7,6 +7,7 @@ from collections import defaultdict
 from typing import Literal
 
 from workrb.results import BenchmarkResults
+from workrb.types import LanguageAggregationMode
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ def format_results(
     show_error: bool = True,
     error_type: Literal["ci_margin", "stderr", "std"] = "ci_margin",
     show_only_key_metrics: bool = True,
+    language_aggregation_mode: LanguageAggregationMode | None = None,
 ) -> str:
     """
     Display benchmark results using BenchmarkResults aggregation methods.
@@ -36,11 +38,19 @@ def format_results(
         show_error: Whether to show error bars
         error_type: Type of error to show - "ci_margin", "stderr", or "std"
         show_only_key_metrics: If True, only show key metrics defined in task groups
+        language_aggregation_mode: How to determine the grouping language for
+            aggregation. When ``None``, reads the mode stored in
+            ``results.metadata.language_aggregation_mode``.
 
     Returns
     -------
         String containing formatted results
     """
+    if language_aggregation_mode is None:
+        language_aggregation_mode = LanguageAggregationMode(
+            results.metadata.language_aggregation_mode
+        )
+
     # Get aggregations - always include mean and error_type
     aggregations = ("mean", error_type) if show_error else ("mean",)
 
@@ -50,30 +60,67 @@ def format_results(
         for metrics in results.key_metrics_by_task_group.values():
             key_metrics.update(metrics)
 
+    # Compute all aggregation levels at once
+    all_results = results._get_summary_metrics(
+        aggregations=aggregations,
+        language_aggregation_mode=language_aggregation_mode,
+    )
+
+    # Partition results by tag name prefix for selective display
+    results_by_level: dict[str, dict] = {
+        "mean_per_task": {},
+        "mean_per_task_group": {},
+        "mean_per_language": {},
+        "mean_benchmark": {},
+    }
+    for tag, value in all_results.items():
+        if tag.name in results_by_level:
+            results_by_level[tag.name][tag] = value
+
     # Display each requested aggregation level
     metric_strs = []
     if display_per_task:
-        agg_results = results._aggregate_per_task(aggregations=aggregations)
         metric_strs.append(
-            _display_aggregation(agg_results, key_metrics, value_format, show_error, error_type)
+            _display_aggregation(
+                results_by_level["mean_per_task"],
+                key_metrics,
+                value_format,
+                show_error,
+                error_type,
+            )
         )
 
     if display_per_task_group:
-        agg_results = results._aggregate_per_task_group(aggregations=aggregations)
         metric_strs.append(
-            _display_aggregation(agg_results, key_metrics, value_format, show_error, error_type)
+            _display_aggregation(
+                results_by_level["mean_per_task_group"],
+                key_metrics,
+                value_format,
+                show_error,
+                error_type,
+            )
         )
 
     if display_per_language:
-        agg_results = results._aggregate_per_language(aggregations=aggregations)
         metric_strs.append(
-            _display_aggregation(agg_results, key_metrics, value_format, show_error, error_type)
+            _display_aggregation(
+                results_by_level["mean_per_language"],
+                key_metrics,
+                value_format,
+                show_error,
+                error_type,
+            )
         )
 
     if display_overall:
-        agg_results = results._aggregate_benchmark(aggregations=aggregations)
         metric_strs.append(
-            _display_aggregation(agg_results, key_metrics, value_format, show_error, error_type)
+            _display_aggregation(
+                results_by_level["mean_benchmark"],
+                key_metrics,
+                value_format,
+                show_error,
+                error_type,
+            )
         )
 
     return "\n".join(metric_strs)
