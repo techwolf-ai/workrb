@@ -173,13 +173,21 @@ print(results)
 
 **Metrics**: The main benchmark metrics `mean_benchmark/<metric>/mean` require 4 aggregation steps:
 
-1. First, Macro-average languages per task (e.g. ESCOJob2SkillRanking)   (`mean_per_task/<task_name>/<metric>/mean`)
+1. First, Macro-average datasets per task, grouped by language via `get_dataset_languages()` (`mean_per_task/<task_name>/<metric>/mean`)
 2. Macro-average tasks per task group (e.g. Job2SkillRanking)  (`mean_per_task_group/<group>/<metric>/mean`)
 3. Macro-average task groups per task type (e.g. RankingTask, ClassificationTask) `mean_per_task_type/<type>/<metric>/mean`
 4. Macro-average over task types.
 
 Per-language performance is also available: `mean_per_language/<lang>/<metric>/mean`.
-Each aggregation provides 95% confidence intervals (replace `mean` with `ci_margin`) 
+Each aggregation provides 95% confidence intervals (replace `mean` with `ci_margin`).
+
+> **Cross-lingual aggregation**: By default, per-language aggregation only includes monolingual datasets (`LanguageAggregationMode.MONOLINGUAL_ONLY`). For tasks with cross-lingual datasets, use `CROSSLINGUAL_GROUP_INPUT_LANGUAGES` or `CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES` to group results by the query or target language respectively:
+> ```python
+> from workrb.types import LanguageAggregationMode
+> summary = results._aggregate_per_language(
+>     aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES,
+> )
+> ``` 
 
 ```python
 # Benchmark returns a detailed Pydantic model

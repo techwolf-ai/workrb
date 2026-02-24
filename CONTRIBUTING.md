@@ -185,8 +185,20 @@ class MyCustomRankingTask(RankingTask):
         """
         Load dataset for a specific dataset ID and split.
 
-        Returns:
-            RankingDataset with query_texts, target_indices, and target_space
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier. For monolingual tasks, the base class
+            automatically uses the language code as dataset_id
+            (e.g. "en", "de"), so you can use ``Language(dataset_id)``
+            to resolve the language when loading data.
+        split : DatasetSplit
+            Data split to load.
+
+        Returns
+        -------
+        RankingDataset
+            Dataset with query_texts, target_indices, and target_space.
         """
         # Load your data here (from files, HuggingFace datasets, etc.)
         # Example:
@@ -204,6 +216,26 @@ class MyCustomRankingTask(RankingTask):
             dataset_id=dataset_id,
         )
 ```
+
+### Advanced: Cross-lingual and multi-dataset tasks
+
+The default `Task` base class assumes a 1:1 mapping between languages and datasets (each language code *is* the dataset ID). For tasks that have multiple datasets per language or cross-lingual evaluation pairs, override two methods:
+
+- **`languages_to_dataset_ids(languages)`** — return all dataset IDs that should be loaded for the given languages. For example, a cross-lingual task might return `["ita_q_it_c_en", "ita_q_it_c_de"]` for `[Language.IT]`.
+- **`get_dataset_languages(dataset_id)`** — return a `DatasetLanguages` named tuple specifying the `input_languages` and `output_languages` frozensets for a dataset. This controls how results are grouped during per-language aggregation.
+
+```python
+from workrb.types import DatasetLanguages, Language
+
+def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
+    # Example: Italian queries, English targets
+    return DatasetLanguages(
+        input_languages=frozenset({Language.IT}),
+        output_languages=frozenset({Language.EN}),
+    )
+```
+
+By default, per-language aggregation only includes monolingual datasets (`LanguageAggregationMode.MONOLINGUAL_ONLY`). Cross-lingual results can be aggregated using `CROSSLINGUAL_GROUP_INPUT_LANGUAGES` or `CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES` — see the [Results & Aggregation](#results--aggregation) section in the README.
 
 ### Step 3: Add to Module Exports
 
@@ -231,8 +263,9 @@ from workrb.tasks.abstract.base import Language
 def test_my_custom_task_loads():
     """Test that task loads without errors"""
     task = workrb.tasks.MyCustomRankingTask(split="val", languages=["en"])
-    dataset = task.lang_datasets[Language.EN]
-    
+    dataset_id = Language.EN.value
+    dataset = task.datasets[dataset_id]
+
     assert len(dataset.query_texts) > 0
     assert len(dataset.target_space) > 0
     assert len(dataset.target_indices) == len(dataset.query_texts)
