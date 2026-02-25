@@ -503,7 +503,7 @@ class TestGetDatasetIdsToEvaluate:
         """MONOLINGUAL_ONLY keeps monolingual datasets and filters all cross-lingual ones.
 
         Simulates a MELO-like task with monolingual datasets (en, de) alongside
-        several cross-lingual datasets (en_de, fr_de) — only the monolingual
+        several cross-lingual datasets (en_de, fr_de) -- only the monolingual
         ones should survive filtering.
         """
         task = _MockTask(
@@ -588,6 +588,177 @@ class TestGetDatasetIdsToEvaluate:
         )
         result = _get_dataset_ids_to_evaluate([task], LanguageAggregationMode.MONOLINGUAL_ONLY)
         assert result == {"task1": []}
+
+    def test_skip_language_aggregation_keeps_all(self):
+        """SKIP_LANGUAGE_AGGREGATION returns all dataset IDs without filtering."""
+        task = _MockTask(
+            "task1",
+            {
+                "en": DatasetLanguages(
+                    input_languages=frozenset({Language.EN}),
+                    output_languages=frozenset({Language.EN}),
+                ),
+                "en_de": DatasetLanguages(
+                    input_languages=frozenset({Language.EN}),
+                    output_languages=frozenset({Language.DE}),
+                ),
+                "multi": DatasetLanguages(
+                    input_languages=frozenset({Language.EN, Language.FR}),
+                    output_languages=frozenset({Language.DE, Language.ES}),
+                ),
+            },
+        )
+        result = _get_dataset_ids_to_evaluate(
+            [task], LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION
+        )
+        assert result == {"task1": ["en", "en_de", "multi"]}
+
+
+class TestAggregateDatasetidsPerTask:
+    """Tests for _aggregate_datasetids_per_task with language-grouped averaging."""
+
+    def test_monolingual_equal_language_weight(self):
+        """4 EN datasets + 1 DE dataset: language-grouped mean != flat mean.
+
+        Flat: mean(0.8, 0.8, 0.8, 0.8, 0.6) = 0.76
+        Grouped: mean(mean(0.8,0.8,0.8,0.8), mean(0.6)) = mean(0.8, 0.6) = 0.70
+        """
+        br = _make_benchmark_results(
+            [
+                ("task1", "en1", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "en2", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "en3", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "en4", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "de", {"map": 0.6}, ["de"], ["de"]),
+            ]
+        )
+        result = br._aggregate_datasetids_per_task(
+            language_aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+            aggregations=("mean",),
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        assert result_str["mean_per_task/task1/map/mean"] == pytest.approx(0.70)
+
+    def test_monolingual_filters_crosslingual(self):
+        """Cross-lingual dataset is skipped under MONOLINGUAL_ONLY."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "en_de", {"map": 0.5}, ["en"], ["de"]),
+            ]
+        )
+        result = br._aggregate_datasetids_per_task(
+            language_aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+            aggregations=("mean",),
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        # Only the en monolingual dataset should be included
+        assert result_str["mean_per_task/task1/map/mean"] == pytest.approx(0.8)
+
+    def test_crosslingual_group_input_language_grouped(self):
+        """Group by input language, verify per-language weighting."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en_to_de1", {"map": 0.8}, ["en"], ["de"]),
+                ("task1", "en_to_de2", {"map": 0.6}, ["en"], ["de"]),
+                ("task1", "fr_to_de", {"map": 0.4}, ["fr"], ["de"]),
+            ]
+        )
+        result = br._aggregate_datasetids_per_task(
+            language_aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES,
+            aggregations=("mean",),
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        # en group: mean(0.8, 0.6) = 0.7, fr group: mean(0.4) = 0.4
+        # task mean: mean(0.7, 0.4) = 0.55
+        assert result_str["mean_per_task/task1/map/mean"] == pytest.approx(0.55)
+
+    def test_single_dataset_per_language(self):
+        """1:1 mapping: same result as flat average (regression test)."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "de", {"map": 0.6}, ["de"], ["de"]),
+            ]
+        )
+        result = br._aggregate_datasetids_per_task(
+            language_aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+            aggregations=("mean",),
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        # mean(0.8, 0.6) = 0.70, same as flat
+        assert result_str["mean_per_task/task1/map/mean"] == pytest.approx(0.70)
+
+    def test_all_datasets_incompatible_produces_empty_result(self):
+        """All datasets skipped under MONOLINGUAL_ONLY produce empty result."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en_de", {"map": 0.7}, ["en"], ["de"]),
+                ("task1", "fr_es", {"map": 0.5}, ["fr"], ["es"]),
+            ]
+        )
+        result = br._aggregate_datasetids_per_task(
+            language_aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+            aggregations=("mean",),
+        )
+        assert result == {}
+
+
+class TestSkipLanguageAggregation:
+    """Tests for SKIP_LANGUAGE_AGGREGATION mode."""
+
+    def test_flat_average_no_filtering(self):
+        """Mix of mono/cross/multi datasets, all included in flat average."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "en_de", {"map": 0.6}, ["en"], ["de"]),
+                ("task1", "multi", {"map": 0.4}, ["en", "fr"], ["de", "es"]),
+            ]
+        )
+        result = br._aggregate_datasetids_per_task(
+            language_aggregation_mode=LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION,
+            aggregations=("mean",),
+        )
+        result_str = {str(k): v for k, v in result.items()}
+        # Flat mean: (0.8 + 0.6 + 0.4) / 3 = 0.6
+        assert result_str["mean_per_task/task1/map/mean"] == pytest.approx(0.6)
+
+    def test_per_language_returns_empty(self):
+        """_aggregate_per_language returns {} for SKIP_LANGUAGE_AGGREGATION."""
+        br = _make_benchmark_results(
+            [
+                ("task1", "en", {"map": 0.8}, ["en"], ["en"]),
+            ]
+        )
+        result = br._aggregate_per_language(
+            aggregation_mode=LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION,
+        )
+        assert result == {}
+
+    def test_full_chain_skip_mode(self):
+        """Full get_summary_metrics call with SKIP_LANGUAGE_AGGREGATION.
+
+        Verifies flat average propagates to benchmark level and no
+        per-language keys are produced.
+        """
+        br = _make_benchmark_results(
+            [
+                ("task1", "en", {"map": 0.8}, ["en"], ["en"]),
+                ("task1", "en_de", {"map": 0.6}, ["en"], ["de"]),
+                ("task1", "multi", {"map": 0.4}, ["en", "fr"], ["de", "es"]),
+            ]
+        )
+        summary = br.get_summary_metrics(
+            language_aggregation_mode=LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION,
+        )
+        # No per-language keys
+        per_lang_keys = [k for k in summary if k.startswith("mean_per_language/")]
+        assert per_lang_keys == []
+
+        # Flat average: (0.8 + 0.6 + 0.4) / 3 = 0.6
+        assert summary["mean_per_task/task1/map/mean"] == pytest.approx(0.6)
+        assert summary["mean_benchmark/map/mean"] == pytest.approx(0.6)
 
 
 if __name__ == "__main__":

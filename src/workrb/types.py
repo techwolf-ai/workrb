@@ -91,6 +91,13 @@ class LanguageAggregationMode(str, Enum):
     Datasets with multiple output languages are skipped.
     """
 
+    SKIP_LANGUAGE_AGGREGATION = "skip_language_aggregation"
+    """Skip language-based grouping entirely.
+
+    All datasets are included in a flat average per task with no filtering
+    and no per-language output is produced.
+    """
+
 
 def get_language_grouping_key(
     input_languages: Sequence[str],

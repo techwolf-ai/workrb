@@ -288,6 +288,9 @@ def _get_dataset_ids_to_evaluate(
         Tasks whose datasets are all incompatible still appear as keys
         with an empty list.
     """
+    if language_aggregation_mode == LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION:
+        return {task.name: list(task.dataset_ids) for task in tasks}
+
     result: dict[str, list[str]] = {}
     for task in tasks:
         filtered = []
