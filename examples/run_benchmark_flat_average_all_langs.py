@@ -1,0 +1,68 @@
+"""
+Run the benchmark with flat averaging on all available languages.
+
+Aggregation mode: SKIP_LANGUAGE_AGGREGATION
+    All datasets contribute equally to the per-task score as a flat
+    average, with no language-based grouping or filtering. This means
+    cross-lingual and multilingual datasets are included alongside
+    monolingual ones. The final results do not include per-language
+    averages, since no language grouping criterion is defined and
+    there is no unambiguous way to assign cross-lingual or
+    multilingual datasets to a single language bucket.
+
+Task-level language filtering: None
+    Setting langs=None means each task loads all languages it supports,
+    with no filtering at the task level.
+
+Execution mode: ALL
+    Explicitly set here, but has no practical effect under
+    SKIP_LANGUAGE_AGGREGATION since no datasets are ever filtered
+    out by the aggregation mode.
+"""
+
+import workrb
+from workrb.types import ExecutionMode, LanguageAggregationMode
+
+if __name__ == "__main__":
+    # Models
+    models = [
+        # Lexical baselines
+        workrb.models.RandomRankingModel(),
+        workrb.models.BM25Model(lowercase=True),
+        # DL model
+        workrb.models.JobBERTModel(),
+    ]
+
+    # No language filtering: each task loads all languages it supports
+    langs = None
+    split = "test"
+
+    # Tasks
+    tasks = [
+        # Tasks with monolingual datasets
+        workrb.tasks.ESCOJob2SkillRanking(split=split, languages=langs),
+        workrb.tasks.ESCOSkill2JobRanking(split=split, languages=langs),
+        workrb.tasks.JobBERTJobNormRanking(split=split, languages=langs),
+        # Tasks with monolingual, cross-lingual, and multilingual datasets
+        workrb.tasks.ProjectCandidateRanking(split=split, languages=langs),
+        workrb.tasks.SearchQueryCandidateRanking(split=split, languages=langs),
+        # TODO: add MELO and MELS tasks when PR #37 is merged
+    ]
+
+    # Evaluate
+    # NOTE: execution_mode=ALL has no effect when using SKIP_LANGUAGE_AGGREGATION,
+    # because no datasets are ever filtered out regardless of execution mode.
+    all_results = workrb.evaluate_multiple_models(
+        models=models,
+        tasks=tasks,
+        output_folder_template="../results/flat_average_all_langs/{model_name}",
+        description="Flat average benchmark (all languages)",
+        force_restart=True,
+        language_aggregation_mode=LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION,
+        execution_mode=ExecutionMode.ALL,
+    )
+
+    # Display results
+    for model_name, results in all_results.items():
+        print(f"\nResults for {model_name}:")
+        print(results)
