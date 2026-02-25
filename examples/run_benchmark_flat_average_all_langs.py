@@ -42,7 +42,6 @@ if __name__ == "__main__":
         # Tasks with monolingual datasets
         workrb.tasks.ESCOJob2SkillRanking(split=split, languages=langs),
         workrb.tasks.ESCOSkill2JobRanking(split=split, languages=langs),
-        workrb.tasks.JobBERTJobNormRanking(split=split, languages=langs),
         # Tasks with monolingual, cross-lingual, and multilingual datasets
         workrb.tasks.ProjectCandidateRanking(split=split, languages=langs),
         workrb.tasks.SearchQueryCandidateRanking(split=split, languages=langs),
