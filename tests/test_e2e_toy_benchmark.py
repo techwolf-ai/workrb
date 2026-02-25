@@ -112,7 +112,7 @@ def test_e2e_toy_benchmark():
     # Display dataset sizes
     print("\n📊 Dataset sizes:")
     for task in tasks:
-        print(f"  • {task.name:35} {task.get_size_oneliner(Language.EN)}")
+        print(f"  • {task.name:35} {task.get_size_oneliner(Language.EN.value)}")
 
     # Separate ranking and classification tasks
     ranking_tasks = [t for t in tasks if isinstance(t, RankingTask)]
@@ -168,11 +168,11 @@ def test_e2e_toy_benchmark():
         task_result = results.task_results[task_name]
 
         # Check if language results exist
-        if Language.EN not in task_result.datasetid_results:
+        if Language.EN.value not in task_result.datasetid_results:
             validation_errors.append(f"Missing language results for {task_name} (en)")
             continue
 
-        lang_result = task_result.datasetid_results[Language.EN]
+        lang_result = task_result.datasetid_results[Language.EN.value]
 
         # Validate metrics based on task type
         assert len(lang_result.metrics_dict) > 0, f"No metrics found for {task_name}"
