@@ -164,11 +164,11 @@ def test_e2e_checkpointing():
             f"Task '{task.name}' missing from final results"
         )
         task_result = end_results.task_results[task.name]
-        assert Language.EN in task_result.datasetid_results, (
+        assert Language.EN.value in task_result.datasetid_results, (
             f"Language 'en' missing for task '{task.name}'"
         )
 
-        lang_result = task_result.datasetid_results[Language.EN]
+        lang_result = task_result.datasetid_results[Language.EN.value]
         assert len(lang_result.metrics_dict) > 0, f"No metrics for task '{task.name}'"
         print(f"  ✓ Task '{task.name}' has complete results")
 

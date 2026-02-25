@@ -190,18 +190,72 @@ class BenchmarkResults(BaseModel):
         tag_name: str = "mean_per_task",
         aggregations: tuple = ("mean", "stderr", "ci_margin"),
     ) -> dict[ResultTagString, float]:
-        """Aggregate dataset results per task, filtering by language aggregation mode.
+        """Aggregate dataset results per task.
 
-        For each task, only datasets compatible with the given
-        ``language_aggregation_mode`` are included in the per-task average.
-        Incompatible datasets are skipped with a warning, using the same
-        ``_get_language_grouping_key`` logic as ``_aggregate_per_language``.
+        Dispatches to either a flat average (``SKIP_LANGUAGE_AGGREGATION``)
+        or a language-grouped average (all other modes).
 
         This is the root aggregation level: per-task results feed into
         per-task-group, per-task-type, and benchmark-level aggregations,
         so filtering here ensures consistency across the entire chain.
         """
-        raw_results = defaultdict(list)
+        if language_aggregation_mode == LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION:
+            return self._aggregate_datasetids_per_task_flat(
+                tag_name=tag_name, aggregations=aggregations
+            )
+        return self._aggregate_datasetids_per_task_language_grouped(
+            language_aggregation_mode=language_aggregation_mode,
+            tag_name=tag_name,
+            aggregations=aggregations,
+        )
+
+    def _aggregate_datasetids_per_task_flat(
+        self,
+        tag_name: str = "mean_per_task",
+        aggregations: tuple = ("mean", "stderr", "ci_margin"),
+    ) -> dict[ResultTagString, float]:
+        """Flat average of all datasets per task, with no filtering or language grouping.
+
+        Each dataset is an equal data point regardless of its language configuration.
+        """
+        raw_results: dict[tuple[str, str], list[float]] = defaultdict(list)
+        for task_name, task_result in self.task_results.items():
+            for _dataset_id, metrics_result in task_result.datasetid_results.items():
+                for metric_name, metric_value in metrics_result.metrics_dict.items():
+                    raw_results[(task_name, metric_name)].append(metric_value)
+
+        results: dict[ResultTagString, float] = {}
+        for (task_name, metric_name), values in raw_results.items():
+            computed_stats = self._compute_stats(values)
+            for agg in aggregations:
+                assert agg in computed_stats, (
+                    f"Aggregation {agg} not found in stats: {computed_stats.keys()}"
+                )
+                tag = ResultTagString(
+                    name=tag_name,
+                    metric_name=metric_name,
+                    aggregation=agg,
+                    grouping_name=task_name,
+                )
+                results[tag] = computed_stats[agg]
+        return results
+
+    def _aggregate_datasetids_per_task_language_grouped(
+        self,
+        language_aggregation_mode: LanguageAggregationMode,
+        tag_name: str = "mean_per_task",
+        aggregations: tuple = ("mean", "stderr", "ci_margin"),
+    ) -> dict[ResultTagString, float]:
+        """Language-grouped average: filter incompatible datasets, group by
+        language, average within each language group, then average across
+        language groups.
+
+        This gives equal weight per language regardless of how many datasets
+        each language has.  For tasks with exactly one dataset per language
+        the result is identical to a flat average of the compatible datasets.
+        """
+        # Filter incompatible datasets and group by (task, metric, lang_key)
+        lang_grouped: dict[tuple[str, str, str], list[float]] = defaultdict(list)
         for task_name, task_result in self.task_results.items():
             for dataset_id, metrics_result in task_result.datasetid_results.items():
                 language_key = self._get_language_grouping_key(
@@ -220,18 +274,28 @@ class BenchmarkResults(BaseModel):
                     )
                     continue
                 for metric_name, metric_value in metrics_result.metrics_dict.items():
-                    raw_results[(task_name, metric_name)].append(metric_value)
+                    lang_grouped[(task_name, metric_name, language_key)].append(metric_value)
 
-        # Compute stats
-        results = {}
-        for (task_name, metric_name), values in raw_results.items():
-            stats = self._compute_stats(values)
+        # Compute mean within each language bucket
+        per_language_means: dict[tuple[str, str], list[float]] = defaultdict(list)
+        for (task_name, metric_name, _lang_key), values in lang_grouped.items():
+            per_language_means[(task_name, metric_name)].append(float(np.mean(values)))
+
+        # Compute stats across per-language means to get per-task score
+        results: dict[ResultTagString, float] = {}
+        for (task_name, metric_name), lang_means in per_language_means.items():
+            computed_stats = self._compute_stats(lang_means)
             for agg in aggregations:
-                assert agg in stats, f"Aggregation {agg} not found in stats: {stats.keys()}"
-                tag = ResultTagString(
-                    name=tag_name, metric_name=metric_name, aggregation=agg, grouping_name=task_name
+                assert agg in computed_stats, (
+                    f"Aggregation {agg} not found in stats: {computed_stats.keys()}"
                 )
-                results[tag] = stats[agg]
+                tag = ResultTagString(
+                    name=tag_name,
+                    metric_name=metric_name,
+                    aggregation=agg,
+                    grouping_name=task_name,
+                )
+                results[tag] = computed_stats[agg]
         return results
 
     def _aggregate_per_task_group(
@@ -428,6 +492,9 @@ class BenchmarkResults(BaseModel):
             with only monolingual datasets).
             Datasets incompatible with the chosen mode are skipped with a warning.
         """
+        if aggregation_mode == LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION:
+            return {}
+
         # Collect metric values per language
         raw_results = defaultdict(list)
         for task_name, task_result in self.task_results.items():
