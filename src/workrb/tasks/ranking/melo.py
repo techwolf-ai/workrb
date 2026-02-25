@@ -42,6 +42,12 @@ class MELORanking(RankingTask):
     ]
 
     MELO_DATASET_IDS = [
+        "aut_q_de_c_de",
+        "aut_q_de_c_en",
+        "bel_q_fr_c_fr",
+        "bel_q_fr_c_en",
+        "bel_q_nl_c_nl",
+        "bel_q_nl_c_en",
         "bgr_q_bg_c_bg",
         "bgr_q_bg_c_en",
         "cze_q_cs_c_cs",

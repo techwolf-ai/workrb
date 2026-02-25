@@ -256,6 +256,12 @@ class TestMELORankingDatasetIds:
                     Language.PT,
                 ],
                 {
+                    "aut_q_de_c_de",
+                    "aut_q_de_c_en",
+                    "bel_q_fr_c_fr",
+                    "bel_q_fr_c_en",
+                    "bel_q_nl_c_nl",
+                    "bel_q_nl_c_en",
                     "deu_q_de_c_de",
                     "deu_q_de_c_en",
                     "esp_q_es_c_en",
