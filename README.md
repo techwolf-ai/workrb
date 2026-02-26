@@ -207,12 +207,14 @@ lang_result_ci = summary["mean_per_language/en/f1_macro/ci_margin"]
 | Job to Skills WorkBench        | multi_label | 3039 queries x 13939 targets        | 28        |
 | Job Title Similarity           | multi_label | 105 queries x 2619 targets          | 11        |
 | Job Normalization              | single_label | 15463 queries x 2942 targets        | 28        |
+| Job Normalization MELO         | multi_label | 633 queries x 33813 targets         | 21        |
 | Skill to Job WorkBench         | multi_label | 13492 queries x 3039 targets        | 28        |
 | Skill Extraction House         | multi_label | 262 queries x 13891 targets         | 28        |
 | Skill Extraction Tech          | multi_label | 338 queries x 13891 targets         | 28        |
 | Skill Extraction SkillSkape    | multi_label | 1191 queries x 13891 targets        | 28        |
 | Skill Similarity SkillMatch-1K | single_label | 900 queries x 2648 targets          | 1         |
 | Skill Normalization ESCO       | multi_label | 72008 queries x 13939 targets       | 28        |
+| Skill Normalization MELS       | multi_label | 1722 queries x 19466 targets        | 5         |
 | Query-Candidate Matching       | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
 | Project-Candidate Matching     | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
 | **Classification**             

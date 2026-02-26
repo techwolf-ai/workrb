@@ -59,7 +59,8 @@ if __name__ == "__main__":
         # Tasks with monolingual, cross-lingual, and multilingual datasets
         workrb.tasks.ProjectCandidateRanking(split=split, languages=langs),
         workrb.tasks.SearchQueryCandidateRanking(split=split, languages=langs),
-        # TODO: add MELO and MELS tasks when PR #37 is merged
+        workrb.tasks.MELORanking(split=split, languages=langs),
+        workrb.tasks.MELSRanking(split=split, languages=langs),
     ]
 
     # Evaluate

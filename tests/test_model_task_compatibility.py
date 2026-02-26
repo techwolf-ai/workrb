@@ -12,6 +12,8 @@ import math
 
 import pytest
 
+pytestmark = pytest.mark.filterwarnings("ignore::sklearn.exceptions.UndefinedMetricWarning")
+
 from tests.test_utils import create_toy_task_class
 from workrb.models import BiEncoderModel, RndESCOClassificationModel
 from workrb.tasks import ESCOJob2SkillClassification, SkillMatch1kSkillSimilarityRanking
