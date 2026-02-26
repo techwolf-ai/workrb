@@ -1,4 +1,4 @@
-"""Job Normalization ranking task using datasets from MELO (Retyk et al., 2024)."""
+"""Job Normalization ranking task using the MELO Benchmark (Retyk et al., 2024)."""
 
 from datasets import load_dataset
 
@@ -11,10 +11,50 @@ from workrb.types import DatasetLanguages, ModelInputType
 @register_task()
 class MELORanking(RankingTask):
     """
-    MELO: Job Normalization ranking task using datasets from MELO (Retyk et al., 2024).
+    MELO: Multilingual Entity Linking of Occupations (Retyk et al., 2024).
 
-    This task includes datasets from the MELO Benchmark, which involve Entity Linking
-    of occupations (job titles) into ESCO, posed as a ranking task.
+    **Scope.** Job Normalization ranking task using datasets from the MELO Benchmark.
+    It evaluates entity linking of occupation mentions (job titles) to the ESCO
+    Occupations taxonomy, posed as a ranking problem. It is built from
+    high-quality crosswalks between national occupation taxonomies and ESCO, published
+    by official labor-related organizations across EU member states and the USA. It
+    includes 48 datasets spanning 23 countries and 21 languages.
+
+    **Task structure.** Each element in a national taxonomy becomes a query (a job
+    title). The corpus consists of occupation surface forms from ESCO concepts in the
+    corpus language(s) — each concept may contribute multiple synonymous names. The
+    goal is to rank the correct ESCO occupation(s) for each query. Relevance labels
+    are binary and derived at the concept level from the crosswalk: all surface forms
+    of a relevant concept are marked as relevant. Queries may map to one or more
+    concepts (multi-label). Only a test split is available (no train/validation).
+
+    **Dataset variants.** Most countries have two variants: a **monolingual** variant
+    where both queries and corpus are in the same language (e.g., ``aut_q_de_c_de`` —
+    Austrian queries in German, ESCO corpus in German), and a **cross-lingual** variant
+    where queries are in the national language and the corpus is in English (e.g.,
+    ``aut_q_de_c_en`` — Austrian queries in German, ESCO corpus in English). Belgium
+    has four variants (two per official language: French and Dutch). The USA dataset
+    includes a monolingual English variant and a multilingual corpus variant.
+
+    **Naming convention.** Dataset IDs follow the pattern
+    ``{country}_q_{query_lang}_c_{corpus_lang(s)}``, where ``{country}`` is the
+    ISO 3166-1 alpha-3 country code (e.g., ``aut`` for Austria), ``q_{lang}`` is the
+    query language as an ISO 639-1 code, and ``c_{lang(s)}`` is one or more corpus
+    languages as ISO 639-1 codes.
+
+    Examples
+    --------
+    In the ``ita_q_it_c_it`` dataset, Italian occupation names from the Italian
+    national taxonomy (e.g., query: "Vigili del fuoco") must be matched against ESCO
+    Occupations in Italian (e.g., corpus: "vigile del fuoco", "pompiere"). The
+    ``ita_q_it_c_en`` cross-lingual variant uses the same Italian queries but an
+    English ESCO corpus.
+
+    Notes
+    -----
+    - Paper: Retyk et al. (2024), "MELO: An Evaluation Benchmark for Multilingual
+      Entity Linking of Occupations"
+    - HuggingFace: https://huggingface.co/datasets/Avature/MELO-Benchmark
     """
 
     MELO_LANGUAGES = [

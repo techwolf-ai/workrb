@@ -1,4 +1,4 @@
-"""Skill Normalization ranking task using datasets inspired in MELO (Retyk et al., 2024)."""
+"""Skill Normalization ranking task using the MELS Benchmark."""
 
 from datasets import load_dataset
 
@@ -11,17 +11,55 @@ from workrb.types import DatasetLanguages, ModelInputType
 @register_task()
 class MELSRanking(RankingTask):
     """
-    MELS (Multilingual Entity Linking of Skills): Skills Normalization ranking task using datasets
-    that were inspired in MELO (Retyk et al., 2024).
+    MELS: Multilingual Entity Linking of Skills, inspired by MELO (Retyk et al., 2024).
 
-    MELS is a sibling dataset to MELO (Multilingual Entity Linking of Occupations). Both datasets
-    were built using the same methodology and the same type of source data: crosswalks between
-    national taxonomies and ESCO, published by official labor-related organizations from EU member
-    states.
+    **Scope.** Skill Normalization ranking task using datasets from the MELS Benchmark.
+    It evaluates entity linking of skill mentions to the ESCO Skills taxonomy, posed as
+    a ranking problem. MELS is a sibling benchmark to MELO (Multilingual Entity Linking
+    of Occupations). Both were built using the same methodology and the same type of
+    source data: crosswalks between national taxonomies and ESCO, published by official
+    labor-related organizations from EU member states.
+    The difference is the entity type: MELO links occupation mentions (job titles) to
+    ESCO Occupations, while MELS links skill mentions to ESCO Skills. MELS covers fewer
+    countries than MELO because fewer EU member states have published ESCO skill
+    crosswalks. It includes 8 datasets spanning 3 countries (Belgium, Germany, Sweden)
+    and 5 languages (DE, EN, FR, NL, SV). The 4 native query languages are French,
+    Dutch, German, and Swedish; English appears only as a corpus language in
+    cross-lingual variants.
 
-    The difference is the entity type:
-     - MELO links occupation mentions (job titles) to ESCO Occupations
-     - MELS links skill mentions to ESCO Skills
+    **Task structure.** Each element in a national taxonomy becomes a query (a skill
+    label). The corpus consists of skill surface forms from ESCO concepts in the
+    corpus language(s) — each concept may contribute multiple synonymous names. The
+    goal is to rank the correct ESCO skill(s) for each query. Relevance labels are
+    binary and derived at the concept level from the crosswalk: all surface forms of
+    a relevant concept are marked as relevant. Queries may map to one or more concepts
+    (multi-label). Only a test split is available (no train/validation).
+
+    **Dataset variants.** Each country has two variants per query language: a
+    **monolingual** variant where both queries and corpus are in the same language
+    (e.g., ``deu_q_de_c_de`` — German skill labels, ESCO corpus in German), and a
+    **cross-lingual** variant where queries are in the national language and the corpus
+    is in English (e.g., ``deu_q_de_c_en`` — German skill labels, ESCO corpus in
+    English). Belgium has four variants (two per official language: French and Dutch).
+
+    **Naming convention.** Dataset IDs follow the pattern
+    ``{country}_q_{query_lang}_c_{corpus_lang}``, where ``{country}`` is the
+    ISO 3166-1 alpha-3 country code (e.g., ``deu`` for Germany), ``q_{lang}`` is the
+    query language as an ISO 639-1 code, and ``c_{lang}`` is the corpus language as an
+    ISO 639-1 code.
+
+    Examples
+    --------
+    In the ``deu_q_de_c_de`` dataset, German skill labels from Germany's national
+    taxonomy (e.g., query: "Holzfällen") must be matched against ESCO Skills in German
+    (e.g., corpus: "Bäume fällen"). The ``deu_q_de_c_en`` cross-lingual variant uses
+    the same German queries but an English ESCO Skills corpus.
+
+    Notes
+    -----
+    - MELS follows the methodology described in: Retyk et al. (2024), "MELO: An
+      Evaluation Benchmark for Multilingual Entity Linking of Occupations"
+    - HuggingFace: https://huggingface.co/datasets/Avature/MELS-Benchmark
     """
 
     MELS_LANGUAGES = [
