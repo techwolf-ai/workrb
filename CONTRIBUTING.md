@@ -120,6 +120,24 @@ Make a pull request (PR) from your fork into the main branch of WorkRB, followin
 2. Address any feedback or requested changes
 3. Once approved, a maintainer will merge your PR
 
+### 5. (Optional) Updating your fork when `main` has changed
+
+While you've been working on your fork, the `main` branch in the original repo may have moved ahead while you were working. Before we can merge your PR, you need to merge the latest changes into your fork's feature branch. To do this, run from your local fork repository, on the branch you're working on:
+
+```bash
+# Add the upstream remote (one-time)
+git remote add upstream https://github.com/techwolf-ai/workrb.git
+
+# Fetch latest changes and merge into your branch
+git fetch upstream
+git merge upstream/main
+
+# Push to your fork
+git push origin feature/my-new-feature
+```
+
+Merge commits on your feature branch are fine: PRs are squash-merged into `main` by the maintainers, so the final history stays clean.
+
 
 ## Adding a New Task
 
