@@ -171,39 +171,64 @@ results = workrb.load_results("results/my_model/results.json")
 print(results)
 ```
 
-**Metrics**: The main benchmark metrics `mean_benchmark/<metric>/mean` require 4 aggregation steps:
+#### Aggregation Chain
 
-1. First, Macro-average datasets per task, grouped by language via `get_dataset_languages()` (`mean_per_task/<task_name>/<metric>/mean`)
-2. Macro-average tasks per task group (e.g. Job2SkillRanking)  (`mean_per_task_group/<group>/<metric>/mean`)
-3. Macro-average task groups per task type (e.g. RankingTask, ClassificationTask) `mean_per_task_type/<type>/<metric>/mean`
-4. Macro-average over task types.
+The final benchmark score `mean_benchmark/<metric>/mean` is computed via the following chain:
+`dataset`  → `language`  → `task` → `task_group` → `task_type`.
+This enables sequential macro-averaging in each of the stages:
+- `dataset`: Is the individual unit to start aggregation from. Each task contains a set of datasets, each with a unique `dataset_id`. *Example: The MELO task language/region subsets `usa_q_en_c_en` and `swe_q_sv_c_en`.*
+- `language`: Aggregate over languages within the task's datasets. *Example: Group all monolingual French datasets in ESCOSkill2JobRanking*
+- `task`: Aggregate over tasks in the same task group. *Example: HouseSkillExtractRanking and TechSkillExtractRanking tasks in the Skill Extraction task group.*
+- `task_group`: Aggregate over task groups under a specific task type. *Example: Skill Extraction, Skill Normalization, and Job Normalization task groups, are all part of the ranking task type*
+- `task_type`: Aggregate over different task types for final benchmark performance, e.g. the Ranking and Classification task types.
 
-Per-language performance is also available: `mean_per_language/<lang>/<metric>/mean`.
+Per-language performance is available under language-grouped modes: `mean_per_language/<lang>/<metric>/mean`.
 Each aggregation provides 95% confidence intervals (replace `mean` with `ci_margin`).
 
-> **Cross-lingual aggregation**: By default, per-language aggregation only includes monolingual datasets (`LanguageAggregationMode.MONOLINGUAL_ONLY`). For tasks with cross-lingual datasets, use `CROSSLINGUAL_GROUP_INPUT_LANGUAGES` or `CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES` to group results by the query or target language respectively:
-> ```python
-> from workrb.types import LanguageAggregationMode
-> summary = results._aggregate_per_language(
->     aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES,
-> )
-> ``` 
+#### Language Aggregation Modes
+
+The `language_aggregation_mode` parameter controls how dataset results are grouped during metric aggregation. There are 4 modes (`LanguageAggregationMode`):
+
+| Mode | Behavior |
+| --- | --- |
+| `MONOLINGUAL_ONLY` (default) | Group by language; only include monolingual datasets (input lang == output lang). Cross-lingual datasets are filtered out. |
+| `CROSSLINGUAL_GROUP_INPUT_LANGUAGES` | Group by the input/query language. Requires a single input language per dataset (skip multilingual inputs). |
+| `CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES` | Group by the output/target language. Requires a single output language per dataset (skip multilingual outputs). |
+| `SKIP_LANGUAGE_AGGREGATION` | No language grouping or filtering. All datasets are directly macro-averaged per task. No per-language metrics are produced. |
+
+
+
+#### Execution Mode
+As `datasets` may be filtered out by the aggregation mode, you may want to skip evaluations that are not used in the final metrics. The `execution_mode` parameter controls whether incompatible datasets are evaluated:
+
+| Mode | Behavior |
+| --- | --- |
+| `ExecutionMode.LAZY` (default) | Skip datasets that are incompatible with the chosen `language_aggregation_mode`, saving compute. |
+| `ExecutionMode.ALL` | Evaluate all datasets regardless. Useful when you want to store all results and re-aggregate later with a different mode. |
+
+> **Note:** Under `SKIP_LANGUAGE_AGGREGATION`, no datasets are ever incompatible, so `execution_mode` can be ignored.
+
+An example of why you could choose for `ExecutionMode.ALL`:
 
 ```python
+from workrb.types import LanguageAggregationMode, ExecutionMode
+
 # Benchmark returns a detailed Pydantic model
-results: BenchmarkResults = workrb.evaluate(...)
-
-# Calculate aggregated metrics
-summary: dict[str, float] = results.get_summary_metrics()
-
-# Show all results
-print(summary)
-print(results) # Equivalent: internally runs get_summary_metrics()
-
-# Access metric via tag
-lang_result = summary["mean_per_language/en/f1_macro/mean"]
-lang_result_ci = summary["mean_per_language/en/f1_macro/ci_margin"]
+results: BenchmarkResults = workrb.evaluate(
+    model,
+    tasks,
+    language_aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
+    execution_mode=ExecutionMode.ALL, # Execute all so we can later switch language_aggregation_mode
+)
+# No lazy mode was used; We can override the aggregation mode at summary time
+summary = results.get_summary_metrics(
+    language_aggregation_mode=LanguageAggregationMode.CROSSLINGUAL_GROUP_INPUT_LANGUAGES,
+)
 ```
+
+For complete runnable examples of different aggregation strategies, see:
+- [examples/run_benchmark_language_weighted.py](examples/run_benchmark_language_weighted.py) — Language-weighted aggregation on selected languages
+- [examples/run_benchmark_flat_average.py](examples/run_benchmark_flat_average.py) — Skip language aggregation (flat averaging)
 
 
 ## Supported tasks & models

@@ -506,9 +506,9 @@ class TestMyCustomModelBenchmark:
         - RP@5: XX.X%
         """
         model = MyCustomModel()
-        task = TechSkillExtractRanking(split=DatasetSplit.TEST, languages=[Language.EN])
+        task = TechSkillExtractRanking(split=DatasetSplit.TEST, languages=[Language.EN.value])
 
-        results = task.evaluate(model=model, metrics=["mrr", "rp@5"], language=Language.EN)
+        results = task.evaluate(model=model, metrics=["mrr", "rp@5"], language=Language.EN.value)
 
         # Paper-reported values (allow tolerance for minor differences)
         expected_mrr = 0.55
