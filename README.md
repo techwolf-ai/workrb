@@ -13,8 +13,8 @@
     <p>
         <a href="#installation">Installation</a> |
         <a href="#features">Features</a> |
-        <a href="#usage-guide">Usage Guide</a> |
         <a href="#supported-tasks--models">Tasks & Models</a> |
+        <a href="#usage-guide">Usage Guide</a> |
         <a href="#contributing">Contributing</a> |
         <a href="#citation">Citing</a>
     <p>
