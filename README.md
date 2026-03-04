@@ -14,6 +14,7 @@
         <a href="#installation">Installation</a> |
         <a href="#features">Features</a> |
         <a href="#usage-guide">Usage Guide</a> |
+        <a href="#supported-tasks--models">Tasks & Models</a> |
         <a href="#contributing">Contributing</a> |
         <a href="#citation">Citing</a>
     <p>
@@ -55,12 +56,12 @@ tasks = [
 ]
 
 # 3. Run benchmark & view results
-results = workrb.evaluate(
+results = workrb.evaluate(  # Returns BenchmarkResults (Pydantic model)
     model,
     tasks,
     output_folder="results/my_model",
 )
-print(results)
+print(results)  # Benchmark/Per-task/Per-language metrics
 ```
 
 ## Installation
@@ -70,12 +71,53 @@ pip install workrb
 ```
 **Requirements:** Python 3.10+, see [pyproject.toml](pyproject.toml) for all dependencies.
 
+
+## Supported tasks & models
+
+### Tasks
+| Task Name                      | Class Name | Label Type | Dataset Size (English)              | Languages |
+|--------------------------------| --- | --- |-------------------------------------|-----------|
+| **Ranking**
+| Job to Skills WorkBench        | `ESCOJob2SkillRanking` | multi_label | 3039 queries x 13939 targets        | 28        |
+| Job Title Similarity           | `JobTitleSimilarityRanking` | multi_label | 105 queries x 2619 targets          | 11        |
+| Job Normalization              | `JobBERTJobNormRanking` | single_label | 15463 queries x 2942 targets        | 28        |
+| Job Normalization MELO         | `MELORanking` | multi_label | 633 queries x 33813 targets         | 21        |
+| Skill to Job WorkBench         | `ESCOSkill2JobRanking` | multi_label | 13492 queries x 3039 targets        | 28        |
+| Skill Extraction House         | `HouseSkillExtractRanking` | multi_label | 262 queries x 13891 targets         | 28        |
+| Skill Extraction Tech          | `TechSkillExtractRanking` | multi_label | 338 queries x 13891 targets         | 28        |
+| Skill Extraction SkillSkape    | `SkillSkapeExtractRanking` | multi_label | 1191 queries x 13891 targets        | 28        |
+| Skill Similarity SkillMatch-1K | `SkillMatch1kSkillSimilarityRanking` | single_label | 900 queries x 2648 targets          | 1         |
+| Skill Normalization ESCO       | `ESCOSkillNormRanking` | multi_label | 72008 queries x 13939 targets       | 28        |
+| Skill Normalization MELS       | `MELSRanking` | multi_label | 1722 queries x 19466 targets        | 5         |
+| Query-Candidate Matching       | `SearchQueryCandidateRanking` | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
+| Project-Candidate Matching     | `ProjectCandidateRanking` | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
+| **Classification**
+| Job-Skill Classification       | `ESCOJob2SkillClassification` | multi_label | 3039 samples, 13939 classes         | 28        |
+
+
+### Models
+| Model Name | Description | Adaptive Targets |
+| --- | --- | --- |
+| **Embedding Models**
+| BiEncoderModel | BiEncoder model using sentence-transformers for ranking and classification tasks. | ✅ |
+| JobBERTModel | Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2 | ✅ |
+| ConTeXTMatchModel | ConTeXT-Skill-Extraction-base from Techwolf: https://huggingface.co/TechWolf/ConTeXT-Skill-Extraction-base | ✅ |
+| CurriculumMatchModel | CurriculumMatch bi-encoder from Aleksandruz: https://huggingface.co/Aleksandruz/skillmatch-mpnet-curriculum-retriever | ✅ |
+| **Lexical Baselines**
+| BM25Model | BM25 Okapi probabilistic ranking baseline. | ✅ |
+| TfIdfModel | TF-IDF baseline with configurable word-level or character n-gram tokenization. | ✅ |
+| EditDistanceModel | Edit distance (Levenshtein ratio) baseline for near-exact matching. | ✅ |
+| RandomRankingModel | Random scoring baseline for sanity checking evaluation pipelines. | ✅ |
+| **Classification Baselines**
+| RndESCOClassificationModel | Random baseline for multi-label classification with random prediction head for ESCO. | ❌ |
+
 ## Usage Guide
 
 This section covers common usage patterns. Table of Contents:
 - [Custom Tasks & Models](#custom-tasks--models)
 - [Checkpointing & Resuming](#checkpointing--resuming)
 - [Results & Aggregation](#results--aggregation)
+- [Running Multiple Models](#running-multiple-models)
 
 
 ### Custom Tasks & Models
@@ -136,14 +178,16 @@ results = workrb.evaluate(model, tasks, output_folder="results/my_model")
 ```python
 # Resume from previous & extend with new task and languages
 tasks_extended = [
-    workrb.tasks.ESCOJob2SkillRanking( # Add de, fr
-        split="val", 
-        languages=["en", "de", "fr"]), 
-    workrb.tasks.ESCOJob2SkillRanking( # Add new task
-        split="val", 
+    workrb.tasks.ESCOJob2SkillRanking(  # Add de, fr
+        split="val",
+        languages=["en", "de", "fr"],
+    ),
+    workrb.tasks.ESCOSkillNormRanking(  # Add new task
+        split="val",
         languages=["en"],
+    ),
 ]
-results = workrb.evaluate(model, tasks, output_folder="results/my_model")
+results = workrb.evaluate(model, tasks_extended, output_folder="results/my_model")
 # ✓ Reuses English results, only evaluates new languages/tasks
 ```
 
@@ -184,6 +228,38 @@ This enables sequential macro-averaging in each of the stages:
 
 Per-language performance is available under language-grouped modes: `mean_per_language/<lang>/<metric>/mean`.
 Each aggregation provides 95% confidence intervals (replace `mean` with `ci_margin`).
+
+#### Available Metrics
+
+**Ranking metrics** (used in `RankingTask`):
+
+| Metric | Description |
+| --- | --- |
+| `map` | Mean Average Precision |
+| `mrr` | Mean Reciprocal Rank |
+| `recall@k` | Recall at k (e.g. `recall@5`, `recall@10`) |
+| `hit@k` | Hit rate at k — binary: is any relevant item in the top-k? |
+| `rp@k` | R-Precision at k — precision relative to total relevant items |
+
+**Classification metrics** (used in `ClassificationTask`):
+
+| Metric | Description |
+| --- | --- |
+| `f1_macro`, `f1_micro`, `f1_weighted` | F1 score variants |
+| `f1_samples` | Per-sample F1 (multilabel only) |
+| `precision_macro`, `precision_micro`, `precision_weighted` | Precision variants |
+| `recall_macro`, `recall_micro`, `recall_weighted` | Recall variants |
+| `accuracy` | Overall accuracy (subset accuracy for multilabel) |
+| `roc_auc`, `roc_auc_micro` | Area under ROC curve (threshold-independent) |
+
+You can override the default metrics per task via the `metrics` parameter of `evaluate()`:
+
+```python
+results = workrb.evaluate(
+    model, tasks, output_folder="results/my_model",
+    metrics={"ESCOJob2SkillRanking": ["map", "mrr", "recall@5", "recall@10"]},
+)
+```
 
 #### Language Aggregation Modes
 
@@ -229,39 +305,26 @@ summary = results.get_summary_metrics(
 For complete runnable examples of different aggregation strategies, see:
 - [examples/run_benchmark_language_weighted.py](examples/run_benchmark_language_weighted.py) — Language-weighted aggregation on selected languages
 - [examples/run_benchmark_flat_average.py](examples/run_benchmark_flat_average.py) — Skip language aggregation (flat averaging)
+- [examples/run_benchmark_language_weighted_all_langs.py](examples/run_benchmark_language_weighted_all_langs.py) — Language-weighted with all available languages
+- [examples/run_benchmark_flat_average_all_langs.py](examples/run_benchmark_flat_average_all_langs.py) — Flat averaging with all available languages
 
 
-## Supported tasks & models
+### Running Multiple Models
 
-### Tasks
-| Task Name                      | Label Type | Dataset Size (English)              | Languages |
-|--------------------------------| --- |-------------------------------------|-----------|
-| **Ranking**                    
-| Job to Skills WorkBench        | multi_label | 3039 queries x 13939 targets        | 28        |
-| Job Title Similarity           | multi_label | 105 queries x 2619 targets          | 11        |
-| Job Normalization              | single_label | 15463 queries x 2942 targets        | 28        |
-| Job Normalization MELO         | multi_label | 633 queries x 33813 targets         | 21        |
-| Skill to Job WorkBench         | multi_label | 13492 queries x 3039 targets        | 28        |
-| Skill Extraction House         | multi_label | 262 queries x 13891 targets         | 28        |
-| Skill Extraction Tech          | multi_label | 338 queries x 13891 targets         | 28        |
-| Skill Extraction SkillSkape    | multi_label | 1191 queries x 13891 targets        | 28        |
-| Skill Similarity SkillMatch-1K | single_label | 900 queries x 2648 targets          | 1         |
-| Skill Normalization ESCO       | multi_label | 72008 queries x 13939 targets       | 28        |
-| Skill Normalization MELS       | multi_label | 1722 queries x 19466 targets        | 5         |
-| Query-Candidate Matching       | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
-| Project-Candidate Matching     | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
-| **Classification**             
-| Job-Skill Classification       | multi_label | 3039 samples, 13939 classes         | 28        |
+Evaluate multiple models in a single call with `evaluate_multiple_models()`. Each model runs the `evaluate()` and automatically gets its own output folder (with checkpointing) based on the model name:
 
+```python
+results = workrb.evaluate_multiple_models(
+    models=[model_a, model_b],
+    tasks=tasks,
+    output_folder_template="results/{model_name}", # Use explicit '{model_name}', used for templating
+)
+# results["model_a_name"] -> BenchmarkResults
+# results["model_b_name"] -> BenchmarkResults
+```
 
-### Models
-| Model Name | Description | Adaptive Targets |
-| --- | --- | --- |
-| BiEncoderModel | BiEncoder model using sentence-transformers for ranking and classification tasks. | ✅ |
-| JobBERTModel | Job-Normalization BiEncoder from Techwolf: https://huggingface.co/TechWolf/JobBERT-v2 | ✅ |
-| ConTeXTMatchModel | ConTeXT-Skill-Extraction-base from Techwolf: https://huggingface.co/TechWolf/ConTeXT-Skill-Extraction-base | ✅ |
-| CurriculumMatchModel | CurriculumMatch bi-encoder from Aleksandruz: https://huggingface.co/Aleksandruz/skillmatch-mpnet-curriculum-retriever | ✅ |
-| RndESCOClassificationModel | Random baseline for multi-label classification with random prediction head for ESCO. | ❌ |
+All keyword arguments from `evaluate()` (e.g. `language_aggregation_mode`, `execution_mode`) are passed through. See [examples/run_multiple_models.py](examples/run_multiple_models.py) for a complete example.
+
 
 
 ## Contributing
