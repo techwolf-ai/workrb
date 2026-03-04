@@ -11,6 +11,7 @@ Thank you for your interest in contributing to WorkRB! We're building a communit
 - [Adding a New Model](#adding-a-new-model)
 - [Adding New Metrics](#adding-new-metrics)
 - [Code Standards](#code-standards)
+- [CI/CD Workflows](#cicd-workflows)
 - [Questions & Support](#questions--support)
 
 ## Ways to Contribute
@@ -116,9 +117,10 @@ Make a pull request (PR) from your fork into the main branch of WorkRB, followin
 
 ### 4. Review Process
 
-1. Maintainers will review your PR
-2. Address any feedback or requested changes
-3. Once approved, a maintainer will merge your PR
+1. The **Test** CI workflow (`test.yml`) runs automatically on your PR — linting and the full test suite must pass before merging. Fix any failures before requesting review.
+2. Maintainers will review your PR
+3. Address any feedback or requested changes
+4. Once approved, a maintainer will merge your PR
 
 ### 5. (Optional) Updating your fork when `main` has changed
 
@@ -254,6 +256,8 @@ def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
 ```
 
 By default, per-language aggregation only includes monolingual datasets (`LanguageAggregationMode.MONOLINGUAL_ONLY`). Cross-lingual results can be aggregated using `CROSSLINGUAL_GROUP_INPUT_LANGUAGES` or `CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES` — see the [Results & Aggregation](#results--aggregation) section in the README.
+
+**For a real-world cross-lingual task implementation**, see [src/workrb/tasks/ranking/melo.py](src/workrb/tasks/ranking/melo.py) which overrides both methods for multi-region, cross-lingual evaluation.
 
 ### Step 3: Add to Module Exports
 
@@ -658,6 +662,29 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
     """
     pass
 ```
+
+### Commit Messages & Versioning
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) enforced by a pre-commit hook (commitizen). All commit messages must follow the format:
+
+```
+<type>: <description>
+```
+
+Common types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. For example: `feat: add SkillSkape ranking task`.
+
+Versioning and the [CHANGELOG.md](CHANGELOG.md) are managed automatically by [commitizen](https://github.com/commitizen-tools/commitizen) (`cz bump`). You don't need to update the changelog manually, maintainers will handle your PR and new package releases.
+
+
+## CI/CD Workflows
+
+The repository uses the following GitHub Actions workflows:
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| **Test** (`test.yml`) | Push to `main` or PR to `main` | Runs linting and the full test suite (`poe test`) on Python 3.10 with both highest and lowest dependency resolutions |
+| **Model Benchmarks** (`benchmark.yml`) | Manual trigger from Actions UI | Runs model performance tests (`poe test-benchmark`). Contributors can trigger this manually via Actions → Model Benchmarks → Run workflow |
+| **Publish** (`publish.yml`) | GitHub Release creation | Publishes the package to PyPI (maintainers only) |
 
 
 ## Questions & Support
