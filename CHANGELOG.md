@@ -1,3 +1,34 @@
+## v0.4.0 (2026-03-04)
+
+### BREAKING CHANGE
+
+- MetricsResult.language replaced by input_languages/output_languages
+
+### Feat
+
+- add lazy execution filtering and ExecutionMode enum
+- add cross-lingual aggregation modes for per-language metrics
+- freelancer project ranking
+- add unicode normalization to lexical baseline preprocessing
+- add lexical baselines for ranking
+
+### Fix
+
+- remove from example the dataset that uses ESCO 1.0.5 but defines UK as supported language
+- add language field to MetricsResult for proper per-language aggregation
+- solve issues in example files
+- include lowercase setting in lexical baseline model names
+- import SkillSkape
+
+### Refactor
+
+- use language-grouped averaging in per-task aggregation
+- migrate freelancer task to dataset_id-based language mapping
+- make language_aggregation_mode a non-optional parameter in evaluate()
+- migrate freelancer project matching tasks to load_dataset API
+- rename language_results to datasetid_results for consistency with dataset_id abstraction
+- generalize dataset indexing from language-based to dataset_id-based
+
 ## v0.3.0 (2026-01-09)
 
 ### Feat
