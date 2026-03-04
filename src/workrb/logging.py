@@ -11,7 +11,7 @@ import sys
 
 def setup_logger(name: str = "workrb", verbose: bool = False) -> logging.Logger:
     """
-    Setup package logger with console and optional file handlers.
+    Setup package logger with console handler.
 
     Args:
         name: Logger name (usually package name)

@@ -60,6 +60,7 @@ class TaskRegistry:
     def create(cls, name: str, **kwargs) -> "Task":
         """Create an instance of a registered task."""
         task_class = cls.get(name)
+        logger.info(f"Creating task '{name}' ({task_class.__module__}.{task_class.__name__})")
         return task_class(**kwargs)
 
     @classmethod
@@ -172,6 +173,7 @@ class ModelRegistry:
     def create(cls, name: str, **kwargs) -> "ModelInterface":
         """Create an instance of a registered model."""
         model_class = cls.get(name)
+        logger.info(f"Creating model '{name}' ({model_class.__module__}.{model_class.__name__})")
         return model_class(**kwargs)
 
     @classmethod
