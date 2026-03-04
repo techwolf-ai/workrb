@@ -11,6 +11,7 @@ Thank you for your interest in contributing to WorkRB! We're building a communit
 - [Adding a New Model](#adding-a-new-model)
 - [Adding New Metrics](#adding-new-metrics)
 - [Code Standards](#code-standards)
+- [CI/CD Workflows](#cicd-workflows)
 - [Questions & Support](#questions--support)
 
 ## Ways to Contribute
@@ -116,9 +117,28 @@ Make a pull request (PR) from your fork into the main branch of WorkRB, followin
 
 ### 4. Review Process
 
-1. Maintainers will review your PR
-2. Address any feedback or requested changes
-3. Once approved, a maintainer will merge your PR
+1. The **Test** CI workflow (`test.yml`) runs automatically on your PR — linting and the full test suite must pass before merging. Fix any failures before requesting review.
+2. Maintainers will review your PR
+3. Address any feedback or requested changes
+4. Once approved, a maintainer will merge your PR
+
+### 5. (Optional) Updating your fork when `main` has changed
+
+While you've been working on your fork, the `main` branch in the original repo may have moved ahead while you were working. Before we can merge your PR, you need to merge the latest changes into your fork's feature branch. To do this, run from your local fork repository, on the branch you're working on:
+
+```bash
+# Add the upstream remote (one-time)
+git remote add upstream https://github.com/techwolf-ai/workrb.git
+
+# Fetch latest changes and merge into your branch
+git fetch upstream
+git merge upstream/main
+
+# Push to your fork
+git push origin feature/my-new-feature
+```
+
+Merge commits on your feature branch are fine: PRs are squash-merged into `main` by the maintainers, so the final history stays clean.
 
 
 ## Adding a New Task
@@ -185,8 +205,20 @@ class MyCustomRankingTask(RankingTask):
         """
         Load dataset for a specific dataset ID and split.
 
-        Returns:
-            RankingDataset with query_texts, target_indices, and target_space
+        Parameters
+        ----------
+        dataset_id : str
+            Dataset identifier. For monolingual tasks, the base class
+            automatically uses the language code as dataset_id
+            (e.g. "en", "de"), so you can use ``Language(dataset_id)``
+            to resolve the language when loading data.
+        split : DatasetSplit
+            Data split to load.
+
+        Returns
+        -------
+        RankingDataset
+            Dataset with query_texts, target_indices, and target_space.
         """
         # Load your data here (from files, HuggingFace datasets, etc.)
         # Example:
@@ -204,6 +236,28 @@ class MyCustomRankingTask(RankingTask):
             dataset_id=dataset_id,
         )
 ```
+
+### Advanced: Cross-lingual and multi-dataset tasks
+
+The default `Task` base class assumes a 1:1 mapping between languages and datasets (each language code *is* the dataset ID). For tasks that have multiple datasets per language or cross-lingual evaluation pairs, override two methods:
+
+- **`languages_to_dataset_ids(languages)`** — return all dataset IDs that should be loaded for the given languages. For example, a cross-lingual task might return `["ita_q_it_c_en", "ita_q_it_c_de"]` for `[Language.IT]`.
+- **`get_dataset_languages(dataset_id)`** — return a `DatasetLanguages` named tuple specifying the `input_languages` and `output_languages` frozensets for a dataset. This controls how results are grouped during per-language aggregation.
+
+```python
+from workrb.types import DatasetLanguages, Language
+
+def get_dataset_languages(self, dataset_id: str) -> DatasetLanguages:
+    # Example: Italian queries, English targets
+    return DatasetLanguages(
+        input_languages=frozenset({Language.IT}),
+        output_languages=frozenset({Language.EN}),
+    )
+```
+
+By default, per-language aggregation only includes monolingual datasets (`LanguageAggregationMode.MONOLINGUAL_ONLY`). Cross-lingual results can be aggregated using `CROSSLINGUAL_GROUP_INPUT_LANGUAGES` or `CROSSLINGUAL_GROUP_OUTPUT_LANGUAGES` — see the [Results & Aggregation](#results--aggregation) section in the README.
+
+**For a real-world cross-lingual task implementation**, see [src/workrb/tasks/ranking/melo.py](src/workrb/tasks/ranking/melo.py) which overrides both methods for multi-region, cross-lingual evaluation.
 
 ### Step 3: Add to Module Exports
 
@@ -231,8 +285,9 @@ from workrb.tasks.abstract.base import Language
 def test_my_custom_task_loads():
     """Test that task loads without errors"""
     task = workrb.tasks.MyCustomRankingTask(split="val", languages=["en"])
-    dataset = task.lang_datasets[Language.EN]
-    
+    dataset_id = Language.EN.value
+    dataset = task.datasets[dataset_id]
+
     assert len(dataset.query_texts) > 0
     assert len(dataset.target_space) > 0
     assert len(dataset.target_indices) == len(dataset.query_texts)
@@ -455,9 +510,9 @@ class TestMyCustomModelBenchmark:
         - RP@5: XX.X%
         """
         model = MyCustomModel()
-        task = TechSkillExtractRanking(split=DatasetSplit.TEST, languages=[Language.EN])
+        task = TechSkillExtractRanking(split=DatasetSplit.TEST, languages=[Language.EN.value])
 
-        results = task.evaluate(model=model, metrics=["mrr", "rp@5"], language=Language.EN)
+        results = task.evaluate(model=model, metrics=["mrr", "rp@5"], language=Language.EN.value)
 
         # Paper-reported values (allow tolerance for minor differences)
         expected_mrr = 0.55
@@ -607,6 +662,29 @@ def my_function(arg1: str, arg2: int = 5) -> list[str]:
     """
     pass
 ```
+
+### Commit Messages & Versioning
+
+This project uses [Conventional Commits](https://www.conventionalcommits.org/) enforced by a pre-commit hook (commitizen). All commit messages must follow the format:
+
+```
+<type>: <description>
+```
+
+Common types: `feat`, `fix`, `docs`, `chore`, `refactor`, `test`. For example: `feat: add SkillSkape ranking task`.
+
+Versioning and the [CHANGELOG.md](CHANGELOG.md) are managed automatically by [commitizen](https://github.com/commitizen-tools/commitizen) (`cz bump`). You don't need to update the changelog manually, maintainers will handle your PR and new package releases.
+
+
+## CI/CD Workflows
+
+The repository uses the following GitHub Actions workflows:
+
+| Workflow | Trigger | What it does |
+| --- | --- | --- |
+| **Test** (`test.yml`) | Push to `main` or PR to `main` | Runs linting and the full test suite (`poe test`) on Python 3.10 with both highest and lowest dependency resolutions |
+| **Model Benchmarks** (`benchmark.yml`) | Manual trigger from Actions UI | Runs model performance tests (`poe test-benchmark`). Contributors can trigger this manually via Actions → Model Benchmarks → Run workflow |
+| **Publish** (`publish.yml`) | GitHub Release creation | Publishes the package to PyPI (maintainers only) |
 
 
 ## Questions & Support

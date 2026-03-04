@@ -38,6 +38,8 @@ class RankingDataset:
         target_indices: list[list[int]],
         target_space: list[str],
         dataset_id: str,
+        allow_duplicate_queries: bool = True,
+        allow_duplicate_targets: bool = False,
     ):
         """Initialize ranking dataset with validation.
 
@@ -56,7 +58,7 @@ class RankingDataset:
         self.target_indices = self._postprocess_indices(target_indices)
         self.target_space = self._postprocess_texts(target_space)
         self.dataset_id = dataset_id
-        self.validate_dataset()
+        self.validate_dataset(allow_duplicate_queries, allow_duplicate_targets)
 
     def validate_dataset(
         self,
