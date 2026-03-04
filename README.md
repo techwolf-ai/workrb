@@ -302,11 +302,7 @@ summary = results.get_summary_metrics(
 )
 ```
 
-For complete runnable examples of different aggregation strategies, see:
-- [examples/run_benchmark_language_weighted.py](examples/run_benchmark_language_weighted.py) — Language-weighted aggregation on selected languages
-- [examples/run_benchmark_flat_average.py](examples/run_benchmark_flat_average.py) — Skip language aggregation (flat averaging)
-- [examples/run_benchmark_language_weighted_all_langs.py](examples/run_benchmark_language_weighted_all_langs.py) — Language-weighted with all available languages
-- [examples/run_benchmark_flat_average_all_langs.py](examples/run_benchmark_flat_average_all_langs.py) — Flat averaging with all available languages
+For a complete runnable example of different aggregation strategies, see [examples/run_benchmark_aggregation.py](examples/run_benchmark_aggregation.py).
 
 
 ### Running Multiple Models
