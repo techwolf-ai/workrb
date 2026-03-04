@@ -69,4 +69,5 @@ tmp/
 results/
 
 # AI-assistant configs
+.claude/
 CLAUDE.md
