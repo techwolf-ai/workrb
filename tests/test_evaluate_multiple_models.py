@@ -79,7 +79,7 @@ def create_mock_results(model_name: str, task_name: str) -> BenchmarkResults:
         task_results={
             task_name: TaskResults(
                 metadata=TaskResultMetadata(
-                    task_group="skillsim",
+                    task_group="rank_semantic_similarity",
                     task_type="ranking",
                     label_type="single_label",
                     description="Find similar skills using the SkillMatch-1K dataset",
@@ -103,7 +103,7 @@ def create_mock_results(model_name: str, task_name: str) -> BenchmarkResults:
             languages=["en"],
             resumed_from_checkpoint=False,
         ),
-        key_metrics_by_task_group={"skillsim": ["map"]},
+        key_metrics_by_task_group={"rank_semantic_similarity": ["map"]},
     )
 
 

@@ -71,8 +71,8 @@ class JobTitleSimilarityRanking(RankingTask):
 
     @property
     def task_group(self) -> RankingTaskGroup:
-        """Job Title Similarity task group."""
-        return RankingTaskGroup.JOBSIM
+        """Semantic Similarity task group."""
+        return RankingTaskGroup.SEMANTIC_SIMILARITY
 
     @property
     def supported_query_languages(self) -> list[Language]:

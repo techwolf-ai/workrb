@@ -83,8 +83,8 @@ class _BaseCandidateRanking(RankingTask, ABC):
 
     @property
     def task_group(self) -> RankingTaskGroup:
-        """Job Title Similarity task group."""
-        return RankingTaskGroup.JOBSIM
+        """Candidate Ranking task group."""
+        return RankingTaskGroup.CANDIDATE_RANKING
 
     @property
     def supported_query_languages(self) -> list[Language]:

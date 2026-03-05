@@ -22,11 +22,11 @@ class RankingTaskGroup(BaseTaskGroup, str, Enum):
 
     JOB_NORMALIZATION = f"{_prefix}job_normalization"
     JOB2SKILL = f"{_prefix}job2skill"
-    JOBSIM = f"{_prefix}jobsim"
+    SEMANTIC_SIMILARITY = f"{_prefix}semantic_similarity"
     SKILL2JOB = f"{_prefix}skill2job"
     SKILL_NORMALIZATION = f"{_prefix}skill_normalization"
     SKILL_EXTRACTION = f"{_prefix}skill_extraction"
-    SKILLSIM = f"{_prefix}skillsim"
+    CANDIDATE_RANKING = f"{_prefix}candidate_ranking"
 
 
 class RankingDataset:
