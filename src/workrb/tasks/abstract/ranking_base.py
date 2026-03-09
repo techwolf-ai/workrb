@@ -55,8 +55,8 @@ class RankingDataset:
         target_indices: list[list[int]],
         target_space: list[str],
         dataset_id: str,
-        duplicate_query_strategy: DuplicateStrategy = DuplicateStrategy.ALLOW,
-        duplicate_target_strategy: DuplicateStrategy = DuplicateStrategy.RAISE,
+        duplicate_query_strategy: DuplicateStrategy = DuplicateStrategy.RESOLVE,
+        duplicate_target_strategy: DuplicateStrategy = DuplicateStrategy.RESOLVE,
     ):
         """Initialize ranking dataset with validation.
 
@@ -116,8 +116,7 @@ class RankingDataset:
             )
             self.target_space = new_target_space
             self.target_indices = [
-                sorted(set(old_to_new[idx] for idx in idx_list))
-                for idx_list in self.target_indices
+                sorted(set(old_to_new[idx] for idx in idx_list)) for idx_list in self.target_indices
             ]
 
     def _resolve_duplicate_queries(self) -> None:
