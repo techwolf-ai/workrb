@@ -4,7 +4,7 @@ Task module with hierarchical structure.
 
 # Core task classes
 from .abstract import ClassificationTask, LabelType, Task
-from .abstract.ranking_base import RankingDataset, RankingTask
+from .abstract.ranking_base import DuplicateStrategy, RankingDataset, RankingTask
 
 # Task implementations
 from .classification.job2skill import ESCOJob2SkillClassification
@@ -33,6 +33,7 @@ __all__ = [
     "RankingTask",
     "ClassificationTask",
     "RankingDataset",
+    "DuplicateStrategy",
     # Classification tasks
     "ESCOJob2SkillClassification",
     # Ranking tasks

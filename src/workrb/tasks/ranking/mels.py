@@ -4,7 +4,12 @@ from datasets import load_dataset
 
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
-from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+from workrb.tasks.abstract.ranking_base import (
+    DuplicateStrategy,
+    RankingDataset,
+    RankingTask,
+    RankingTaskGroup,
+)
 from workrb.types import DatasetLanguages, ModelInputType
 
 
@@ -225,7 +230,11 @@ class MELSRanking(RankingTask):
         corpus = list(ds["corpus"]["text"])
 
         return RankingDataset(
-            queries, relevancy_labels, corpus, dataset_id=dataset_id, allow_duplicate_targets=True
+            queries,
+            relevancy_labels,
+            corpus,
+            dataset_id=dataset_id,
+            duplicate_target_strategy=DuplicateStrategy.RESOLVE,
         )
 
     @property
