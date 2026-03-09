@@ -30,8 +30,8 @@ class SkillMatch1kSkillSimilarityRanking(RankingTask):
 
     @property
     def task_group(self) -> RankingTaskGroup:
-        """Skill similarity task group."""
-        return RankingTaskGroup.SKILLSIM
+        """Semantic Similarity task group."""
+        return RankingTaskGroup.SEMANTIC_SIMILARITY
 
     @property
     def supported_query_languages(self) -> list[Language]:
