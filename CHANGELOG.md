@@ -1,3 +1,9 @@
+## v0.5.0 (2026-03-09)
+
+### Refactor
+
+- align task groups to paper (JOBSIM/SKILLSIM → Semantic Similarity + Candidate Ranking) (#45)
+
 ## v0.4.0 (2026-03-04)
 
 ### BREAKING CHANGE
