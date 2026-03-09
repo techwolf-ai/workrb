@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from abc import abstractmethod
 from collections import Counter
 from enum import Enum
@@ -16,6 +17,8 @@ from workrb.types import ModelInputType
 if TYPE_CHECKING:
     from workrb.models.base import ModelInterface
 
+logger = logging.getLogger(__name__)
+
 
 class RankingTaskGroup(BaseTaskGroup, str, Enum):
     _prefix = "rank_"
@@ -29,6 +32,20 @@ class RankingTaskGroup(BaseTaskGroup, str, Enum):
     CANDIDATE_RANKING = f"{_prefix}candidate_ranking"
 
 
+class DuplicateStrategy(str, Enum):
+    """Strategy for handling duplicate queries or targets in a RankingDataset.
+
+    ALLOW: Silently accept duplicates without any action.
+    RAISE: Raise an error if duplicates are found.
+    RESOLVE: Deterministically deduplicate. For targets, keep first occurrence and remap
+        indices. For queries, merge target_indices via union for identical query texts.
+    """
+
+    ALLOW = "allow"
+    RAISE = "raise"
+    RESOLVE = "resolve"
+
+
 class RankingDataset:
     """Structure for ranking datasets."""
 
@@ -38,8 +55,8 @@ class RankingDataset:
         target_indices: list[list[int]],
         target_space: list[str],
         dataset_id: str,
-        allow_duplicate_queries: bool = True,
-        allow_duplicate_targets: bool = False,
+        duplicate_query_strategy: DuplicateStrategy = DuplicateStrategy.ALLOW,
+        duplicate_target_strategy: DuplicateStrategy = DuplicateStrategy.RAISE,
     ):
         """Initialize ranking dataset with validation.
 
@@ -53,20 +70,91 @@ class RankingDataset:
             List of target vocabulary strings.
         dataset_id : str
             Unique identifier for this dataset.
+        duplicate_query_strategy : DuplicateStrategy
+            How to handle duplicate query texts. ALLOW silently accepts them,
+            RAISE raises on duplicates, RESOLVE merges their target_indices via union.
+        duplicate_target_strategy : DuplicateStrategy
+            How to handle duplicate target texts. ALLOW silently accepts them,
+            RAISE raises on duplicates, RESOLVE keeps first occurrence and remaps indices.
         """
         self.query_texts = self._postprocess_texts(query_texts)
         self.target_indices = self._postprocess_indices(target_indices)
         self.target_space = self._postprocess_texts(target_space)
         self.dataset_id = dataset_id
-        self.validate_dataset(allow_duplicate_queries, allow_duplicate_targets)
 
-    def validate_dataset(
+        # Resolve duplicates (targets first to remap indices, then queries to merge)
+        if duplicate_target_strategy == DuplicateStrategy.RESOLVE:
+            self._resolve_duplicate_targets()
+        if duplicate_query_strategy == DuplicateStrategy.RESOLVE:
+            self._resolve_duplicate_queries()
+
+        self._validate_dataset(duplicate_query_strategy, duplicate_target_strategy)
+
+    def _resolve_duplicate_targets(self) -> None:
+        """Deduplicate target_space, keeping first occurrence and remapping indices."""
+        seen: dict[str, int] = {}
+        old_to_new: dict[int, int] = {}
+        new_target_space: list[str] = []
+        duplicates: list[str] = []
+
+        for old_idx, text in enumerate(self.target_space):
+            if text in seen:
+                old_to_new[old_idx] = seen[text]
+                duplicates.append(text)
+            else:
+                new_idx = len(new_target_space)
+                seen[text] = new_idx
+                old_to_new[old_idx] = new_idx
+                new_target_space.append(text)
+
+        if duplicates:
+            logger.warning(
+                "Resolved %d duplicate targets in dataset '%s': %s",
+                len(duplicates),
+                self.dataset_id,
+                duplicates,
+            )
+            self.target_space = new_target_space
+            self.target_indices = [
+                sorted(set(old_to_new[idx] for idx in idx_list))
+                for idx_list in self.target_indices
+            ]
+
+    def _resolve_duplicate_queries(self) -> None:
+        """Deduplicate query_texts, merging target_indices via union."""
+        seen: dict[str, int] = {}
+        new_queries: list[str] = []
+        new_indices: list[list[int]] = []
+        duplicates: list[str] = []
+
+        for query, idx_list in zip(self.query_texts, self.target_indices):
+            if query in seen:
+                pos = seen[query]
+                merged = set(new_indices[pos]) | set(idx_list)
+                new_indices[pos] = sorted(merged)
+                duplicates.append(query)
+            else:
+                seen[query] = len(new_queries)
+                new_queries.append(query)
+                new_indices.append(sorted(idx_list))
+
+        if duplicates:
+            logger.warning(
+                "Resolved %d duplicate queries (merged target_indices) in dataset '%s': %s",
+                len(duplicates),
+                self.dataset_id,
+                duplicates,
+            )
+            self.query_texts = new_queries
+            self.target_indices = new_indices
+
+    def _validate_dataset(
         self,
-        allow_duplicate_queries: bool = True,
-        allow_duplicate_targets: bool = False,
-    ):
-        """Check the dataset."""
-        if not allow_duplicate_queries:
+        duplicate_query_strategy: DuplicateStrategy,
+        duplicate_target_strategy: DuplicateStrategy,
+    ) -> None:
+        """Validate the dataset after construction and optional deduplication."""
+        if duplicate_query_strategy == DuplicateStrategy.RAISE:
             queries_non_unique = [
                 query_text for query_text, cnt in Counter(self.query_texts).items() if cnt > 1
             ]
@@ -74,7 +162,7 @@ class RankingDataset:
                 f"Query texts must be unique. Query texts appearing multiple times: {queries_non_unique} "
             )
 
-        if not allow_duplicate_targets:
+        if duplicate_target_strategy == DuplicateStrategy.RAISE:
             targets_non_unique = [
                 target_text for target_text, cnt in Counter(self.target_space).items() if cnt > 1
             ]
@@ -93,7 +181,7 @@ class RankingDataset:
     def _postprocess_indices(self, indices: list[list[int]]) -> list[list[int]]:
         """Postprocess indices."""
         # Remove duplicates in target_label
-        indices = [list(set(label_list)) for label_list in indices]
+        indices = [sorted(set(label_list)) for label_list in indices]
         return indices
 
     def _postprocess_texts(self, texts: list[str]) -> list[str]:
