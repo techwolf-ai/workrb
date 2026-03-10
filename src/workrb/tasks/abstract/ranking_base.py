@@ -11,7 +11,13 @@ from typing import TYPE_CHECKING
 import torch
 
 from workrb.metrics.ranking import calculate_ranking_metrics
-from workrb.tasks.abstract.base import BaseTaskGroup, DatasetSplit, Task, TaskType
+from workrb.tasks.abstract.base import (
+    BaseTaskGroup,
+    DatasetConfigNotSupported,
+    DatasetSplit,
+    Task,
+    TaskType,
+)
 from workrb.types import ModelInputType
 
 if TYPE_CHECKING:
@@ -153,6 +159,17 @@ class RankingDataset:
         duplicate_target_strategy: DuplicateStrategy,
     ) -> None:
         """Validate the dataset after construction and optional deduplication."""
+        if len(self.query_texts) == 0:
+            raise DatasetConfigNotSupported(
+                f"Dataset '{self.dataset_id}' has 0 queries. "
+                "This typically means that on dynamic dataset loading, no data is available for this language/configuration. "
+            )
+        if len(self.target_space) == 0:
+            raise DatasetConfigNotSupported(
+                f"Dataset '{self.dataset_id}' has 0 targets. "
+                "This typically means that on dynamic dataset loading, no data is available for this language/configuration. "
+            )
+
         if duplicate_query_strategy == DuplicateStrategy.RAISE:
             queries_non_unique = [
                 query_text for query_text, cnt in Counter(self.query_texts).items() if cnt > 1

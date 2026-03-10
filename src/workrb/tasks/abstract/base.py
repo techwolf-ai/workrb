@@ -10,6 +10,19 @@ from workrb.types import DatasetLanguages, DatasetSplit, LabelType, Language
 logger = logging.getLogger(__name__)
 
 
+class DatasetConfigNotSupported(Exception):
+    """
+    Raised when a dataset configuration is not supported.
+
+    Only this exception is gracefully skipped during dataset loading;
+    all other errors fail hard to avoid silent failures.
+
+    For example, in dynamic dataset loading with ESCO, a specific language
+    or version may result in not having the required data, such as skill
+    alternatives for ESCOSkillNormalization, resulting in 0 queries or targets.
+    """
+
+
 class BaseTaskGroup(str, Enum):
     """
     Task group enum.
@@ -122,7 +135,15 @@ class Task(ABC):
         """
         datasets = {}
         for dataset_id in dataset_ids:
-            datasets[dataset_id] = self.load_dataset(dataset_id=dataset_id, split=split)
+            try:
+                datasets[dataset_id] = self.load_dataset(dataset_id=dataset_id, split=split)
+            except DatasetConfigNotSupported as e:
+                logger.warning(
+                    "Skipping unsupported dataset '%s' for task '%s': %s",
+                    dataset_id,
+                    self.name,
+                    e,
+                )
         return datasets
 
     def get_task_config(self) -> dict[str, Any]:
