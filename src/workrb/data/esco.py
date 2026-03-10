@@ -76,7 +76,6 @@ class ESCO:
     @classmethod
     def _parse_minor_version(cls, version: str) -> tuple[int, int]:
         """Extract (major, minor) from a version string like '1.2.0'."""
-
         assert re.fullmatch(r"\d+\.\d+(\.\d+)?", version), f"Invalid version format: {version!r}"
         parts = version.split(".")
         return (int(parts[0]), int(parts[1]))
