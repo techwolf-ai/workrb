@@ -74,6 +74,9 @@ class Task(ABC):
         # Load datasets for the selected dataset identifiers
         self.datasets = self._load_datasets(dataset_ids=self.dataset_ids, split=self.split)
 
+        # Skipped datasets (DatasetConfigNotSupported) are excluded from self.dataset_ids
+        self.dataset_ids = list(self.datasets.keys())
+
     def _parse_languages(
         self, languages: list[str], unsupported_lang_mode: Literal["error", "skip"]
     ) -> list[Language]:
