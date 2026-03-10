@@ -3,6 +3,7 @@ Enhanced ESCO data manager for the hybrid approach.
 """
 
 import logging
+import re
 import urllib.parse
 import zipfile
 from pathlib import Path
@@ -26,7 +27,9 @@ class ESCO:
     """
 
     BASE_URL = "https://ec.europa.eu/esco/download/"
-    SUPPORTED_ESCO_LANGUAGES: tuple[Language, ...] = (
+
+    # Base languages shared across all ESCO versions (1.0+)
+    _BASE_LANGUAGES: tuple[Language, ...] = (
         Language.BG,  # Bulgarian
         Language.ES,  # Spanish
         Language.CS,  # Czech
@@ -51,11 +54,45 @@ class ESCO:
         Language.SL,  # Slovenian
         Language.FI,  # Finnish
         Language.SV,  # Swedish
-        Language.IS,  # Icelandic
-        Language.NO,  # Norwegian
-        Language.AR,  # Arabic
-        Language.UK,  # Ukrainian
     )
+
+    # Language support per ESCO minor version. Keyed by (major, minor).
+    # Patch versions share language support (e.g. 1.0.5 and 1.0.9 both use 1.0).
+    _MINOR_VERSION_LANGUAGES: dict[tuple[int, int], tuple[Language, ...]] = {
+        (1, 0): _BASE_LANGUAGES,
+        (1, 1): _BASE_LANGUAGES
+        + (
+            Language.IS,  # Icelandic (added in 1.1)
+            Language.NO,  # Norwegian (added in 1.1)
+            Language.AR,  # Arabic (added in 1.1)
+            Language.UK,  # Ukrainian (added in 1.1)
+        ),
+    }
+    _MINOR_VERSION_LANGUAGES[(1, 2)] = _MINOR_VERSION_LANGUAGES[(1, 1)]
+
+    # Union of all languages across all versions (for backwards compatibility)
+    SUPPORTED_ESCO_LANGUAGES: tuple[Language, ...] = _MINOR_VERSION_LANGUAGES[(1, 2)]
+
+    @classmethod
+    def _parse_minor_version(cls, version: str) -> tuple[int, int]:
+        """Extract (major, minor) from a version string like '1.2.0'."""
+
+        assert re.fullmatch(r"\d+\.\d+(\.\d+)?", version), f"Invalid version format: {version!r}"
+        parts = version.split(".")
+        return (int(parts[0]), int(parts[1]))
+
+    @classmethod
+    def get_supported_languages(cls, version: str = "1.2.0") -> tuple[Language, ...]:
+        """Return supported languages for a specific ESCO version.
+
+        Language support is determined by the major.minor version — patch versions
+        (e.g. 1.0.5 vs 1.0.9) share the same language set.
+        """
+        minor = cls._parse_minor_version(version)
+        if minor in cls._MINOR_VERSION_LANGUAGES:
+            return cls._MINOR_VERSION_LANGUAGES[minor]
+        logger.warning("Unknown ESCO version '%s', falling back to latest language set.", version)
+        return cls.SUPPORTED_ESCO_LANGUAGES
 
     def __init__(
         self,
@@ -81,9 +118,10 @@ class ESCO:
         self.auto_download = auto_download
 
         self.language = language
-        assert self.language in self.SUPPORTED_ESCO_LANGUAGES, (
-            f"Language {self.language.value} not supported by ESCO. "
-            f"Supported languages: {[lang.value for lang in self.SUPPORTED_ESCO_LANGUAGES]}"
+        supported = self.get_supported_languages(self.version)
+        assert self.language in supported, (
+            f"Language {self.language.value} not supported by ESCO v{self.version}. "
+            f"Supported languages: {[lang.value for lang in supported]}"
         )
 
         # Set up data paths - use cache directory by default

@@ -43,8 +43,8 @@ class ESCOJob2SkillRanking(RankingTask):
 
     @property
     def supported_target_languages(self) -> list[Language]:
-        """Target skills vocabulary spans all ESCO languages."""
-        return list(ESCO.SUPPORTED_ESCO_LANGUAGES)
+        """Target skills vocabulary for the configured ESCO version."""
+        return list(ESCO.get_supported_languages(self.esco_version))
 
     @property
     def label_type(self) -> LabelType:

@@ -187,22 +187,24 @@ class TestResolveBothDuplicates:
 
 
 class TestDefaultBehavior:
-    """Test that defaults match previous behavior (queries=ALLOW, targets=RAISE)."""
+    """Test that defaults resolve both query and target duplicates."""
 
-    def test_default_allows_duplicate_queries(self):
+    def test_default_resolves_duplicate_queries(self):
         ds = RankingDataset(
             query_texts=["q1", "q1"],
             target_indices=[[0], [1]],
             target_space=["a", "b"],
             dataset_id="test",
         )
-        assert ds.query_texts == ["q1", "q1"]
+        assert ds.query_texts == ["q1"]
+        assert ds.target_indices == [[0, 1]]
 
-    def test_default_raises_on_duplicate_targets(self):
-        with pytest.raises(AssertionError):
-            RankingDataset(
-                query_texts=["q1"],
-                target_indices=[[0, 1]],
-                target_space=["a", "a"],
-                dataset_id="test",
-            )
+    def test_default_resolves_duplicate_targets(self):
+        ds = RankingDataset(
+            query_texts=["q1"],
+            target_indices=[[0, 1]],
+            target_space=["a", "a"],
+            dataset_id="test",
+        )
+        assert ds.target_space == ["a"]
+        assert ds.target_indices == [[0]]
