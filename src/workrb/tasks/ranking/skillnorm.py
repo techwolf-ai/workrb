@@ -29,6 +29,9 @@ class ESCOSkillNormRanking(RankingTask):
     - rnd_split: Random split based on test/validation fraction ratio (default)
     - class_uniform_split: Takes 1 alternative from each class with multiple alternatives
       for validation, rest for test. Disregards the val/test fraction ratio.
+
+    Note: Some ESCO languages have no skill alternatives (e.g. 'uk' in v1.2.0),
+    resulting in 0 queries. These languages are automatically skipped during loading.
     """
 
     def __init__(
