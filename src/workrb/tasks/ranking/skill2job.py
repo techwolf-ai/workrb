@@ -37,8 +37,8 @@ class ESCOSkill2JobRanking(RankingTask):
 
     @property
     def supported_query_languages(self) -> list[Language]:
-        """Supported query languages are all ESCO languages (val is EN-only)."""
-        return list(ESCO.SUPPORTED_ESCO_LANGUAGES)
+        """Supported query languages for the configured ESCO version (val is EN-only)."""
+        return list(ESCO.get_supported_languages(self.esco_version))
 
     @property
     def supported_target_languages(self) -> list[Language]:

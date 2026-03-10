@@ -69,13 +69,13 @@ class ESCOSkillNormRanking(RankingTask):
 
     @property
     def supported_query_languages(self) -> list[Language]:
-        """Supported query languages are all ESCO languages."""
-        return list(ESCO.SUPPORTED_ESCO_LANGUAGES)
+        """Supported query languages for the configured ESCO version."""
+        return list(ESCO.get_supported_languages(self.esco_version))
 
     @property
     def supported_target_languages(self) -> list[Language]:
-        """Supported target languages are all ESCO languages."""
-        return list(ESCO.SUPPORTED_ESCO_LANGUAGES)
+        """Supported target languages for the configured ESCO version."""
+        return list(ESCO.get_supported_languages(self.esco_version))
 
     @property
     def split_test_fraction(self) -> float:
