@@ -325,7 +325,7 @@ class RankingTask(Task):
 
         # Convert to numpy if needed
         if isinstance(prediction_matrix, torch.Tensor):
-            prediction_matrix = prediction_matrix.cpu().numpy()
+            prediction_matrix = prediction_matrix.cpu().float().numpy()
 
         # Calculate metrics
         metric_results = calculate_ranking_metrics(
