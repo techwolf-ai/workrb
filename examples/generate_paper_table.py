@@ -79,10 +79,14 @@ def discover_results(results_dir: str) -> list[tuple[str, str, Path]]:
 def main():
     parser = argparse.ArgumentParser(description="Generate LaTeX table from paper results.")
     parser.add_argument("--metric", default="map", help="Target metric (default: map)")
+    # Default: resolve relative to the repo root (parent of examples/)
+    _default_results_dir = str(
+        Path(__file__).resolve().parent.parent / ".." / "results" / "run_paper_results"
+    )
     parser.add_argument(
         "--results-dir",
-        default="../results/run_paper_results",
-        help="Root results directory (default: ../results/run_paper_results)",
+        default=_default_results_dir,
+        help=f"Root results directory (default: {_default_results_dir})",
     )
     parser.add_argument("--output", default=None, help="Write LaTeX to file instead of stdout")
     parser.add_argument(

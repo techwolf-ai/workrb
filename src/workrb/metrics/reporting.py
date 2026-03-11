@@ -334,26 +334,33 @@ def format_results_latex(
     # ---- apply short_names -----------------------------------------------
     df = df.rename(columns=short_names, index=short_names)
 
-    # ---- find best per column for highlighting ---------------------------
-    best_per_col: dict[str, float] = {}
+    # ---- find best per column per group for highlighting -------------------
+    # Build a set of best (row_index, col) pairs to bold
+    best_cells: set[tuple[int, str]] = set()
     if highlight_best:
-        for col in df.columns:
-            numeric_vals = pd.to_numeric(df[col], errors="coerce")
-            if numeric_vals.notna().any():
-                best_per_col[col] = numeric_vals.max()
+        resolved_groups = model_groups if model_groups is not None else [list(range(len(df)))]
+        for group in resolved_groups:
+            group_df = df.iloc[group]
+            for col in group_df.columns:
+                numeric_vals = pd.to_numeric(group_df[col], errors="coerce")
+                if numeric_vals.notna().any():
+                    best_val = numeric_vals.max()
+                    for idx in group:
+                        if df.iloc[idx][col] == best_val:
+                            best_cells.add((idx, col))
 
     # ---- format cells ----------------------------------------------------
-    def _fmt_cell(val: float, col: str) -> str:
+    def _fmt_cell(val: float, row_idx: int, col: str) -> str:
         if pd.isna(val):
             return "--"
         formatted = value_format.format(value=val)
-        if highlight_best and col in best_per_col and val == best_per_col[col]:
+        if highlight_best and (row_idx, col) in best_cells:
             return f"\\textbf{{{formatted}}}"
         return formatted
 
     formatted_df = pd.DataFrame(index=df.index, columns=df.columns)
     for col in df.columns:
-        formatted_df[col] = [_fmt_cell(v, col) for v in df[col]]
+        formatted_df[col] = [_fmt_cell(v, i, col) for i, v in enumerate(df[col])]
 
     # ---- build LaTeX string ----------------------------------------------
     n_cols = len(formatted_df.columns)
