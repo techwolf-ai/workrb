@@ -117,6 +117,7 @@ def main():
     monolingual_models = [
         ConTeXTMatchModel(),
         CurriculumMatchModel(),
+        JobBERTModel(model_name="TechWolf/JobBERT-v2"),
     ]
 
     print("Running Group 2 (monolingual EN-only)...")
