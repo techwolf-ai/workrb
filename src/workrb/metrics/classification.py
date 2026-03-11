@@ -275,7 +275,7 @@ def _to_2d_numpy(array: torch.Tensor | np.ndarray | list) -> np.ndarray:
     """
     # Convert torch tensor to numpy
     if isinstance(array, torch.Tensor):
-        array = array.cpu().numpy()
+        array = array.cpu().float().numpy()
 
     # Convert to numpy array if it's a list
     if isinstance(array, list):

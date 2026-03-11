@@ -28,7 +28,7 @@ def calculate_ranking_metrics(
     """
     # Convert to numpy if needed
     if isinstance(prediction_matrix, torch.Tensor):
-        prediction_matrix = prediction_matrix.cpu().numpy()
+        prediction_matrix = prediction_matrix.cpu().float().numpy()
 
     # Sort indices by prediction scores (descending)
     sorted_indices = np.argsort(-prediction_matrix, axis=1)
