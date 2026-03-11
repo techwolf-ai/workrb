@@ -113,6 +113,114 @@ class TestConTeXTMatchModelUsage:
         assert torch.isfinite(scores).all()
 
 
+TOY_QUERIES = ["software engineer", "data scientist", "project manager", "devops engineer"]
+TOY_TARGETS = [
+    "Python programming",
+    "machine learning",
+    "statistics",
+    "team leadership",
+    "cloud computing",
+]
+
+
+@pytest.fixture(scope="module")
+def contextmatch_model():
+    """Module-scoped fixture to avoid reloading the model for each test."""
+    return ConTeXTMatchModel()
+
+
+class TestConTeXTMatchModelBatching:
+    """Test that scoring_batch_size correctly batches queries without affecting results."""
+
+    def test_scoring_batch_size_initialization_default(self, contextmatch_model):
+        """Test that default scoring_batch_size is 32."""
+        assert contextmatch_model.scoring_batch_size == 32
+
+    def test_scoring_batch_size_initialization_custom(self):
+        """Test custom scoring_batch_size values, including clamping < 1 to 1."""
+        model = ConTeXTMatchModel(scoring_batch_size=16)
+        assert model.scoring_batch_size == 16
+
+        model_clamped = ConTeXTMatchModel(scoring_batch_size=0)
+        assert model_clamped.scoring_batch_size == 1
+
+        model_negative = ConTeXTMatchModel(scoring_batch_size=-5)
+        assert model_negative.scoring_batch_size == 1
+
+    @pytest.mark.parametrize("scoring_batch_size", [1, 2, 3, 1000])
+    def test_scoring_batch_size_does_not_affect_results(self, scoring_batch_size):
+        """Core correctness: different batch sizes must produce identical similarity matrices."""
+        reference_model = ConTeXTMatchModel(scoring_batch_size=1000)
+        batched_model = ConTeXTMatchModel(scoring_batch_size=scoring_batch_size)
+        # Share the same underlying SentenceTransformer to ensure identical encodings
+        batched_model.model = reference_model.model
+
+        reference_scores = reference_model._compute_rankings(
+            queries=TOY_QUERIES,
+            targets=TOY_TARGETS,
+            query_input_type=ModelInputType.JOB_TITLE,
+            target_input_type=ModelInputType.SKILL_NAME,
+        )
+        batched_scores = batched_model._compute_rankings(
+            queries=TOY_QUERIES,
+            targets=TOY_TARGETS,
+            query_input_type=ModelInputType.JOB_TITLE,
+            target_input_type=ModelInputType.SKILL_NAME,
+        )
+
+        assert torch.allclose(reference_scores, batched_scores, atol=1e-6), (
+            f"Scores differ with scoring_batch_size={scoring_batch_size}: "
+            f"max diff = {(reference_scores - batched_scores).abs().max().item():.2e}"
+        )
+
+    def test_scoring_batch_size_one(self, contextmatch_model):
+        """Edge case: batch size of 1 processes each query individually."""
+        contextmatch_model.scoring_batch_size = 1
+
+        scores = contextmatch_model._compute_rankings(
+            queries=TOY_QUERIES,
+            targets=TOY_TARGETS,
+            query_input_type=ModelInputType.JOB_TITLE,
+            target_input_type=ModelInputType.SKILL_NAME,
+        )
+
+        assert scores.shape == (len(TOY_QUERIES), len(TOY_TARGETS))
+        assert isinstance(scores, torch.Tensor)
+        assert torch.isfinite(scores).all()
+
+        # Restore default
+        contextmatch_model.scoring_batch_size = 32
+
+    def test_scoring_batch_size_larger_than_queries(self, contextmatch_model):
+        """When scoring_batch_size > num_queries, everything runs in a single chunk."""
+        contextmatch_model.scoring_batch_size = 1000
+
+        scores = contextmatch_model._compute_rankings(
+            queries=TOY_QUERIES,
+            targets=TOY_TARGETS,
+            query_input_type=ModelInputType.JOB_TITLE,
+            target_input_type=ModelInputType.SKILL_NAME,
+        )
+
+        assert scores.shape == (len(TOY_QUERIES), len(TOY_TARGETS))
+        assert torch.isfinite(scores).all()
+
+        # Restore default
+        contextmatch_model.scoring_batch_size = 32
+
+    def test_single_query_ranking(self, contextmatch_model):
+        """Edge case: only 1 query should produce shape (1, n_targets)."""
+        scores = contextmatch_model._compute_rankings(
+            queries=["software engineer"],
+            targets=TOY_TARGETS,
+            query_input_type=ModelInputType.JOB_TITLE,
+            target_input_type=ModelInputType.SKILL_NAME,
+        )
+
+        assert scores.shape == (1, len(TOY_TARGETS))
+        assert torch.isfinite(scores).all()
+
+
 @pytest.mark.model_performance
 class TestConTeXTMatchModelTechSkillExtraction:
     """Test ConTeXTMatchModel performance on TECH skill extraction test set."""
