@@ -2,9 +2,14 @@
 Simple results display system using BenchmarkResults aggregation methods.
 """
 
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
+from collections.abc import Sequence
 from typing import Literal
+
+import pandas as pd
 
 from workrb.results import BenchmarkResults
 from workrb.types import LanguageAggregationMode
@@ -189,3 +194,217 @@ def _display_row(
 
     metrics_display = ",\t".join(metric_strs)
     return f"{row_label:<30} {metrics_display}"
+
+
+# ---------------------------------------------------------------------------
+# LaTeX table formatting
+# ---------------------------------------------------------------------------
+
+
+def format_results_latex(
+    results_list: Sequence[BenchmarkResults],
+    target_metric: str = "map",
+    aggregation_level: Literal["task_group", "task"] = "task_group",
+    value_format: str = "{value:.1f}",
+    scale_factor: float = 100.0,
+    caption: str = "Benchmark Results",
+    label: str = "tab:benchmark_results",
+    model_groups: list[list[int]] | None = None,
+    short_names: dict[str, str] | None = None,
+    highlight_best: bool = True,
+    resize: str | None = r"\columnwidth",
+) -> str:
+    r"""Build a LaTeX table comparing multiple model results.
+
+    Parameters
+    ----------
+    results_list:
+        One :class:`BenchmarkResults` per model, each with its own stored
+        ``language_aggregation_mode``.
+    target_metric:
+        Metric name to extract (e.g. ``"map"``, ``"mrr"``).
+    aggregation_level:
+        Column granularity — ``"task_group"`` or ``"task"``.
+    value_format:
+        Python format string applied to each cell value.  Use ``{value}``
+        as the placeholder (e.g. ``"{value:.1f}"``).
+    scale_factor:
+        Multiply raw metric values by this factor before formatting
+        (default ``100.0`` gives percentage-style numbers).
+    caption:
+        LaTeX ``\caption`` text.
+    label:
+        LaTeX ``\label`` text.
+    model_groups:
+        Optional grouping of model indices for ``\midrule`` separation.
+        E.g. ``[[0, 1, 2], [3, 4]]`` draws a ``\midrule`` between index 2
+        and 3.  When *None*, all models are in a single group.
+    short_names:
+        Rename dictionary applied to both model names and column headers.
+        Keys in insertion order also determine column ordering when the key
+        matches a column name.
+    highlight_best:
+        Bold the highest value in each column.
+    resize:
+        Width argument for ``\resizebox``.  When set (default
+        ``r"\columnwidth"``), the tabular is wrapped in
+        ``\resizebox{<value>}{!}{…}``.  Pass *None* to disable resizing.
+
+    Returns
+    -------
+    str
+        Complete LaTeX ``table`` environment string.
+    """
+    short_names = short_names or {}
+    tag_level = "mean_per_task_group" if aggregation_level == "task_group" else "mean_per_task"
+
+    # ---- collect per-model data ------------------------------------------
+    rows: dict[str, dict[str, float]] = {}  # model_name -> {col_name: value}
+    missing_warnings: list[str] = []
+
+    for results in results_list:
+        mode = LanguageAggregationMode(results.metadata.language_aggregation_mode)
+        all_metrics = results._get_summary_metrics(
+            aggregations=("mean",),
+            language_aggregation_mode=mode,
+        )
+
+        model_name = results.metadata.model_name
+        row: dict[str, float] = {}
+
+        for tag, value in all_metrics.items():
+            if tag.aggregation != "mean":
+                continue
+            if tag.metric_name != target_metric:
+                continue
+
+            if tag.name == tag_level and tag.grouping_name is not None:
+                row[tag.grouping_name] = value
+            elif tag.name == "mean_benchmark":
+                row["Overall"] = value
+
+        rows[model_name] = row
+
+    # ---- build DataFrame -------------------------------------------------
+    df = pd.DataFrame.from_dict(rows, orient="index")
+    df.index.name = "Model"
+
+    # Warn about completely missing columns (metric not present for any model)
+    all_columns = set(df.columns) - {"Overall"}
+    missing_cols = [c for c in sorted(all_columns) if df[c].isna().all()]
+    if missing_cols:
+        msg = (
+            f"Metric '{target_metric}' not found for "
+            f"{'task groups' if aggregation_level == 'task_group' else 'tasks'}: "
+            f"{', '.join(missing_cols)}. These columns will show '--'."
+        )
+        logger.warning(msg)
+        missing_warnings.append(msg)
+
+    # Warn about partially missing cells
+    for model_name in df.index:
+        missing_for_model = [
+            c for c in df.columns if c != "Overall" and pd.isna(df.loc[model_name, c])
+        ]
+        if missing_for_model:
+            msg = (
+                f"Metric '{target_metric}' missing for model '{model_name}' in: "
+                f"{', '.join(missing_for_model)}."
+            )
+            logger.warning(msg)
+            missing_warnings.append(msg)
+
+    # ---- column ordering -------------------------------------------------
+    # Use short_names insertion order for columns that match, then alphabetical remainder
+    ordered_cols: list[str] = []
+    remaining = set(df.columns) - {"Overall"}
+    for key in short_names:
+        # key could be the original name or the short name target
+        if key in remaining:
+            ordered_cols.append(key)
+            remaining.discard(key)
+    for col in sorted(remaining):
+        ordered_cols.append(col)
+    ordered_cols.append("Overall")
+    df = df[[c for c in ordered_cols if c in df.columns]]
+
+    # ---- apply scale factor ----------------------------------------------
+    df = df * scale_factor
+
+    # ---- apply short_names -----------------------------------------------
+    df = df.rename(columns=short_names, index=short_names)
+
+    # ---- find best per column for highlighting ---------------------------
+    best_per_col: dict[str, float] = {}
+    if highlight_best:
+        for col in df.columns:
+            numeric_vals = pd.to_numeric(df[col], errors="coerce")
+            if numeric_vals.notna().any():
+                best_per_col[col] = numeric_vals.max()
+
+    # ---- format cells ----------------------------------------------------
+    def _fmt_cell(val: float, col: str) -> str:
+        if pd.isna(val):
+            return "--"
+        formatted = value_format.format(value=val)
+        if highlight_best and col in best_per_col and val == best_per_col[col]:
+            return f"\\textbf{{{formatted}}}"
+        return formatted
+
+    formatted_df = pd.DataFrame(index=df.index, columns=df.columns)
+    for col in df.columns:
+        formatted_df[col] = [_fmt_cell(v, col) for v in df[col]]
+
+    # ---- build LaTeX string ----------------------------------------------
+    n_cols = len(formatted_df.columns)
+    col_spec = "l" + "c" * (n_cols - 1) + "|c"  # last col (Overall) separated
+
+    lines = [
+        r"\begin{table}[t]",
+        r"\centering",
+        rf"\caption{{{caption}}}",
+        rf"\label{{{label}}}",
+    ]
+    if resize:
+        lines.append(rf"\resizebox{{{resize}}}{{!}}{{%")
+    lines.extend(
+        [
+            rf"\begin{{tabular}}{{{col_spec}}}",
+            r"\toprule",
+        ]
+    )
+
+    # Header row
+    header = "Model & " + " & ".join(formatted_df.columns) + r" \\"
+    lines.append(header)
+    lines.append(r"\midrule")
+
+    # Determine group boundaries
+    if model_groups is None:
+        model_groups = [list(range(len(formatted_df)))]
+
+    row_idx = 0
+    for group_i, group in enumerate(model_groups):
+        for i in group:
+            model = formatted_df.index[i]
+            cells = " & ".join(formatted_df.iloc[i])
+            lines.append(f"{model} & {cells}" + r" \\")
+            row_idx += 1
+        # Add midrule between groups (not after the last)
+        if group_i < len(model_groups) - 1:
+            lines.append(r"\midrule")
+
+    lines.append(r"\bottomrule")
+    lines.append(r"\end{tabular}")
+    if resize:
+        lines.append("}")
+    lines.append(r"\end{table}")
+
+    latex_str = "\n".join(lines)
+
+    # Print warnings summary if any
+    if missing_warnings:
+        warning_block = "\n".join(f"% WARNING: {w}" for w in missing_warnings)
+        latex_str = warning_block + "\n" + latex_str
+
+    return latex_str
