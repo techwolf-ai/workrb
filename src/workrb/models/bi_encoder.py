@@ -280,7 +280,31 @@ class JobBERTModel(ModelInterface):
 
 @register_model()
 class ConTeXTMatchModel(ModelInterface):
-    """BiEncoder model using sentence-transformers."""
+    """Token-level attention bi-encoder for skill extraction using ConTeXT-Match.
+
+    Unlike standard bi-encoders that produce a single embedding per text, ConTeXT-Match
+    retains per-token embeddings for query texts (shape: (B, L, D)) and computes
+    attention-weighted similarity against mean-pooled target embeddings (shape: (B, D)).
+    This allows the model to focus on the most relevant tokens in a query when matching
+    against each target.
+
+    Memory considerations:
+        The scoring step produces intermediate tensors of shape (num_queries, num_targets, seq_len),
+        which can cause OOM with large query sets. To mitigate this, scoring is batched over queries
+        using ``scoring_batch_size`` — targets are encoded once and reused across all query chunks.
+
+    Batch sizes:
+        This model has two distinct batch size controls:
+
+        - ``scoring_batch_size`` (constructor param, default=32): Controls how many queries are
+          scored against all targets at once in ``_compute_rankings``. Lower values reduce peak
+          GPU memory during the attention-weighted similarity computation. Must be >= 1.
+
+        - ``encode_batch_size`` (param in ``encode()``, default=128): Controls how many texts are
+          tokenized and encoded through the transformer at once. This affects memory during the
+          forward pass of the underlying SentenceTransformer model. Typically less of a bottleneck
+          than the scoring step.
+    """
 
     _NEAR_ZERO_THRESHOLD = 1e-9
 
@@ -288,11 +312,25 @@ class ConTeXTMatchModel(ModelInterface):
         self,
         model_name: str = "TechWolf/ConTeXT-Skill-Extraction-base",
         temperature: float = 1.0,
+        scoring_batch_size: int = 32,
         **kwargs,
     ):
+        """Initialize the ConTeXT-Match model.
+
+        Args:
+            model_name: HuggingFace model identifier for the ConTeXT-Match model.
+            temperature: Temperature for the attention softmax in scoring. Higher values
+                produce softer attention weights across tokens; lower values concentrate
+                attention on the most relevant tokens.
+            scoring_batch_size: Number of queries to score against all targets at once.
+                Controls peak GPU memory during ``_compute_rankings``. Lower values use
+                less memory but may be slower. Must be >= 1.
+            **kwargs: Additional keyword arguments (unused, for compatibility).
+        """
         self.base_model_name = model_name
         self.model = SentenceTransformer(model_name)
         self.temperature = temperature
+        self.scoring_batch_size = max(1, scoring_batch_size)
         # Move to GPU if available
         device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(device)
@@ -302,7 +340,24 @@ class ConTeXTMatchModel(ModelInterface):
     def _context_match_score(
         token_embeddings: torch.Tensor, target_embeddings: torch.Tensor, temperature: float = 1.0
     ) -> torch.Tensor:
-        """Compute attention-weighted similarity between token embeddings and target embeddings."""
+        """Compute attention-weighted similarity between token and target embeddings.
+
+        For each (query, target) pair, computes dot-product attention weights over the
+        query's tokens, then returns the weighted sum of per-token cosine similarities.
+
+        Args:
+            token_embeddings: Query token embeddings of shape (B1, L, D), where B1 is the
+                number of queries, L is the (padded) sequence length, and D is the embedding
+                dimension. Padding tokens should have near-zero embeddings.
+            target_embeddings: Mean-pooled target embeddings of shape (B2, D).
+            temperature: Softmax temperature for attention weights. Controls how sharply
+                the model attends to specific tokens.
+
+        Returns
+        -------
+            Similarity matrix of shape (B1, B2), where entry (i, j) is the attention-weighted
+            cosine similarity between query i and target j.
+        """
         # token_embeddings: (B1, L, D), target_embeddings: (B2, D)
         dot_scores = (token_embeddings @ target_embeddings.T).transpose(1, 2)  # (B1, B2, L)
         dot_scores[dot_scores.abs() < ConTeXTMatchModel._NEAR_ZERO_THRESHOLD] = float("-inf")
@@ -328,7 +383,18 @@ class ConTeXTMatchModel(ModelInterface):
 
     @staticmethod
     def encode_batch(contextmatch_model, texts, mean: bool = False) -> torch.Tensor:
-        """Encode tokens pof the texts ConTeXT-Skill-Extraction-base model."""
+        """Encode a single batch of texts through the ConTeXT-Match model.
+
+        Args:
+            contextmatch_model: The underlying SentenceTransformer model instance.
+            texts: List of texts to encode in this batch.
+            mean: If False (default), returns per-token embeddings for use as queries.
+                If True, returns mean-pooled sentence embeddings for use as targets.
+
+        Returns
+        -------
+            Tensor of token embeddings (variable-length list) or sentence embeddings.
+        """
         args: dict[str, Any] = {
             "normalize_embeddings": False,
             "convert_to_tensor": True,
@@ -339,13 +405,29 @@ class ConTeXTMatchModel(ModelInterface):
 
     @staticmethod
     def encode(
-        contextmatch_model, texts, batch_size: int = 128, mean: bool = False
+        contextmatch_model, texts, encode_batch_size: int = 128, mean: bool = False
     ) -> torch.Tensor:
-        """Encode using the branch of the ConTeXT-Skill-Extraction-base model."""
+        """Encode texts through the ConTeXT-Match model in batches.
+
+        Processes texts in chunks of ``encode_batch_size`` through the transformer,
+        then pads variable-length token embeddings to a uniform sequence length.
+
+        Args:
+            contextmatch_model: The underlying SentenceTransformer model instance.
+            texts: List of texts to encode.
+            encode_batch_size: Number of texts to pass through the transformer at once.
+                Controls GPU memory usage during the encoding forward pass.
+            mean: If False (default), returns padded per-token embeddings (B, L, D).
+                If True, returns mean-pooled sentence embeddings (B, D).
+
+        Returns
+        -------
+            Tensor of shape (B, L, D) for token embeddings or (B, D) for mean-pooled.
+        """
         # For token embeddings, process in batches and handle variable lengths
         all_token_embeddings = []
-        for i in tqdm(range(0, len(texts), batch_size)):
-            batch = texts[i : i + batch_size]
+        for i in tqdm(range(0, len(texts), encode_batch_size)):
+            batch = texts[i : i + encode_batch_size]
             batch_token_embs = ConTeXTMatchModel.encode_batch(contextmatch_model, batch, mean=mean)
             all_token_embeddings.extend(batch_token_embs)
 
@@ -360,12 +442,35 @@ class ConTeXTMatchModel(ModelInterface):
         query_input_type: ModelInputType,
         target_input_type: ModelInputType,
     ) -> torch.Tensor:
-        """Compute ranking scores using attention-weighted similarity."""
+        """Compute ranking scores using attention-weighted similarity.
+
+        Two-phase approach:
+            1. **Encode**: All queries and targets are encoded through the transformer.
+               Queries produce per-token embeddings (B1, L, D); targets are mean-pooled (B2, D).
+               This phase is batched by ``encode_batch_size`` in ``encode()``.
+            2. **Score**: The similarity between queries and targets is computed via
+               ``_context_match_score``. Because this creates intermediate tensors of shape
+               (chunk_size, num_targets, seq_len), queries are processed in chunks of
+               ``scoring_batch_size`` to keep GPU memory bounded. Targets are encoded once
+               and reused across all query chunks.
+
+        Returns
+        -------
+            Similarity matrix of shape (num_queries, num_targets).
+        """
         query_token_embeddings = ConTeXTMatchModel.encode(self.model, queries)
         target_token_embeddings_mean = ConTeXTMatchModel.encode(self.model, targets, mean=True)
-        return self._context_match_score(
-            query_token_embeddings, target_token_embeddings_mean, temperature=self.temperature
-        )
+
+        # Batch over queries to avoid OOM from the (chunk_size, num_targets, seq_len)
+        # intermediate tensor in _context_match_score
+        chunks = []
+        for i in range(0, len(queries), self.scoring_batch_size):
+            query_chunk = query_token_embeddings[i : i + self.scoring_batch_size]
+            chunk_scores = self._context_match_score(
+                query_chunk, target_token_embeddings_mean, temperature=self.temperature
+            )
+            chunks.append(chunk_scores)
+        return torch.cat(chunks, dim=0)
 
     @torch.no_grad()
     def _compute_classification(
