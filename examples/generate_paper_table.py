@@ -95,6 +95,11 @@ def main():
         choices=["task_group", "task"],
         help="Column granularity (default: task_group)",
     )
+    parser.add_argument(
+        "--show-dataset-counts",
+        action="store_true",
+        help="Show number of datasets per model per column in the table",
+    )
     parser.add_argument("--list", action="store_true", help="List discovered results and exit")
     args = parser.parse_args()
 
@@ -156,6 +161,7 @@ def main():
         model_groups=model_groups,
         short_names=SHORT_NAMES,
         highlight_best=True,
+        show_dataset_counts=args.show_dataset_counts,
     )
 
     if args.output:
