@@ -2,7 +2,7 @@ import json
 import logging
 import pprint
 from collections import defaultdict
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 import pandas as pd
@@ -183,6 +183,58 @@ class BenchmarkResults(BaseModel):
             **mean_per_task_type,
             **mean_benchmark,
         }
+
+    def get_dataset_counts(
+        self,
+        aggregation_level: Literal["task_group", "task"] = "task_group",
+        language_aggregation_mode: LanguageAggregationMode | None = None,
+    ) -> dict[str, int]:
+        """Return number of datasets per task group (or task) after language filtering.
+
+        Parameters
+        ----------
+        aggregation_level:
+            ``"task_group"`` sums dataset counts across tasks in each group.
+            ``"task"`` returns counts per individual task.
+        language_aggregation_mode:
+            How to filter datasets by language. When *None*, reads the mode
+            stored in ``self.metadata.language_aggregation_mode``.
+
+        Returns
+        -------
+        dict[str, int]
+            Mapping from group/task name to dataset count, plus an
+            ``"Overall"`` key with the total.
+        """
+        if language_aggregation_mode is None:
+            language_aggregation_mode = LanguageAggregationMode(
+                self.metadata.language_aggregation_mode
+            )
+
+        counts: dict[str, int] = defaultdict(int)
+        total = 0
+
+        for task_name, task_result in self.task_results.items():
+            task_count = 0
+            for dataset_id, metrics_result in task_result.datasetid_results.items():
+                if language_aggregation_mode == LanguageAggregationMode.SKIP_LANGUAGE_AGGREGATION:
+                    task_count += 1
+                else:
+                    lang_key = self._get_language_grouping_key(
+                        metrics_result, language_aggregation_mode
+                    )
+                    if lang_key is not None:
+                        task_count += 1
+
+            if aggregation_level == "task":
+                counts[task_name] = task_count
+            else:
+                group_name = task_result.metadata.task_group
+                counts[group_name] += task_count
+            total += task_count
+
+        counts["Overall"] = total
+        return dict(counts)
 
     def _aggregate_datasetids_per_task(
         self,

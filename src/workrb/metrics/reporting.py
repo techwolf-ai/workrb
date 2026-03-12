@@ -213,6 +213,7 @@ def format_results_latex(
     short_names: dict[str, str] | None = None,
     highlight_best: bool = True,
     resize: str | None = r"\columnwidth",
+    show_dataset_counts: bool = False,
 ) -> str:
     r"""Build a LaTeX table comparing multiple model results.
 
@@ -249,6 +250,11 @@ def format_results_latex(
         Width argument for ``\resizebox``.  When set (default
         ``r"\columnwidth"``), the tabular is wrapped in
         ``\resizebox{<value>}{!}{…}``.  Pass *None* to disable resizing.
+    show_dataset_counts:
+        When *True*, append a ``#D`` row after each model group showing
+        the number of datasets that contributed to each column's score.
+        If all models in a group share the same counts, a single row is
+        shown; otherwise one row per model is emitted.
 
     Returns
     -------
@@ -284,6 +290,17 @@ def format_results_latex(
                 row["Overall"] = value
 
         rows[model_name] = row
+
+    # ---- collect dataset counts per model --------------------------------
+    dataset_counts: dict[str, dict[str, int]] = {}  # model_name -> {col: count}
+    if show_dataset_counts:
+        for results in results_list:
+            mode = LanguageAggregationMode(results.metadata.language_aggregation_mode)
+            counts = results.get_dataset_counts(
+                aggregation_level=aggregation_level,
+                language_aggregation_mode=mode,
+            )
+            dataset_counts[results.metadata.model_name] = counts
 
     # ---- build DataFrame -------------------------------------------------
     df = pd.DataFrame.from_dict(rows, orient="index")
@@ -390,6 +407,54 @@ def format_results_latex(
     if model_groups is None:
         model_groups = [list(range(len(formatted_df)))]
 
+    # ---- prepare dataset count rows per group (if requested) ---------------
+    # For each group, check if all models share the same counts; if so emit
+    # one shared row, otherwise emit one row per model.
+    group_count_rows: list[list[str]] = []  # parallel to model_groups
+    if show_dataset_counts:
+        # Map original model names to their df index order
+        original_names = list(rows.keys())  # preserves insertion order
+        for group in (model_groups if model_groups is not None else [list(range(len(formatted_df)))]):
+            # Collect count dicts for models in this group
+            group_counts: list[dict[str, int]] = []
+            group_model_names: list[str] = []
+            for i in group:
+                orig_name = original_names[i]
+                group_model_names.append(orig_name)
+                group_counts.append(dataset_counts.get(orig_name, {}))
+
+            # Check if all models in group have identical counts
+            all_same = len(set(tuple(sorted(c.items())) for c in group_counts)) <= 1
+
+            count_lines: list[str] = []
+            if all_same and group_counts:
+                # Single shared row
+                cells = []
+                for col in formatted_df.columns:
+                    # Reverse-lookup original column name from short_names
+                    orig_col = col
+                    for k, v in short_names.items():
+                        if v == col:
+                            orig_col = k
+                            break
+                    cells.append(str(group_counts[0].get(orig_col, "--")))
+                count_lines.append(r"\textit{\#D} & " + " & ".join(cells) + r" \\")
+            else:
+                for model_name, counts in zip(group_model_names, group_counts):
+                    display_name = short_names.get(model_name, model_name)
+                    cells = []
+                    for col in formatted_df.columns:
+                        orig_col = col
+                        for k, v in short_names.items():
+                            if v == col:
+                                orig_col = k
+                                break
+                        cells.append(str(counts.get(orig_col, "--")))
+                    count_lines.append(
+                        rf"\textit{{{display_name} \#D}} & " + " & ".join(cells) + r" \\"
+                    )
+            group_count_rows.append(count_lines)
+
     row_idx = 0
     for group_i, group in enumerate(model_groups):
         for i in group:
@@ -397,6 +462,10 @@ def format_results_latex(
             cells = " & ".join(formatted_df.iloc[i])
             lines.append(f"{model} & {cells}" + r" \\")
             row_idx += 1
+        # Add dataset count rows for this group
+        if show_dataset_counts and group_count_rows:
+            for count_line in group_count_rows[group_i]:
+                lines.append(count_line)
         # Add midrule between groups (not after the last)
         if group_i < len(model_groups) - 1:
             lines.append(r"\midrule")
