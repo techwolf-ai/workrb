@@ -414,7 +414,7 @@ def format_results_latex(
     if show_dataset_counts:
         # Map original model names to their df index order
         original_names = list(rows.keys())  # preserves insertion order
-        for group in (model_groups if model_groups is not None else [list(range(len(formatted_df)))]):
+        for group in model_groups if model_groups is not None else [list(range(len(formatted_df)))]:
             # Collect count dicts for models in this group
             group_counts: list[dict[str, int]] = []
             group_model_names: list[str] = []

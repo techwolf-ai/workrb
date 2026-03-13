@@ -67,6 +67,14 @@ def calculate_ranking_metrics(
             assert k is not None, "k must be provided for hit@k metrics"
             results[metric] = _calculate_hit_at_k(sorted_indices, pos_label_idxs, k)
 
+        elif base_metric == "ndcg":
+            if k is not None:
+                results[metric] = _calculate_ndcg(sorted_indices, pos_label_idxs, k)
+            else:
+                results[metric] = _calculate_ndcg(
+                    sorted_indices, pos_label_idxs, sorted_indices.shape[1]
+                )
+
         else:
             raise ValueError(f"Unknown ranking metric '{metric}'")
 
@@ -194,3 +202,28 @@ def _calculate_rp_at_k(
         rp_scores.append(rp)
 
     return float(np.mean(rp_scores)) if rp_scores else 0.0
+
+
+def _calculate_ndcg(sorted_indices: np.ndarray, pos_label_idxs: list[list[int]], k: int) -> float:
+    """Calculate Normalized Discounted Cumulative Gain@K (binary relevance)."""
+    ndcg_scores = []
+
+    for i, pos_labels in enumerate(pos_label_idxs):
+        if len(pos_labels) == 0:
+            continue
+
+        pos_labels_set = set(pos_labels)
+
+        # DCG@k: sum of 1/log2(rank+1) for relevant items in top-k
+        dcg = 0.0
+        for rank_idx in range(min(k, len(sorted_indices[i]))):
+            if sorted_indices[i][rank_idx] in pos_labels_set:
+                dcg += 1.0 / np.log2(rank_idx + 2)  # 0-based -> log2(pos+1)
+
+        # IDCG@k: ideal DCG with all relevant items ranked first
+        idcg = sum(1.0 / np.log2(j + 2) for j in range(min(k, len(pos_labels))))
+
+        if idcg > 0:
+            ndcg_scores.append(dcg / idcg)
+
+    return float(np.mean(ndcg_scores)) if ndcg_scores else 0.0
