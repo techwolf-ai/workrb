@@ -237,6 +237,7 @@ Each aggregation provides 95% confidence intervals (replace `mean` with `ci_marg
 | --- | --- |
 | `map` | Mean Average Precision |
 | `mrr` | Mean Reciprocal Rank |
+| `ndcg@k` | Normalized Discounted Cumulative Gain with support for top-k cutoff.|
 | `recall@k` | Recall at k (e.g. `recall@5`, `recall@10`) |
 | `hit@k` | Hit rate at k — binary: is any relevant item in the top-k? |
 | `rp@k` | R-Precision at k — precision relative to total relevant items |
