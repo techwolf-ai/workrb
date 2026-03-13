@@ -1,3 +1,23 @@
+## v0.5.1 (2026-03-13)
+
+### Feat
+
+- NDCG metrics for paper
+- enable row with dataset counts for results table example
+- latex table results reporting for paper example
+- ConteXTMatch query batching for out-of-memory on large ranking tasks
+- make ESCO language support version dependent
+- deduplication strategy for queries and targets to enable datasets with duplicate targets
+
+### Fix
+
+- latex table result set best results in bold for different model groups
+- cast prediction matrices explicitly to float
+- update dataset_ids in Task based on filtering non-supported ones
+- linter fixes
+- DatasetConfigNotSupported exceptions are introduced and skipped to solve dynamic dataset loading that can result in 0-length query or target tasks.
+- default resolve duplicates in ranking and query
+
 ## v0.5.0 (2026-03-09)
 
 ### Refactor
