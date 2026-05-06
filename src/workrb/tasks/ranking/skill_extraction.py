@@ -233,7 +233,9 @@ class TechWolfSkillExtractRanking(BaseESCOSkillExtractRanking):
     @property
     def description(self) -> str:
         """Skill extraction TechWolf task description."""
-        return "Extract skills from text descriptions in a generic distribution of job descriptions."
+        return (
+            "Extract skills from text descriptions in a generic distribution of job descriptions."
+        )
 
     @property
     def citation(self) -> str:
@@ -328,7 +330,9 @@ class SkillXLSkillExtractRanking(BaseESCOSkillExtractRanking):
     @property
     def description(self) -> str:
         """Skill extraction SkillXL task description."""
-        return "Extract skills from text descriptions in a generic distribution of job descriptions."
+        return (
+            "Extract skills from text descriptions in a generic distribution of job descriptions."
+        )
 
     @property
     def citation(self) -> str:
