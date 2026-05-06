@@ -1,10 +1,21 @@
 """Tests for ranking metrics (workrb.metrics.ranking)."""
 
+import math
+
 import numpy as np
 import pytest
 import torch
 
 from workrb.metrics.ranking import calculate_ranking_metrics
+
+
+def _prediction_matrix_from_order(order: list[int], n_targets: int) -> np.ndarray:
+    """Build a 1-query prediction matrix that ranks targets in the given order (best first)."""
+    scores = np.zeros((1, n_targets), dtype=float)
+    for rank, idx in enumerate(order):
+        scores[0, idx] = float(n_targets - rank)
+    return scores
+
 
 # Shared test fixtures: 2 queries x 5 targets
 # Query 0 sorted order: [0, 2, 4, 3, 1]  (scores: 0.9, 0.1, 0.8, 0.2, 0.5)
@@ -152,3 +163,172 @@ class TestRankingMetricsGeneral:
         for metric_name in ["map", "mrr", "recall@3", "hit@3", "rp@3"]:
             assert isinstance(results[metric_name], float)
             assert 0.0 <= results[metric_name] <= 1.0
+
+
+class TestNDCGGradedRelevance:
+    """nDCG with graded relevance (pos_label_relevance not None)."""
+
+    def test_explicit_relevance_one_matches_binary(self):
+        """Passing all-1.0 relevance must match the binary fallback exactly."""
+        binary = calculate_ranking_metrics(PREDICTION_MATRIX, POS_LABEL_IDXS, metrics=["ndcg@3"])
+        graded = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["ndcg@3"],
+            pos_label_relevance=[[1.0, 1.0], [1.0, 1.0]],
+        )
+        assert graded["ndcg@3"] == pytest.approx(binary["ndcg@3"])
+
+    def test_higher_grade_first_outscores_lower_grade_first(self):
+        """Ranking the higher-graded positive first must beat the reverse."""
+        preds_good = _prediction_matrix_from_order([0, 1, 2, 3], n_targets=4)
+        preds_bad = _prediction_matrix_from_order([1, 0, 2, 3], n_targets=4)
+        good = calculate_ranking_metrics(
+            prediction_matrix=preds_good,
+            pos_label_idxs=[[0, 1]],
+            pos_label_relevance=[[3.0, 1.0]],
+            metrics=["ndcg@4"],
+        )
+        bad = calculate_ranking_metrics(
+            prediction_matrix=preds_bad,
+            pos_label_idxs=[[0, 1]],
+            pos_label_relevance=[[3.0, 1.0]],
+            metrics=["ndcg@4"],
+        )
+        assert good["ndcg@4"] == pytest.approx(1.0)
+        assert bad["ndcg@4"] < good["ndcg@4"]
+
+    def test_graded_perfect_ranking_returns_one(self):
+        """Ideal ordering of grades [3, 2, 1] gives nDCG = 1."""
+        preds = _prediction_matrix_from_order([0, 1, 2, 3], n_targets=4)
+        result = calculate_ranking_metrics(
+            prediction_matrix=preds,
+            pos_label_idxs=[[0, 1, 2]],
+            pos_label_relevance=[[3.0, 2.0, 1.0]],
+            metrics=["ndcg@4"],
+        )
+        assert result["ndcg@4"] == pytest.approx(1.0)
+
+    def test_graded_known_value(self):
+        """Hand-computed value with grades 2 and 1 over 3 targets.
+
+        Positives: idx 0 grade 2, idx 2 grade 1. Ranking [0, 1, 2].
+        gains @ ranks 0,1,2 = (2^2-1, 0, 2^1-1) = (3, 0, 1)
+        discounts = 1/log2(2), 1/log2(3), 1/log2(4)
+        DCG = 3 + 0 + 0.5 = 3.5
+        Ideal grades [2, 1] -> gains (3, 1), discounts (1, 1/log2(3))
+        IDCG = 3 + 1/log2(3)
+        """
+        preds = _prediction_matrix_from_order([0, 1, 2], n_targets=3)
+        result = calculate_ranking_metrics(
+            prediction_matrix=preds,
+            pos_label_idxs=[[0, 2]],
+            pos_label_relevance=[[2.0, 1.0]],
+            metrics=["ndcg@3"],
+        )
+        dcg = 3.0 + 1.0 / math.log2(4)
+        idcg = 3.0 + 1.0 / math.log2(3)
+        assert result["ndcg@3"] == pytest.approx(dcg / idcg)
+
+    def test_relevance_ignored_by_binary_metrics(self):
+        """Binary metrics (map, mrr, ...) ignore pos_label_relevance entirely."""
+        without = calculate_ranking_metrics(
+            PREDICTION_MATRIX, POS_LABEL_IDXS, metrics=["map", "mrr", "recall@3"]
+        )
+        with_rel = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["map", "mrr", "recall@3"],
+            pos_label_relevance=[[3.0, 1.0], [2.0, 2.0]],
+        )
+        for metric in ["map", "mrr", "recall@3"]:
+            assert with_rel[metric] == pytest.approx(without[metric])
+
+    def test_misaligned_relevance_raises(self):
+        """A relevance list whose lengths don't match pos_label_idxs raises."""
+        with pytest.raises(ValueError, match="zip"):
+            calculate_ranking_metrics(
+                PREDICTION_MATRIX,
+                POS_LABEL_IDXS,
+                metrics=["ndcg@3"],
+                pos_label_relevance=[[1.0], [1.0, 1.0]],
+            )
+
+
+class TestBinaryRelevanceThreshold:
+    """Threshold filters the binary positive set without affecting nDCG."""
+
+    def test_default_threshold_keeps_all_listed_positives(self):
+        """Default 1e-9 threshold passes any non-zero grade — same as no relevance."""
+        without_rel = calculate_ranking_metrics(
+            PREDICTION_MATRIX, POS_LABEL_IDXS, metrics=["map", "mrr", "recall@3"]
+        )
+        with_rel = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["map", "mrr", "recall@3"],
+            pos_label_relevance=[[3.0, 1.0], [2.0, 2.0]],
+        )
+        for metric in ["map", "mrr", "recall@3"]:
+            assert with_rel[metric] == pytest.approx(without_rel[metric])
+
+    def test_threshold_drops_subthreshold_positives_for_binary(self):
+        """A threshold of 2 drops grade-1 items from the binary positive set."""
+        # Query 0 sorted: [0, 2, 4, 3, 1]. Positives: {2 (grade 3), 4 (grade 1)}.
+        # With threshold=2, only idx 2 stays positive for binary metrics.
+        # MRR: rank of first surviving positive (idx 2) is 2 -> 0.5
+        # Query 1 sorted: [3, 1, 2, 0, 4]. Positives: {1 (grade 3), 3 (grade 1)}.
+        # With threshold=2, only idx 1 stays. Rank of idx 1 = 2 -> 0.5
+        result = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["mrr"],
+            pos_label_relevance=[[3.0, 1.0], [3.0, 1.0]],
+            binary_relevance_threshold=2.0,
+        )
+        assert result["mrr"] == pytest.approx(0.5)
+
+    def test_threshold_does_not_affect_ndcg(self):
+        """NDCG always sees the full graded list regardless of threshold."""
+        relevance = [[3.0, 1.0], [3.0, 1.0]]
+        low = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["ndcg@5"],
+            pos_label_relevance=relevance,
+            binary_relevance_threshold=1e-9,
+        )
+        high = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["ndcg@5"],
+            pos_label_relevance=relevance,
+            binary_relevance_threshold=2.0,
+        )
+        assert low["ndcg@5"] == pytest.approx(high["ndcg@5"])
+
+    def test_threshold_ignored_when_relevance_is_none(self):
+        """Threshold is a no-op when no graded relevance is supplied."""
+        ref = calculate_ranking_metrics(
+            PREDICTION_MATRIX, POS_LABEL_IDXS, metrics=["map", "mrr", "recall@3"]
+        )
+        with_threshold = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["map", "mrr", "recall@3"],
+            binary_relevance_threshold=99.0,  # would drop everything if it applied
+        )
+        for metric in ["map", "mrr", "recall@3"]:
+            assert with_threshold[metric] == pytest.approx(ref[metric])
+
+    def test_threshold_above_all_grades_empties_binary_set(self):
+        """A threshold above every grade leaves no binary positives -> 0.0."""
+        result = calculate_ranking_metrics(
+            PREDICTION_MATRIX,
+            POS_LABEL_IDXS,
+            metrics=["map", "mrr", "recall@3"],
+            pos_label_relevance=[[3.0, 1.0], [3.0, 1.0]],
+            binary_relevance_threshold=10.0,
+        )
+        for metric in ["map", "mrr", "recall@3"]:
+            assert result[metric] == 0.0

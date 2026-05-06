@@ -237,10 +237,22 @@ Each aggregation provides 95% confidence intervals (replace `mean` with `ci_marg
 | --- | --- |
 | `map` | Mean Average Precision |
 | `mrr` | Mean Reciprocal Rank |
-| `ndcg@k` | Normalized Discounted Cumulative Gain with support for top-k cutoff.|
+| `ndcg@k` | Normalized Discounted Cumulative Gain with support for top-k cutoff. Uses a (2^rel - 1) gain when the dataset provides graded `target_relevance`; falls back to binary positives otherwise. See [Graded relevance](#graded-relevance-optional) for the `binary_relevance_threshold` interaction. |
 | `recall@k` | Recall at k (e.g. `recall@5`, `recall@10`) |
 | `hit@k` | Hit rate at k — binary: is any relevant item in the top-k? |
 | `rp@k` | R-Precision at k — precision relative to total relevant items |
+
+##### Graded relevance (optional)
+
+`RankingDataset` accepts an optional `target_relevance` aligned 1-to-1 with `target_indices`. When set, `ndcg@k` consumes the grades via the standard `(2^rel - 1)` gain. The other metrics (`map`, `mrr`, `recall@k`, `hit@k`, `rp@k`) remain binary — they decide what counts as a positive by thresholding the grades.
+
+That threshold is `RankingTask.binary_relevance_threshold`. **It is the knob that decides what "relevant" means for the binary metrics on a graded dataset, so changing it changes their values.**
+
+- Default `1e-9` — every listed grade > 0 is a positive. Numbers match the `target_relevance=None` case exactly, so legacy tasks need no migration.
+- Override on a graded task to express a stricter cutoff (e.g. `2.0` on a 1-3 scale: only secondary/primary count as positives; nice-to-haves still help nDCG but no longer count toward MAP).
+- Always ignored when `target_relevance is None`.
+
+`recall@k` denominator on a graded dataset is the *thresholded* positive count, not the count of all listed items — so a graded dataset's binary numbers are not directly comparable to a fully-binary version of the same data. See [examples/custom_task_graded_relevance_example.py](examples/custom_task_graded_relevance_example.py) for a runnable side-by-side of how the threshold shifts MAP/MRR/recall while leaving nDCG unchanged.
 
 **Classification metrics** (used in `ClassificationTask`):
 

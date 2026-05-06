@@ -1,3 +1,19 @@
+## Unreleased
+
+### Feat
+
+- graded relevance support for ranking metrics: ``RankingDataset`` accepts an
+  optional ``target_relevance`` field aligned 1-to-1 with ``target_indices``.
+  ``ndcg@k`` uses a (2^rel - 1) gain when graded labels are provided; binary
+  metrics (``map``, ``mrr``, ``recall@k``, ``hit@k``, ``rp@k``) ignore the
+  field. Binary nDCG behavior is preserved when ``target_relevance`` is
+  ``None``. See ``examples/custom_task_graded_relevance_example.py``.
+- ``RankingTask.binary_relevance_threshold`` (default ``1e-9``) lets a graded
+  task choose which grades count as positives for binary metrics. Items with
+  relevance below the threshold are dropped from the binary positive set but
+  still contribute to graded metrics like ``ndcg@k``. Has no effect when
+  ``target_relevance`` is ``None``.
+
 ## v0.5.1 (2026-03-13)
 
 ### Feat

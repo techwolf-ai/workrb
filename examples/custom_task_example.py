@@ -4,6 +4,10 @@ Custom Task Example - Creating a Custom Ranking Task
 This example demonstrates how to create a custom ranking task that can be used
 with the WorkRB framework. Custom tasks should inherit from workrb.tasks.RankingTask
 and implement the required abstract methods.
+
+Uses binary relevance: every entry in ``target_indices`` is treated as relevant=1
+by all metrics. For graded relevance (e.g. nDCG@k with a 1-2-3 scale), see
+``custom_task_graded_relevance_example.py``.
 """
 
 import workrb

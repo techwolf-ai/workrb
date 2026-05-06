@@ -13,18 +13,36 @@ def calculate_ranking_metrics(
         "map",
         "rp@10",
     ),
+    pos_label_relevance: list[list[float]] | None = None,
+    binary_relevance_threshold: float = 1e-9,
 ) -> dict[str, float]:
-    """
-    Calculate ranking metrics for evaluation.
+    """Calculate ranking metrics for evaluation.
 
-    Args:
-        prediction_matrix: Similarity/prediction matrix of shape (n_queries, n_targets)
-        pos_label_idxs: List of lists containing positive label indices for each query
-        metrics: List of metric names to compute
+    Parameters
+    ----------
+    prediction_matrix : torch.Tensor or np.ndarray
+        Similarity/prediction matrix of shape (n_queries, n_targets).
+    pos_label_idxs : list[list[int]]
+        Positive label indices for each query.
+    metrics : Sequence[str]
+        Metric names to compute.
+    pos_label_relevance : list[list[float]] or None, optional
+        Optional graded relevance per positive, aligned 1-to-1 with
+        ``pos_label_idxs``. When ``None``, every positive is treated as relevance 1.0
+        (binary fallback, identical to current behavior). Used by graded metrics
+        (``ndcg``); binary metrics (``map``, ``mrr``, ``recall@k``, ``hit@k``,
+        ``rp@k``) consult it only to apply ``binary_relevance_threshold``.
+    binary_relevance_threshold : float, optional
+        Minimum graded relevance for an item to count as a positive for binary
+        metrics. Items with relevance below this threshold are dropped from the
+        binary positive set but still contribute to graded metrics. Ignored when
+        ``pos_label_relevance`` is ``None``. Defaults to ``1e-9``: any non-zero
+        grade counts, matching the current binary-only behavior.
 
     Returns
     -------
-        Dictionary mapping metric names to values
+    dict[str, float]
+        Dictionary mapping metric names to values.
     """
     # Convert to numpy if needed
     if isinstance(prediction_matrix, torch.Tensor):
@@ -32,6 +50,21 @@ def calculate_ranking_metrics(
 
     # Sort indices by prediction scores (descending)
     sorted_indices = np.argsort(-prediction_matrix, axis=1)
+
+    # When graded relevance is provided, derive the binary positive set by
+    # thresholding so binary metrics (map/mrr/recall/hit/rp) consume only items
+    # with relevance >= threshold. Graded nDCG continues to use the full list.
+    if pos_label_relevance is None:
+        binary_pos_label_idxs = pos_label_idxs
+    else:
+        binary_pos_label_idxs = [
+            [
+                idx
+                for idx, rel in zip(idx_list, rel_list, strict=True)
+                if rel >= binary_relevance_threshold
+            ]
+            for idx_list, rel_list in zip(pos_label_idxs, pos_label_relevance, strict=True)
+        ]
 
     results = {}
 
@@ -50,30 +83,28 @@ def calculate_ranking_metrics(
         base_metric, k = _metric_k_split(metric)
 
         if metric == "map":
-            results[metric] = _calculate_map(sorted_indices, pos_label_idxs)
+            results[metric] = _calculate_map(sorted_indices, binary_pos_label_idxs)
 
         elif base_metric == "rp":
             assert k is not None, "k must be provided for rp@k metrics"
-            results[metric] = _calculate_rp_at_k(sorted_indices, pos_label_idxs, k)
+            results[metric] = _calculate_rp_at_k(sorted_indices, binary_pos_label_idxs, k)
 
         elif metric == "mrr":
-            results[metric] = _calculate_mrr(sorted_indices, pos_label_idxs)
+            results[metric] = _calculate_mrr(sorted_indices, binary_pos_label_idxs)
 
         elif base_metric == "recall":
             assert k is not None, "k must be provided for recall@k metrics"
-            results[metric] = _calculate_recall_at_k(sorted_indices, pos_label_idxs, k)
+            results[metric] = _calculate_recall_at_k(sorted_indices, binary_pos_label_idxs, k)
 
         elif base_metric == "hit":
             assert k is not None, "k must be provided for hit@k metrics"
-            results[metric] = _calculate_hit_at_k(sorted_indices, pos_label_idxs, k)
+            results[metric] = _calculate_hit_at_k(sorted_indices, binary_pos_label_idxs, k)
 
         elif base_metric == "ndcg":
-            if k is not None:
-                results[metric] = _calculate_ndcg(sorted_indices, pos_label_idxs, k)
-            else:
-                results[metric] = _calculate_ndcg(
-                    sorted_indices, pos_label_idxs, sorted_indices.shape[1]
-                )
+            cutoff = k if k is not None else sorted_indices.shape[1]
+            results[metric] = _calculate_ndcg(
+                sorted_indices, pos_label_idxs, pos_label_relevance, cutoff
+            )
 
         else:
             raise ValueError(f"Unknown ranking metric '{metric}'")
@@ -204,24 +235,46 @@ def _calculate_rp_at_k(
     return float(np.mean(rp_scores)) if rp_scores else 0.0
 
 
-def _calculate_ndcg(sorted_indices: np.ndarray, pos_label_idxs: list[list[int]], k: int) -> float:
-    """Calculate Normalized Discounted Cumulative Gain@K (binary relevance)."""
+def _calculate_ndcg(
+    sorted_indices: np.ndarray,
+    pos_label_idxs: list[list[int]],
+    pos_label_relevance: list[list[float]] | None,
+    k: int,
+) -> float:
+    """Calculate nDCG@K with the (2^rel - 1) gain and log2(i+2) discount.
+
+    When ``pos_label_relevance`` is None, every positive is treated as
+    relevance 1.0 (binary fallback). With binary positives the gain
+    ``(2^1 - 1) = 1`` matches the binary implementation exactly.
+    """
     ndcg_scores = []
 
     for i, pos_labels in enumerate(pos_label_idxs):
         if len(pos_labels) == 0:
             continue
 
-        pos_labels_set = set(pos_labels)
+        if pos_label_relevance is None:
+            relevance_by_idx = dict.fromkeys(pos_labels, 1.0)
+        else:
+            relevance_by_idx = {
+                idx: float(rel) for idx, rel in zip(pos_labels, pos_label_relevance[i], strict=True)
+            }
 
-        # DCG@k: sum of 1/log2(rank+1) for relevant items in top-k
-        dcg = 0.0
-        for rank_idx in range(min(k, len(sorted_indices[i]))):
-            if sorted_indices[i][rank_idx] in pos_labels_set:
-                dcg += 1.0 / np.log2(rank_idx + 2)  # 0-based -> log2(pos+1)
+        cutoff = min(k, len(sorted_indices[i]))
 
-        # IDCG@k: ideal DCG with all relevant items ranked first
-        idcg = sum(1.0 / np.log2(j + 2) for j in range(min(k, len(pos_labels))))
+        gains = np.array(
+            [
+                (2.0 ** relevance_by_idx.get(int(idx), 0.0)) - 1.0
+                for idx in sorted_indices[i][:cutoff]
+            ]
+        )
+        discounts = 1.0 / np.log2(np.arange(cutoff) + 2)
+        dcg = float(np.sum(gains * discounts))
+
+        ideal_relevances = sorted(relevance_by_idx.values(), reverse=True)[:cutoff]
+        ideal_gains = np.array([(2.0**rel) - 1.0 for rel in ideal_relevances])
+        ideal_discounts = 1.0 / np.log2(np.arange(len(ideal_gains)) + 2)
+        idcg = float(np.sum(ideal_gains * ideal_discounts))
 
         if idcg > 0:
             ndcg_scores.append(dcg / idcg)

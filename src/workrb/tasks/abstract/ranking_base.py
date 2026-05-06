@@ -61,6 +61,7 @@ class RankingDataset:
         target_indices: list[list[int]],
         target_space: list[str],
         dataset_id: str,
+        target_relevance: list[list[float]] | None = None,
         duplicate_query_strategy: DuplicateStrategy = DuplicateStrategy.RESOLVE,
         duplicate_target_strategy: DuplicateStrategy = DuplicateStrategy.RESOLVE,
     ):
@@ -71,11 +72,20 @@ class RankingDataset:
         query_texts : list[str]
             List of query strings.
         target_indices : list[list[int]]
-            List of lists containing indices into the target vocabulary.
+            List of lists containing indices into the target vocabulary. Items not
+            listed for a query are treated as having relevance 0 (unjudged /
+            irrelevant) by graded metrics.
         target_space : list[str]
             List of target vocabulary strings.
         dataset_id : str
             Unique identifier for this dataset.
+        target_relevance : list[list[float]] or None, optional
+            Optional graded relevance per positive, aligned 1-to-1 with
+            ``target_indices``. When ``None``, every entry in ``target_indices`` is
+            treated as binary relevance 1.0. Used by graded metrics such as
+            ``ndcg@k``; binary metrics (``map``, ``mrr``, ``recall@k``, ``hit@k``,
+            ``rp@k``) ignore this field. Values must be non-negative; the scale is
+            up to the task (e.g. {1, 2, 3} or {0.0..1.0}).
         duplicate_query_strategy : DuplicateStrategy
             How to handle duplicate query texts. ALLOW silently accepts them,
             RAISE raises on duplicates, RESOLVE merges their target_indices via union.
@@ -84,7 +94,9 @@ class RankingDataset:
             RAISE raises on duplicates, RESOLVE keeps first occurrence and remaps indices.
         """
         self.query_texts = self._postprocess_texts(query_texts)
-        self.target_indices = self._postprocess_indices(target_indices)
+        self.target_indices, self.target_relevance = self._postprocess_indices(
+            target_indices, target_relevance
+        )
         self.target_space = self._postprocess_texts(target_space)
         self.dataset_id = dataset_id
 
@@ -121,27 +133,62 @@ class RankingDataset:
                 duplicates,
             )
             self.target_space = new_target_space
-            self.target_indices = [
-                sorted(set(old_to_new[idx] for idx in idx_list)) for idx_list in self.target_indices
-            ]
+            if self.target_relevance is None:
+                self.target_indices = [
+                    sorted(set(old_to_new[idx] for idx in idx_list))
+                    for idx_list in self.target_indices
+                ]
+            else:
+                # Remap indices, dedup, and keep relevance from the first occurrence
+                # of each remapped index so (idx, rel) pairs stay aligned.
+                new_indices: list[list[int]] = []
+                new_relevance: list[list[float]] = []
+                for idx_list, rel_list in zip(
+                    self.target_indices, self.target_relevance, strict=True
+                ):
+                    seen_idx: dict[int, float] = {}
+                    for idx, rel in zip(idx_list, rel_list, strict=True):
+                        new_idx = old_to_new[idx]
+                        if new_idx not in seen_idx:
+                            seen_idx[new_idx] = rel
+                    sorted_pairs = sorted(seen_idx.items())
+                    new_indices.append([idx for idx, _ in sorted_pairs])
+                    new_relevance.append([rel for _, rel in sorted_pairs])
+                self.target_indices = new_indices
+                self.target_relevance = new_relevance
 
     def _resolve_duplicate_queries(self) -> None:
-        """Deduplicate query_texts, merging target_indices via union."""
+        """Deduplicate query_texts, merging target_indices via union.
+
+        When ``target_relevance`` is set, the merge keeps the relevance from the
+        first query occurrence for each index; relevance values from later
+        duplicates of the same (query, index) pair are dropped.
+        """
         seen: dict[str, int] = {}
         new_queries: list[str] = []
-        new_indices: list[list[int]] = []
+        new_pairs: list[dict[int, float]] = []
         duplicates: list[str] = []
 
-        for query, idx_list in zip(self.query_texts, self.target_indices):
+        graded = self.target_relevance is not None
+        relevance_iter = (
+            self.target_relevance
+            if graded
+            else [[1.0] * len(idx_list) for idx_list in self.target_indices]
+        )
+
+        for query, idx_list, rel_list in zip(
+            self.query_texts, self.target_indices, relevance_iter, strict=True
+        ):
             if query in seen:
                 pos = seen[query]
-                merged = set(new_indices[pos]) | set(idx_list)
-                new_indices[pos] = sorted(merged)
+                for idx, rel in zip(idx_list, rel_list, strict=True):
+                    if idx not in new_pairs[pos]:
+                        new_pairs[pos][idx] = rel
                 duplicates.append(query)
             else:
                 seen[query] = len(new_queries)
                 new_queries.append(query)
-                new_indices.append(sorted(idx_list))
+                new_pairs.append(dict(zip(idx_list, rel_list, strict=True)))
 
         if duplicates:
             logger.warning(
@@ -151,7 +198,15 @@ class RankingDataset:
                 duplicates,
             )
             self.query_texts = new_queries
+            new_indices: list[list[int]] = []
+            new_relevance: list[list[float]] = []
+            for pairs in new_pairs:
+                sorted_pairs = sorted(pairs.items())
+                new_indices.append([idx for idx, _ in sorted_pairs])
+                new_relevance.append([rel for _, rel in sorted_pairs])
             self.target_indices = new_indices
+            if graded:
+                self.target_relevance = new_relevance
 
     def _validate_dataset(
         self,
@@ -194,11 +249,54 @@ class RankingDataset:
                 )
                 assert isinstance(idx, int), f"Target index {idx} is not an integer"
 
-    def _postprocess_indices(self, indices: list[list[int]]) -> list[list[int]]:
-        """Postprocess indices."""
-        # Remove duplicates in target_label
-        indices = [sorted(set(label_list)) for label_list in indices]
-        return indices
+        # Check target_relevance alignment and non-negativity
+        if self.target_relevance is not None:
+            assert len(self.target_relevance) == len(self.target_indices), (
+                f"target_relevance has {len(self.target_relevance)} queries but "
+                f"target_indices has {len(self.target_indices)}"
+            )
+            for q_i, (rel_list, idx_list) in enumerate(
+                zip(self.target_relevance, self.target_indices, strict=True)
+            ):
+                assert len(rel_list) == len(idx_list), (
+                    f"target_relevance[{q_i}] has length {len(rel_list)} but "
+                    f"target_indices[{q_i}] has length {len(idx_list)}"
+                )
+                for rel in rel_list:
+                    assert rel >= 0, f"Negative relevance value {rel} at query {q_i}"
+
+    def _postprocess_indices(
+        self,
+        indices: list[list[int]],
+        relevance: list[list[float]] | None,
+    ) -> tuple[list[list[int]], list[list[float]] | None]:
+        """Postprocess indices and aligned relevance, dropping duplicate indices.
+
+        Indices are sorted; relevance is permuted in lockstep so each (idx, rel)
+        pair stays aligned. When duplicate indices appear within a query, the
+        relevance from the first occurrence is kept.
+        """
+        if relevance is None:
+            return [sorted(set(label_list)) for label_list in indices], None
+
+        assert len(relevance) == len(indices), (
+            f"target_relevance has {len(relevance)} queries but target_indices has {len(indices)}"
+        )
+        deduped_indices: list[list[int]] = []
+        deduped_relevance: list[list[float]] = []
+        for idx_list, rel_list in zip(indices, relevance, strict=True):
+            assert len(idx_list) == len(rel_list), (
+                f"target_indices and target_relevance must align per query "
+                f"(got {len(idx_list)} vs {len(rel_list)})"
+            )
+            seen: dict[int, float] = {}
+            for idx, rel in zip(idx_list, rel_list, strict=True):
+                if idx not in seen:
+                    seen[idx] = float(rel)
+            sorted_pairs = sorted(seen.items())
+            deduped_indices.append([idx for idx, _ in sorted_pairs])
+            deduped_relevance.append([rel for _, rel in sorted_pairs])
+        return deduped_indices, deduped_relevance
 
     def _postprocess_texts(self, texts: list[str]) -> list[str]:
         """Postprocess texts."""
@@ -222,6 +320,25 @@ class RankingTask(Task):
     @property
     def default_metrics(self) -> list[str]:
         return ["map", "rp@10", "mrr"]
+
+    @property
+    def binary_relevance_threshold(self) -> float:
+        """Minimum graded relevance for an item to count as a positive.
+
+        Used by binary metrics (``map``, ``mrr``, ``recall@k``, ``hit@k``,
+        ``rp@k``) when the dataset provides ``target_relevance``: items with
+        relevance ``>= threshold`` are treated as positives, items below it
+        are dropped from the binary positive set but still contribute to
+        graded metrics such as ``ndcg@k``.
+
+        Default is ``1e-9`` so any listed item with a non-zero grade counts
+        as a positive — equivalent to today's behavior where every entry in
+        ``target_indices`` is a positive. Override on the task to express
+        a stricter threshold (e.g. ``2.0`` on a 0-3 scale).
+
+        Has no effect when ``target_relevance`` is ``None``.
+        """
+        return 1e-9
 
     def __init__(
         self,
@@ -327,9 +444,15 @@ class RankingTask(Task):
         if isinstance(prediction_matrix, torch.Tensor):
             prediction_matrix = prediction_matrix.cpu().float().numpy()
 
-        # Calculate metrics
+        # Calculate metrics. When the dataset provides graded relevance, binary
+        # metrics consume only positives with relevance >= binary_relevance_threshold;
+        # nDCG still sees the full graded label list.
         metric_results = calculate_ranking_metrics(
-            prediction_matrix=prediction_matrix, pos_label_idxs=labels, metrics=metrics
+            prediction_matrix=prediction_matrix,
+            pos_label_idxs=labels,
+            metrics=metrics,
+            pos_label_relevance=dataset.target_relevance,
+            binary_relevance_threshold=self.binary_relevance_threshold,
         )
 
         return metric_results
