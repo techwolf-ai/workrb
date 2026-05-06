@@ -21,7 +21,9 @@ from .ranking.skill2job import ESCOSkill2JobRanking
 from .ranking.skill_extraction import (
     HouseSkillExtractRanking,
     SkillSkapeExtractRanking,
+    SkillXLSkillExtractRanking,
     TechSkillExtractRanking,
+    TechWolfSkillExtractRanking,
 )
 from .ranking.skill_similarity import SkillMatch1kSkillSimilarityRanking
 from .ranking.skillnorm import ESCOSkillNormRanking
@@ -46,7 +48,9 @@ __all__ = [
     "MELSRanking",
     "HouseSkillExtractRanking",
     "TechSkillExtractRanking",
+    "TechWolfSkillExtractRanking",
     "SkillSkapeExtractRanking",
+    "SkillXLSkillExtractRanking",
     "SkillMatch1kSkillSimilarityRanking",
     "ProjectCandidateRanking",
     "SearchQueryCandidateRanking",

@@ -20,7 +20,9 @@ from workrb.tasks.ranking.skill2job import ESCOSkill2JobRanking
 from workrb.tasks.ranking.skill_extraction import (
     HouseSkillExtractRanking,
     SkillSkapeExtractRanking,
+    SkillXLSkillExtractRanking,
     TechSkillExtractRanking,
+    TechWolfSkillExtractRanking,
 )
 from workrb.tasks.ranking.skill_similarity import SkillMatch1kSkillSimilarityRanking
 from workrb.tasks.ranking.skillnorm import ESCOSkillNormRanking
@@ -38,5 +40,7 @@ __all__ = [
     "SearchQueryCandidateRanking",
     "SkillMatch1kSkillSimilarityRanking",
     "SkillSkapeExtractRanking",
+    "SkillXLSkillExtractRanking",
     "TechSkillExtractRanking",
+    "TechWolfSkillExtractRanking",
 ]

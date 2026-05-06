@@ -86,6 +86,8 @@ pip install workrb
 | Skill Extraction House         | `HouseSkillExtractRanking` | multi_label | 262 queries x 13891 targets         | 28        |
 | Skill Extraction Tech          | `TechSkillExtractRanking` | multi_label | 338 queries x 13891 targets         | 28        |
 | Skill Extraction SkillSkape    | `SkillSkapeExtractRanking` | multi_label | 1191 queries x 13891 targets        | 28        |
+| Skill Extraction TechWolf      | `TechWolfSkillExtractRanking` | multi_label | 326 queries x 13891 targets         | 28        |
+| Skill Extraction SkillXL       | `SkillXLSkillExtractRanking` | multi_label | 944 queries x 13891 targets         | 28        |
 | Skill Similarity SkillMatch-1K | `SkillMatch1kSkillSimilarityRanking` | single_label | 900 queries x 2648 targets          | 1         |
 | Skill Normalization ESCO       | `ESCOSkillNormRanking` | multi_label | 72008 queries x 13939 targets       | 28        |
 | Skill Normalization MELS       | `MELSRanking` | multi_label | 1722 queries x 19466 targets        | 5         |
