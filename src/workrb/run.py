@@ -23,6 +23,7 @@ from workrb.results import (
     TaskResults,
 )
 from workrb.tasks.abstract.base import Task
+from workrb.tasks.abstract.ranking_base import RankingTask
 from workrb.types import ExecutionMode, LanguageAggregationMode, get_language_grouping_key
 
 logger = logging.getLogger(__name__)
@@ -36,6 +37,7 @@ def evaluate(
     metrics: dict[str, list[str]] | None = None,
     description: str = "",
     force_restart: bool = False,
+    save_rankings: bool = False,
     language_aggregation_mode: LanguageAggregationMode = LanguageAggregationMode.MONOLINGUAL_ONLY,
     execution_mode: ExecutionMode = ExecutionMode.LAZY,
 ) -> BenchmarkResults:
@@ -49,6 +51,10 @@ def evaluate(
         metrics: Optional dict mapping task names to custom metrics lists
         description: Description for the benchmark run
         force_restart: If True, ignore checkpoints and restart from beginning
+        save_rankings: If True, save per-target ranking score arrays for each
+            ranking task dataset under
+            ``<output_folder>/rankings/<model_name>/`` as JSON artifacts.
+            Has no effect for non-ranking tasks. Defaults to False.
         language_aggregation_mode: How per-language results should be grouped
             when calling ``get_summary_metrics()`` on the returned results.
             When ``execution_mode`` is ``LAZY``, datasets that are
@@ -111,6 +117,7 @@ def evaluate(
         results=results,
         model=model,
         metrics=metrics,
+        save_rankings=save_rankings,
         total_evaluations=total_evaluations,
     )
     if results.metadata.resumed_from_checkpoint:
@@ -429,6 +436,7 @@ def _run_pending_work(
     results: BenchmarkResults,
     model: ModelInterface,
     metrics: dict[str, list[str]] | None,
+    save_rankings: bool,
     total_evaluations: int,
 ) -> BenchmarkResults:
     """Run pending evaluations.
@@ -439,6 +447,7 @@ def _run_pending_work(
         results: BenchmarkResults object to store results.
         model: ModelInterface object to evaluate.
         metrics: Dictionary of task names to their custom metrics.
+        save_rankings: If True, save full ranking score artifacts for ranking tasks.
         total_evaluations: Total number of compatible evaluations (for progress display).
     """
     # Run pending evaluations
@@ -476,9 +485,32 @@ def _run_pending_work(
 
             try:
                 start_time_eval = time.time()
-                dataset_results: dict[str, float] = task.evaluate(
-                    model=model, metrics=task_metrics, dataset_id=dataset_id
-                )
+                if save_rankings and isinstance(task, RankingTask):
+                    prediction_matrix = task.compute_prediction_matrix(
+                        model=model, dataset_id=dataset_id
+                    )
+                    dataset_results = task.compute_metrics_from_prediction_matrix(
+                        prediction_matrix=prediction_matrix,
+                        dataset_id=dataset_id,
+                        metrics=task_metrics,
+                    )
+                    dataset = task.datasets[dataset_id]
+                    rankings_path = config.save_rankings_artifact(
+                        task_name=task.name,
+                        dataset_id=dataset_id,
+                        scores=_build_scores(
+                            query_texts=dataset.query_texts,
+                            target_space=dataset.target_space,
+                            prediction_matrix=prediction_matrix,
+                        ),
+                        num_queries=prediction_matrix.shape[0],
+                        num_targets=prediction_matrix.shape[1],
+                    )
+                    logger.info(f"\tSaved ranking scores to: {rankings_path}")
+                else:
+                    dataset_results: dict[str, float] = task.evaluate(
+                        model=model, metrics=task_metrics, dataset_id=dataset_id
+                    )
                 evaluation_time = time.time() - start_time_eval
 
                 # Store results
@@ -508,3 +540,23 @@ def _run_pending_work(
 
     logger.info(f"Completed {run_idx} / {total_evaluations} evaluations. ")
     return results
+
+
+def _build_scores(
+    query_texts: list[str],
+    target_space: list[str],
+    prediction_matrix: Any,
+) -> dict[str, dict[str, float]]:
+    """Build nested ``{query_text: {target_text: score}}`` from a prediction matrix.
+
+    Zero scores are omitted so sparse models (e.g. BM25) stay compact;
+    consumers should treat a missing target as a score of 0.
+    """
+    matrix = prediction_matrix.tolist()
+    scores: dict[str, dict[str, float]] = {}
+    for q_idx, query_text in enumerate(query_texts):
+        row = matrix[q_idx]
+        scores[query_text] = {
+            target_space[t_idx]: score for t_idx, score in enumerate(row) if score != 0
+        }
+    return scores

@@ -8,6 +8,7 @@ from collections import Counter
 from enum import Enum
 from typing import TYPE_CHECKING
 
+import numpy as np
 import torch
 
 from workrb.metrics.ranking import calculate_ranking_metrics
@@ -306,30 +307,42 @@ class RankingTask(Task):
         dict[str, float]
             Dictionary containing metric scores and evaluation metadata.
         """
-        if metrics is None:
-            metrics = self.default_metrics
+        prediction_matrix = self.compute_prediction_matrix(model=model, dataset_id=dataset_id)
+        return self.compute_metrics_from_prediction_matrix(
+            prediction_matrix=prediction_matrix,
+            dataset_id=dataset_id,
+            metrics=metrics,
+        )
 
-        # Retrieve dataset by ID
+    def compute_prediction_matrix(
+        self,
+        model: ModelInterface,
+        dataset_id: str = "en",
+    ) -> np.ndarray:
+        """Compute the ranking score matrix for a dataset."""
         dataset = self.datasets[dataset_id]
-        queries = dataset.query_texts
-        targets = dataset.target_space
-        labels = dataset.target_indices
-
-        # Get model predictions (similarity matrix)
         prediction_matrix = model.compute_rankings(
-            queries=queries,
-            targets=targets,
+            queries=dataset.query_texts,
+            targets=dataset.target_space,
             query_input_type=self.query_input_type,
             target_input_type=self.target_input_type,
         )
-
-        # Convert to numpy if needed
         if isinstance(prediction_matrix, torch.Tensor):
             prediction_matrix = prediction_matrix.cpu().float().numpy()
+        return prediction_matrix
 
-        # Calculate metrics
-        metric_results = calculate_ranking_metrics(
-            prediction_matrix=prediction_matrix, pos_label_idxs=labels, metrics=metrics
+    def compute_metrics_from_prediction_matrix(
+        self,
+        prediction_matrix: np.ndarray,
+        dataset_id: str = "en",
+        metrics: list[str] | None = None,
+    ) -> dict[str, float]:
+        """Compute ranking metrics from a precomputed prediction matrix."""
+        if metrics is None:
+            metrics = self.default_metrics
+        dataset = self.datasets[dataset_id]
+        return calculate_ranking_metrics(
+            prediction_matrix=prediction_matrix,
+            pos_label_idxs=dataset.target_indices,
+            metrics=metrics,
         )
-
-        return metric_results

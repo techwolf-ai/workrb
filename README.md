@@ -60,6 +60,7 @@ results = workrb.evaluate(  # Returns BenchmarkResults (Pydantic model)
     model,
     tasks,
     output_folder="results/my_model",
+    save_rankings=False,  # Optional: store full per-target score arrays for ranking tasks
 )
 print(results)  # Benchmark/Per-task/Per-language metrics
 ```
@@ -207,6 +208,20 @@ results/my_model/
 ├── results.json          # Final results dump
 └── config.yaml           # Final benchmark configuration dump
 ```
+
+If you pass `save_rankings=True` to `evaluate`, WorkRB also writes per-task,
+per-dataset ranking score artifacts under a model-scoped subdirectory:
+
+```
+results/my_model/
+└── rankings/
+    └── <model_name>/
+        └── <task_name>__<dataset_id>.json
+```
+
+Each JSON contains `model_name`, `task_name`, `dataset_id`, `num_queries`,
+`num_targets`, and `scores_by_target` (a mapping from target text to its
+score across all queries).
 
 To load & parse results from a run:
 
