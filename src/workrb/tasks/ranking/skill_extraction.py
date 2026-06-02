@@ -361,6 +361,11 @@ class BaseGradedSkillExtractRanking(GradedBEIRRankingTask):
     """
 
     @property
+    def split_to_hf_split(self) -> dict[DatasetSplit, str]:
+        """Expose both validation and test splits."""
+        return {DatasetSplit.VAL: "validation", DatasetSplit.TEST: "test"}
+
+    @property
     def task_group(self) -> RankingTaskGroup:
         """Skill extraction task group."""
         return RankingTaskGroup.SKILL_EXTRACTION
@@ -510,6 +515,49 @@ class SkillSkapeGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
   publisher = {{Association for Computational Linguistics}},
   url       = {{https://aclanthology.org/2024.nlp4hr-1.4/}},
   pages     = {{43--58}}
+}
+"""
+
+
+@register_task()
+class TechWolfGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
+    """Skill Extraction from TechWolf Dataset with Graded Relevance.
+
+    Re-annotates the sentences from ``TechWolf/skill-extraction-techwolf``
+    against the full ESCO v1.1.0 skill taxonomy, following the BEIR layout
+    (``queries``, ``corpus``, ``qrels``). Only a ``test`` split is published for
+    this dataset.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(hf_name="TechWolf/Skill-extraction-TechWolf-graded", **kwargs)
+
+    @property
+    def split_to_hf_split(self) -> dict[DatasetSplit, str]:
+        """Only a test split is published for the TechWolf graded dataset."""
+        return {DatasetSplit.TEST: "test"}
+
+    @property
+    def name(self) -> str:
+        """Skill extraction TechWolf graded task name."""
+        return "Skill Extraction TechWolf Graded"
+
+    @property
+    def description(self) -> str:
+        """Skill extraction TechWolf graded task description."""
+        return (
+            "Extract skills from text descriptions in a generic distribution of job "
+            "descriptions, against the full ESCO v1.1.0 taxonomy."
+        )
+
+    @property
+    def citation(self) -> str:
+        """Skill extraction TechWolf graded task citation."""
+        return """@article{decorte2023extreme,
+  title={Extreme multi-label skill extraction training using large language models},
+  author={Decorte, Jens-Joris and Verlinden, Severine and Van Hautte, Jeroen and Deleu, Johannes and Develder, Chris and Demeester, Thomas},
+  journal={arXiv preprint arXiv:2307.10778},
+  year={2023}
 }
 """
 

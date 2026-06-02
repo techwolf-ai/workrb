@@ -26,6 +26,7 @@ from .ranking.skill_extraction import (
     SkillXLSkillExtractRanking,
     TechGradedSkillExtractRanking,
     TechSkillExtractRanking,
+    TechWolfGradedSkillExtractRanking,
     TechWolfSkillExtractRanking,
 )
 from .ranking.skill_similarity import SkillMatch1kSkillSimilarityRanking
@@ -54,6 +55,7 @@ __all__ = [
     "HouseSkillExtractRanking",
     "TechGradedSkillExtractRanking",
     "TechSkillExtractRanking",
+    "TechWolfGradedSkillExtractRanking",
     "TechWolfSkillExtractRanking",
     "SkillSkapeExtractRanking",
     "SkillSkapeGradedSkillExtractRanking",

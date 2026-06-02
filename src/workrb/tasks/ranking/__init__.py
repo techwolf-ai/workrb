@@ -25,6 +25,7 @@ from workrb.tasks.ranking.skill_extraction import (
     SkillXLSkillExtractRanking,
     TechGradedSkillExtractRanking,
     TechSkillExtractRanking,
+    TechWolfGradedSkillExtractRanking,
     TechWolfSkillExtractRanking,
 )
 from workrb.tasks.ranking.skill_similarity import SkillMatch1kSkillSimilarityRanking
@@ -49,5 +50,6 @@ __all__ = [
     "SkillXLSkillExtractRanking",
     "TechGradedSkillExtractRanking",
     "TechSkillExtractRanking",
+    "TechWolfGradedSkillExtractRanking",
     "TechWolfSkillExtractRanking",
 ]

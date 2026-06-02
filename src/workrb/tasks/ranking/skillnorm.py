@@ -229,6 +229,15 @@ class ESCOGradedSkillNormRanking(GradedBEIRRankingTask):
         super().__init__(hf_name="TechWolf/Skill-normalisation-ESCO-graded", **kwargs)
 
     @property
+    def split_to_hf_split(self) -> dict[DatasetSplit, str]:
+        """Expose both validation and test splits.
+
+        The graded repo publishes a ``validation`` split (full 0-4 relevance)
+        and a ``test`` split, both under the ``queries`` and ``qrels`` configs.
+        """
+        return {DatasetSplit.VAL: "validation", DatasetSplit.TEST: "test"}
+
+    @property
     def task_group(self) -> RankingTaskGroup:
         """Skill normalization task group."""
         return RankingTaskGroup.SKILL_NORMALIZATION
