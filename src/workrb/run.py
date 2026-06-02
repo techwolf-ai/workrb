@@ -783,5 +783,11 @@ def _record_dataset_result(
     if config:
         config.save_results_checkpoint(results)
 
+    # Prefer the task's first default metric, but fall back to whatever was
+    # actually computed: a caller-supplied `metrics` set need not include the
+    # default key metric, and indexing it directly would raise KeyError.
     key_metric = task.default_metrics[0]
-    logger.info(f"\t{key_metric}: {metrics_dict[key_metric]:.3f}")
+    if key_metric not in metrics_dict:
+        key_metric = next(iter(metrics_dict), None)
+    if key_metric is not None:
+        logger.info(f"\t{key_metric}: {metrics_dict[key_metric]:.3f}")
