@@ -8,6 +8,7 @@ from workrb.data.esco import ESCO
 from workrb.registry import register_task
 from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
 from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTask, RankingTaskGroup
+from workrb.tasks.ranking.graded_beir import GradedBEIRRankingTask
 from workrb.types import ModelInputType
 
 
@@ -211,3 +212,46 @@ class ESCOSkillNormRanking(RankingTask):
   journal={arXiv preprint arXiv:2511.07969},
   year={2025}
 }"""
+
+
+@register_task()
+class ESCOGradedSkillNormRanking(GradedBEIRRankingTask):
+    """Skill Normalization on ESCO with Graded Relevance.
+
+    Re-annotates surface skill terms (ESCO alt-labels) against the full ESCO
+    v1.1.0 skill taxonomy with a 0-4 relevance scale, following the BEIR layout
+    (``queries``, ``corpus``, ``qrels``). Score scale: 0 unrelated, 1 plausible
+    in domain, 2 recommendable but off-granularity, 3 strongly implied,
+    4 explicitly demonstrated.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(hf_name="TechWolf/Skill-normalisation-ESCO-graded", **kwargs)
+
+    @property
+    def task_group(self) -> RankingTaskGroup:
+        """Skill normalization task group."""
+        return RankingTaskGroup.SKILL_NORMALIZATION
+
+    @property
+    def query_input_type(self) -> ModelInputType:
+        """Query input type for surface skill terms."""
+        return ModelInputType.SKILL_NAME
+
+    @property
+    def name(self) -> str:
+        """Skill normalization ESCO graded task name."""
+        return "Skill Normalization ESCO Graded"
+
+    @property
+    def description(self) -> str:
+        """Skill normalization ESCO graded task description."""
+        return (
+            "Normalize surface skill terms to canonical ESCO skills, with graded 0-4 "
+            "relevance against the full ESCO v1.1.0 taxonomy."
+        )
+
+    @property
+    def citation(self) -> str:
+        """Skill normalization ESCO graded task citation."""
+        return """To be announced."""

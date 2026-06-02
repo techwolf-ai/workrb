@@ -11,6 +11,7 @@ from workrb.tasks.abstract.ranking_base import (
     RankingTask,
     RankingTaskGroup,
 )
+from workrb.tasks.ranking.graded_beir import GradedBEIRRankingTask
 from workrb.types import ModelInputType
 
 
@@ -351,76 +352,23 @@ class SkillXLSkillExtractRanking(BaseESCOSkillExtractRanking):
 """
 
 
-class BaseGradedSkillExtractRanking(BaseESCOSkillExtractRanking):
+class BaseGradedSkillExtractRanking(GradedBEIRRankingTask):
     """Base class for BEIR-layout graded skill-extraction tasks.
 
-    Reads the ``queries``, ``corpus`` and ``qrels`` configs published on the
-    Hugging Face Hub via ``load_dataset``. The target_space is the corpus's
-    ``title`` column (ESCO preferred labels, in corpus order); qrels are
-    expected to contain only non-zero judgments (absent items are implicit
-    grade 0). Only the validation split is released at this stage; the test
-    split will be released alongside the workrb.ai challenge results.
-
-    Subclasses set ``hf_name`` via ``__init__``.
+    Queries are skill-bearing sentences ranked against the ESCO skill taxonomy.
+    The BEIR loading logic lives in :class:`GradedBEIRRankingTask`; this base
+    just pins the skill-extraction task group and query input type.
     """
 
     @property
-    def default_metrics(self) -> list[str]:
-        """Default metrics include nDCG to leverage the graded labels.
+    def task_group(self) -> RankingTaskGroup:
+        """Skill extraction task group."""
+        return RankingTaskGroup.SKILL_EXTRACTION
 
-        ``ndcg`` without a cutoff scores the full ranking (k = |target_space|).
-        """
-        return ["ndcg", "ndcg@5", "ndcg@10", "map", "rp@10", "mrr"]
-
-    def load_dataset(self, dataset_id: str, split: DatasetSplit) -> RankingDataset:
-        """Load BEIR-style graded annotations and convert to a RankingDataset."""
-        if split != DatasetSplit.VAL:
-            raise ValueError(
-                f"Split '{split}' not supported for {type(self).__name__}: only the "
-                f"validation split is annotated at this stage."
-            )
-
-        queries_ds = load_dataset(self.hf_name, "queries", split="validation")
-        corpus_ds = load_dataset(self.hf_name, "corpus", split="corpus")
-        qrels_ds = load_dataset(self.hf_name, "qrels", split="validation")
-        assert isinstance(queries_ds, Dataset)
-        assert isinstance(corpus_ds, Dataset)
-        assert isinstance(qrels_ds, Dataset)
-        queries_df = queries_ds.to_pandas()
-        corpus_df = corpus_ds.to_pandas()
-        qrels_df = qrels_ds.to_pandas()
-
-        # target_space is the corpus titles in corpus order; URIs map by row index.
-        target_space = corpus_df["title"].tolist()
-        uri_to_idx = {uri: i for i, uri in enumerate(corpus_df["_id"])}
-
-        qrels_df["target_idx"] = qrels_df["corpus-id"].map(uri_to_idx)
-        # Every qrel should resolve; if any don't, surface the issue rather than silently dropping.
-        unresolved = qrels_df["target_idx"].isna().sum()
-        assert unresolved == 0, (
-            f"{unresolved} qrel rows reference corpus-ids not present in the corpus config"
-        )
-        qrels_df["target_idx"] = qrels_df["target_idx"].astype(int)
-
-        id_to_query = dict(zip(queries_df["_id"], queries_df["text"], strict=True))
-        qrels_df["sentence"] = qrels_df["query-id"].map(id_to_query)
-
-        grouped = qrels_df.groupby("sentence")
-        filtered_queries: list[str] = []
-        filtered_indices: list[list[int]] = []
-        filtered_relevance: list[list[float]] = []
-        for sentence, group in grouped:
-            filtered_queries.append(str(sentence))
-            filtered_indices.append(group["target_idx"].tolist())
-            filtered_relevance.append([float(s) for s in group["score"].tolist()])
-
-        return RankingDataset(
-            query_texts=filtered_queries,
-            target_indices=filtered_indices,
-            target_space=target_space,
-            dataset_id=dataset_id,
-            target_relevance=filtered_relevance,
-        )
+    @property
+    def query_input_type(self) -> ModelInputType:
+        """Query input type for skill extraction sentences."""
+        return ModelInputType.SKILL_SENTENCE
 
 
 @register_task()
@@ -435,7 +383,7 @@ class HouseGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(hf_name="TechWolf/skill-extraction-house-with-relevancy", **kwargs)
+        super().__init__(hf_name="TechWolf/Skill-extraction-House-graded", **kwargs)
 
     @property
     def name(self) -> str:
@@ -484,7 +432,7 @@ class TechGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
     """
 
     def __init__(self, **kwargs):
-        super().__init__(hf_name="TechWolf/skill-extraction-tech-with-relevancy", **kwargs)
+        super().__init__(hf_name="TechWolf/Skill-extraction-Tech-graded", **kwargs)
 
     @property
     def name(self) -> str:
@@ -517,6 +465,51 @@ class TechGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
   url          = {{https://ceur-ws.org/Vol-3218/RecSysHR2022-paper_4.pdf}},
   volume       = {{3218}},
   year         = {{2022}},
+}
+"""
+
+
+@register_task()
+class SkillSkapeGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
+    """Skill Extraction from SkillSkape Dataset with Graded Relevance.
+
+    Re-annotates the sentences from ``jjzha/skillskape`` against the full ESCO
+    v1.1.0 skill taxonomy with a 0-4 relevance scale, following the BEIR layout
+    (``queries``, ``corpus``, ``qrels``). Score scale: 0 unrelated, 1 plausible
+    in domain, 2 recommendable but off-granularity, 3 strongly implied,
+    4 explicitly demonstrated.
+    """
+
+    def __init__(self, **kwargs):
+        super().__init__(hf_name="TechWolf/Skill-extraction-SkillSkape-graded", **kwargs)
+
+    @property
+    def name(self) -> str:
+        """Skill extraction SkillSkape graded task name."""
+        return "Skill Extraction SkillSkape Graded"
+
+    @property
+    def description(self) -> str:
+        """Skill extraction SkillSkape graded task description."""
+        return (
+            "Extract skills from text descriptions in SkillSkape, with graded 0-4 "
+            "relevance against the full ESCO v1.1.0 taxonomy."
+        )
+
+    @property
+    def citation(self) -> str:
+        """Skill extraction SkillSkape graded task citation."""
+        return """@inproceedings{magron-etal-2024-jobskape,
+  title     = {{JobSkape: A Framework for Generating Synthetic Job Postings to Enhance Skill Matching}},
+  author    = {{Magron, Antoine and Dai, Anna and Zhang, Mike and Montariol, Syrielle and Bosselut, Antoine}},
+  editor    = {{Hruschka, Estevam and Lake, Thom and Otani, Naoki and Mitchell, Tom}},
+  booktitle = {{Proceedings of the First Workshop on Natural Language Processing for Human Resources (NLP4HR 2024)}},
+  month     = {{mar}},
+  year      = {{2024}},
+  address   = {{St. Julian's, Malta}},
+  publisher = {{Association for Computational Linguistics}},
+  url       = {{https://aclanthology.org/2024.nlp4hr-1.4/}},
+  pages     = {{43--58}}
 }
 """
 

@@ -6,6 +6,7 @@ import pytest
 
 from tests.test_utils import GeneralRankingTestTask
 from workrb.tasks import (
+    ESCOGradedSkillNormRanking,
     ESCOJob2SkillClassification,
     ESCOJob2SkillRanking,
     ESCOSkill2JobRanking,
@@ -18,6 +19,7 @@ from workrb.tasks import (
     MELSRanking,
     SkillMatch1kSkillSimilarityRanking,
     SkillSkapeExtractRanking,
+    SkillSkapeGradedSkillExtractRanking,
     TechGradedSkillExtractRanking,
     TechSkillExtractRanking,
 )
@@ -56,6 +58,8 @@ def test_ranking_tasks_init_en_splits():
         ("SkillExtractTechRanking", TechSkillExtractRanking),
         ("SkillExtractTechGradedRanking", TechGradedSkillExtractRanking),
         ("SkillExtractSkillSkapeRanking", SkillSkapeExtractRanking),
+        ("SkillExtractSkillSkapeGradedRanking", SkillSkapeGradedSkillExtractRanking),
+        ("SkillNormESCOGradedRanking", ESCOGradedSkillNormRanking),
         ("SkillSimilarityRanking", SkillMatch1kSkillSimilarityRanking),
     ]
 
@@ -67,6 +71,8 @@ def test_ranking_tasks_init_en_splits():
     tasks_with_only_val_set = [
         "SkillExtractHouseGradedRanking",
         "SkillExtractTechGradedRanking",
+        "SkillExtractSkillSkapeGradedRanking",
+        "SkillNormESCOGradedRanking",
     ]
 
     results = {"success": [], "failures": []}
