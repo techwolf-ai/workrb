@@ -1,5 +1,6 @@
 """Test loading of all concrete task implementations."""
 
+import logging
 from typing import Literal
 
 import pytest
@@ -17,13 +18,19 @@ from workrb.tasks import (
     JobTitleSimilarityRanking,
     MELORanking,
     MELSRanking,
+    SearchQueryCandidateRanking,
     SkillMatch1kSkillSimilarityRanking,
     SkillSkapeExtractRanking,
     SkillSkapeGradedSkillExtractRanking,
     TechGradedSkillExtractRanking,
     TechSkillExtractRanking,
 )
-from workrb.tasks.abstract.base import DatasetSplit, Language, TaskType
+from workrb.tasks.abstract.base import (
+    DatasetConfigNotSupported,
+    DatasetSplit,
+    Language,
+    TaskType,
+)
 from workrb.types import DatasetLanguages
 
 
@@ -230,6 +237,68 @@ class TestTaskLanguageSupport:
             languages=self.supported_languages,
             split=self.split,
             unsupported_lang_mode=unsupported_lang_mode,
+        )
+
+
+class TestEmptyDatasetWarnings:
+    """Tasks that resolve to zero datasets must warn instead of staying silent."""
+
+    @pytest.fixture(autouse=True)
+    def propagate_workrb_logs(self):
+        """Enable propagation on the 'workrb' logger for the duration of each test.
+
+        The package logger disables propagation, which hides its records
+        from caplog's root handler.
+        """
+        workrb_logger = logging.getLogger("workrb")
+        original = workrb_logger.propagate
+        workrb_logger.propagate = True
+        yield
+        workrb_logger.propagate = original
+
+    def test_warns_when_no_dataset_matches_requested_languages(self, caplog):
+        """Warn when the language selection matches no dataset.
+
+        A cross-lingual task requested with a single language selects no
+        datasets: each dataset needs both its query and target languages in
+        the requested set.
+        """
+        with caplog.at_level(logging.WARNING, logger="workrb.tasks.abstract.base"):
+            task = SearchQueryCandidateRanking(split="test", languages=[Language.DE.value])
+
+        assert task.dataset_ids == []
+        assert any(
+            "no datasets for the requested languages" in record.message for record in caplog.records
+        )
+
+    def test_warns_when_all_selected_datasets_are_skipped(self, caplog):
+        """Warn when every selected dataset raises DatasetConfigNotSupported.
+
+        The task ends up with no datasets after loading and must say so.
+        """
+
+        class AllSkippedTask(StubSupportedLanguagesRankingTask):
+            def load_dataset(self, dataset_id, split):
+                raise DatasetConfigNotSupported(f"unsupported: {dataset_id}")
+
+        with caplog.at_level(logging.WARNING, logger="workrb.tasks.abstract.base"):
+            task = AllSkippedTask(languages=[Language.EN.value], split="test")
+
+        assert task.dataset_ids == []
+        assert any(
+            "selected datasets were skipped during loading" in record.message
+            for record in caplog.records
+        )
+
+    def test_no_warning_when_datasets_load(self, caplog):
+        """A task with at least one loaded dataset must not emit either warning."""
+        with caplog.at_level(logging.WARNING, logger="workrb.tasks.abstract.base"):
+            StubSupportedLanguagesRankingTask(languages=[Language.EN.value], split="test")
+
+        assert not any(
+            "no datasets for the requested languages" in record.message
+            or "selected datasets were skipped during loading" in record.message
+            for record in caplog.records
         )
 
 

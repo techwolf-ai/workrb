@@ -70,11 +70,28 @@ class Task(ABC):
 
         # Select dataset identifiers that match the requested languages
         self.dataset_ids = self.languages_to_dataset_ids(self.languages)
+        if not self.dataset_ids:
+            logger.warning(
+                "Task '%s' has no datasets for the requested languages %s. "
+                "The task will produce no results. For cross-lingual tasks, the "
+                "requested languages must cover both the query and the target "
+                "language of a dataset (e.g. languages=['de', 'en'] for a "
+                "German-to-English dataset).",
+                self.name,
+                [lang.value for lang in self.languages],
+            )
 
         # Load datasets for the selected dataset identifiers
         self.datasets = self._load_datasets(dataset_ids=self.dataset_ids, split=self.split)
 
         # Skipped datasets (DatasetConfigNotSupported) are excluded from self.dataset_ids
+        if self.dataset_ids and not self.datasets:
+            logger.warning(
+                "Task '%s': all %d selected datasets were skipped during loading. "
+                "The task will produce no results.",
+                self.name,
+                len(self.dataset_ids),
+            )
         self.dataset_ids = list(self.datasets.keys())
 
     def _parse_languages(
