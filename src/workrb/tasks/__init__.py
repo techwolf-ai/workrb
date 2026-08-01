@@ -15,6 +15,7 @@ from .ranking.freelancer_project_matching import (
 from .ranking.job2skill import ESCOJob2SkillRanking
 from .ranking.job_similarity import JobTitleSimilarityRanking
 from .ranking.jobnorm import JobBERTJobNormRanking
+from .ranking.jobnorm_onet import JobBERTONetJobNormRanking
 from .ranking.melo import MELORanking
 from .ranking.mels import MELSRanking
 from .ranking.skill2job import ESCOSkill2JobRanking
@@ -63,4 +64,5 @@ __all__ = [
     "SkillMatch1kSkillSimilarityRanking",
     "ProjectCandidateRanking",
     "SearchQueryCandidateRanking",
+    "JobBERTONetJobNormRanking",
 ]

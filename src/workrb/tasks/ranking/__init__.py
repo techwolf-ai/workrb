@@ -14,6 +14,7 @@ from workrb.tasks.ranking.freelancer_project_matching import (
 from workrb.tasks.ranking.job2skill import ESCOJob2SkillRanking
 from workrb.tasks.ranking.job_similarity import JobTitleSimilarityRanking
 from workrb.tasks.ranking.jobnorm import JobBERTJobNormRanking
+from workrb.tasks.ranking.jobnorm_onet import JobBERTONetJobNormRanking
 from workrb.tasks.ranking.melo import MELORanking
 from workrb.tasks.ranking.mels import MELSRanking
 from workrb.tasks.ranking.skill2job import ESCOSkill2JobRanking
@@ -39,6 +40,7 @@ __all__ = [
     "HouseGradedSkillExtractRanking",
     "HouseSkillExtractRanking",
     "JobBERTJobNormRanking",
+    "JobBERTONetJobNormRanking",
     "JobTitleSimilarityRanking",
     "MELORanking",
     "MELSRanking",
