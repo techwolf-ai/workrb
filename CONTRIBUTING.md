@@ -156,6 +156,8 @@ Tasks are the core evaluation units in WorkRB. Follow these steps to add a new t
 Create a new file in `src/workrb/tasks/ranking/` or `src/workrb/tasks/classification/` based on the task type. 
 For a full example, see also [examples/custom_task_example.py](examples/custom_task_example.py).
 
+If your task needs a language or input type that is not in `Language` or `ModelInputType`, add it to the enum in [src/workrb/types.py](src/workrb/types.py) when contributing to the package. For tasks living outside the package, register it at import time instead: `Language.register("sw")` or `ModelInputType.register("course_title")`.
+
 ```python
 # src/workrb/tasks/ranking/my_task.py
 

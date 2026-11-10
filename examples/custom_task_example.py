@@ -12,9 +12,25 @@ by all metrics. For graded relevance (e.g. nDCG@k with a 1-2-3 scale), see
 
 import workrb
 from workrb.registry import register_task
-from workrb.tasks.abstract.base import DatasetSplit, LabelType, Language
-from workrb.tasks.abstract.ranking_base import RankingDataset, RankingTaskGroup
+from workrb.tasks.abstract.base import BaseTaskGroup, DatasetSplit, LabelType, Language
+from workrb.tasks.abstract.ranking_base import RankingDataset
 from workrb.types import ModelInputType
+
+# Languages and input types that WorkRB does not ship can be registered once at
+# import time, e.g. ``Language.register("sw")``. Unregistered values still raise.
+JOB_AD_TITLE = ModelInputType.register("job_ad_title")
+
+
+class MyTaskGroup(BaseTaskGroup):
+    """Custom task group.
+
+    Tasks with the same value are averaged together in
+    ``mean_per_task_group``. The ``rank_`` prefix follows the built-in naming
+    convention; using a built-in value such as ``"rank_job2skill"`` would merge
+    this task into that group instead.
+    """
+
+    JOB_AD2SKILL = "rank_job_ad2skill"
 
 
 @register_task()
@@ -50,13 +66,13 @@ class MyCustomRankingTask(workrb.tasks.RankingTask):
 
     @property
     def query_input_type(self) -> ModelInputType:
-        """Return the input type for queries."""
-        return ModelInputType.JOB_TITLE
+        """Return the input type for queries (a custom, registered type)."""
+        return JOB_AD_TITLE
 
     @property
     def target_input_type(self) -> ModelInputType:
         """Return the input type for targets."""
-        return ModelInputType.JOB_TITLE
+        return ModelInputType.SKILL_NAME
 
     @property
     def default_metrics(self) -> list[str]:
@@ -64,9 +80,9 @@ class MyCustomRankingTask(workrb.tasks.RankingTask):
         return ["map", "mrr", "recall@5", "recall@10"]
 
     @property
-    def task_group(self) -> RankingTaskGroup:
+    def task_group(self) -> MyTaskGroup:
         """Task group is custom."""
-        return RankingTaskGroup.JOB2SKILL
+        return MyTaskGroup.JOB_AD2SKILL
 
     @property
     def label_type(self) -> LabelType:
