@@ -82,6 +82,7 @@ pip install workrb
 | Job to Skills WorkBench        | `ESCOJob2SkillRanking` | multi_label | 3039 queries x 13939 targets        | 28        |
 | Job Title Similarity           | `JobTitleSimilarityRanking` | multi_label | 105 queries x 2619 targets          | 11        |
 | Job Normalization              | `JobBERTJobNormRanking` | single_label | 15463 queries x 2942 targets        | 28        |
+| Job Normalization (O*NET)              | `JobBERTONetJobNormRanking` | single_label | 13615 queries x 1016 targets        | 1        |
 | Job Normalization MELO         | `MELORanking` | multi_label | 633 queries x 33813 targets         | 21        |
 | Skill to Job WorkBench         | `ESCOSkill2JobRanking` | multi_label | 13492 queries x 3039 targets        | 28        |
 | Skill Extraction House         | `HouseSkillExtractRanking` | multi_label | 262 queries x 13891 targets         | 28        |
