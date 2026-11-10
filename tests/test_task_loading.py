@@ -24,6 +24,7 @@ from workrb.tasks import (
     SkillSkapeGradedSkillExtractRanking,
     TechGradedSkillExtractRanking,
     TechSkillExtractRanking,
+    TechWolfGradedSkillExtractRanking,
 )
 from workrb.tasks.abstract.base import (
     DatasetConfigNotSupported,
@@ -66,6 +67,7 @@ def test_ranking_tasks_init_en_splits():
         ("SkillExtractTechGradedRanking", TechGradedSkillExtractRanking),
         ("SkillExtractSkillSkapeRanking", SkillSkapeExtractRanking),
         ("SkillExtractSkillSkapeGradedRanking", SkillSkapeGradedSkillExtractRanking),
+        ("SkillExtractTechWolfGradedRanking", TechWolfGradedSkillExtractRanking),
         ("SkillNormESCOGradedRanking", ESCOGradedSkillNormRanking),
         ("SkillSimilarityRanking", SkillMatch1kSkillSimilarityRanking),
     ]
@@ -74,12 +76,7 @@ def test_ranking_tasks_init_en_splits():
         "JobTitleSimilarityRanking",
         "MELORanking",
         "MELSRanking",
-    ]
-    tasks_with_only_val_set = [
-        "SkillExtractHouseGradedRanking",
-        "SkillExtractTechGradedRanking",
-        "SkillExtractSkillSkapeGradedRanking",
-        "SkillNormESCOGradedRanking",
+        "SkillExtractTechWolfGradedRanking",
     ]
 
     results = {"success": [], "failures": []}
@@ -90,8 +87,6 @@ def test_ranking_tasks_init_en_splits():
     for split in splits:
         for task_name, task_class in ranking_tasks:
             if split != DatasetSplit.TEST and task_name in tasks_with_only_test_set:
-                continue
-            if split != DatasetSplit.VAL and task_name in tasks_with_only_val_set:
                 continue
             nb_total += 1
             try:

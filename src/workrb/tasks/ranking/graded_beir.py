@@ -31,9 +31,7 @@ class GradedBEIRRankingTask(RankingTask):
     declared per subclass via :attr:`split_to_hf_split` (which maps each
     supported :class:`DatasetSplit` to the HF split name its
     ``queries``/``qrels`` configs live under) rather than hardcoded with an
-    inline guard as in the single-split tasks (e.g. ``MELORanking``). The
-    default exposes only the validation split, the common case for in-progress
-    benchmark datasets whose test split is withheld.
+    inline guard as in the single-split tasks (e.g. ``MELORanking``).
 
     Concrete subclasses set ``hf_name`` via ``__init__`` and supply the
     task-specific ``task_group``, ``query_input_type``, ``name``,
@@ -56,10 +54,10 @@ class GradedBEIRRankingTask(RankingTask):
 
         The corpus config is always loaded from the ``corpus`` split; this
         mapping only governs the ``queries`` and ``qrels`` configs. Override to
-        expose more or fewer splits, e.g. ``{DatasetSplit.VAL: "validation",
-        DatasetSplit.TEST: "test"}`` for a dataset that releases both.
+        expose fewer splits, e.g. ``{DatasetSplit.TEST: "test"}`` for a dataset
+        that only releases a test split.
         """
-        return {DatasetSplit.VAL: "validation"}
+        return {DatasetSplit.VAL: "validation", DatasetSplit.TEST: "test"}
 
     @property
     def supported_query_languages(self) -> list[Language]:

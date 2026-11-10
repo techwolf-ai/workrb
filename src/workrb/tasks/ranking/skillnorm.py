@@ -229,15 +229,6 @@ class ESCOGradedSkillNormRanking(GradedBEIRRankingTask):
         super().__init__(hf_name="TechWolf/Skill-normalisation-ESCO-graded", **kwargs)
 
     @property
-    def split_to_hf_split(self) -> dict[DatasetSplit, str]:
-        """Expose both validation and test splits.
-
-        The graded repo publishes a ``validation`` split (full 0-4 relevance)
-        and a ``test`` split, both under the ``queries`` and ``qrels`` configs.
-        """
-        return {DatasetSplit.VAL: "validation", DatasetSplit.TEST: "test"}
-
-    @property
     def task_group(self) -> RankingTaskGroup:
         """Skill normalization task group."""
         return RankingTaskGroup.SKILL_NORMALIZATION
@@ -263,4 +254,13 @@ class ESCOGradedSkillNormRanking(GradedBEIRRankingTask):
     @property
     def citation(self) -> str:
         """Skill normalization ESCO graded task citation."""
-        return """To be announced."""
+        return """@misc{veys2026gradingunannotatedinsightsworkrb,
+  title={Grading the Unannotated: Insights from the WorkRB Skill Extraction Challenge at RecSys-HR 2026},
+  author={Warre Veys and Luis Gasco and Jens-Joris Decorte},
+  year={2026},
+  eprint={2611.03525},
+  archivePrefix={arXiv},
+  primaryClass={cs.AI},
+  url={https://arxiv.org/abs/2611.03525},
+}
+"""

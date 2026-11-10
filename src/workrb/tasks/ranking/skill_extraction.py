@@ -361,11 +361,6 @@ class BaseGradedSkillExtractRanking(GradedBEIRRankingTask):
     """
 
     @property
-    def split_to_hf_split(self) -> dict[DatasetSplit, str]:
-        """Expose both validation and test splits."""
-        return {DatasetSplit.VAL: "validation", DatasetSplit.TEST: "test"}
-
-    @property
     def task_group(self) -> RankingTaskGroup:
         """Skill extraction task group."""
         return RankingTaskGroup.SKILL_EXTRACTION
@@ -406,21 +401,14 @@ class HouseGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
     @property
     def citation(self) -> str:
         """Skill extraction HOUSE graded task citation."""
-        return """@inproceedings{decorte2022design,
-  articleno    = {{4}},
-  author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Deleu, Johannes and Develder, Chris and Demeester, Thomas}},
-  booktitle    = {{Proceedings of the 2nd Workshop on Recommender Systems for Human Resources (RecSys-in-HR 2022)}},
-  editor       = {{Kaya, Mesut and Bogers, Toine and Graus, David and Mesbah, Sepideh and Johnson, Chris and Gutiérrez, Francisco}},
-  isbn         = {{9781450398565}},
-  issn         = {{1613-0073}},
-  language     = {{eng}},
-  location     = {{Seatle, USA}},
-  pages        = {{7}},
-  publisher    = {{CEUR}},
-  title        = {{Design of negative sampling strategies for distantly supervised skill extraction}},
-  url          = {{https://ceur-ws.org/Vol-3218/RecSysHR2022-paper_4.pdf}},
-  volume       = {{3218}},
-  year         = {{2022}},
+        return """@misc{veys2026gradingunannotatedinsightsworkrb,
+  title={Grading the Unannotated: Insights from the WorkRB Skill Extraction Challenge at RecSys-HR 2026},
+  author={Warre Veys and Luis Gasco and Jens-Joris Decorte},
+  year={2026},
+  eprint={2611.03525},
+  archivePrefix={arXiv},
+  primaryClass={cs.AI},
+  url={https://arxiv.org/abs/2611.03525},
 }
 """
 
@@ -455,21 +443,14 @@ class TechGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
     @property
     def citation(self) -> str:
         """Skill extraction TECH graded task citation."""
-        return """@inproceedings{decorte2022design,
-  articleno    = {{4}},
-  author       = {{Decorte, Jens-Joris and Van Hautte, Jeroen and Deleu, Johannes and Develder, Chris and Demeester, Thomas}},
-  booktitle    = {{Proceedings of the 2nd Workshop on Recommender Systems for Human Resources (RecSys-in-HR 2022)}},
-  editor       = {{Kaya, Mesut and Bogers, Toine and Graus, David and Mesbah, Sepideh and Johnson, Chris and Gutiérrez, Francisco}},
-  isbn         = {{9781450398565}},
-  issn         = {{1613-0073}},
-  language     = {{eng}},
-  location     = {{Seatle, USA}},
-  pages        = {{7}},
-  publisher    = {{CEUR}},
-  title        = {{Design of negative sampling strategies for distantly supervised skill extraction}},
-  url          = {{https://ceur-ws.org/Vol-3218/RecSysHR2022-paper_4.pdf}},
-  volume       = {{3218}},
-  year         = {{2022}},
+        return """@misc{veys2026gradingunannotatedinsightsworkrb,
+  title={Grading the Unannotated: Insights from the WorkRB Skill Extraction Challenge at RecSys-HR 2026},
+  author={Warre Veys and Luis Gasco and Jens-Joris Decorte},
+  year={2026},
+  eprint={2611.03525},
+  archivePrefix={arXiv},
+  primaryClass={cs.AI},
+  url={https://arxiv.org/abs/2611.03525},
 }
 """
 
@@ -504,17 +485,14 @@ class SkillSkapeGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
     @property
     def citation(self) -> str:
         """Skill extraction SkillSkape graded task citation."""
-        return """@inproceedings{magron-etal-2024-jobskape,
-  title     = {{JobSkape: A Framework for Generating Synthetic Job Postings to Enhance Skill Matching}},
-  author    = {{Magron, Antoine and Dai, Anna and Zhang, Mike and Montariol, Syrielle and Bosselut, Antoine}},
-  editor    = {{Hruschka, Estevam and Lake, Thom and Otani, Naoki and Mitchell, Tom}},
-  booktitle = {{Proceedings of the First Workshop on Natural Language Processing for Human Resources (NLP4HR 2024)}},
-  month     = {{mar}},
-  year      = {{2024}},
-  address   = {{St. Julian's, Malta}},
-  publisher = {{Association for Computational Linguistics}},
-  url       = {{https://aclanthology.org/2024.nlp4hr-1.4/}},
-  pages     = {{43--58}}
+        return """@misc{veys2026gradingunannotatedinsightsworkrb,
+  title={Grading the Unannotated: Insights from the WorkRB Skill Extraction Challenge at RecSys-HR 2026},
+  author={Warre Veys and Luis Gasco and Jens-Joris Decorte},
+  year={2026},
+  eprint={2611.03525},
+  archivePrefix={arXiv},
+  primaryClass={cs.AI},
+  url={https://arxiv.org/abs/2611.03525},
 }
 """
 
@@ -524,9 +502,11 @@ class TechWolfGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
     """Skill Extraction from TechWolf Dataset with Graded Relevance.
 
     Re-annotates the sentences from ``TechWolf/skill-extraction-techwolf``
-    against the full ESCO v1.1.0 skill taxonomy, following the BEIR layout
-    (``queries``, ``corpus``, ``qrels``). Only a ``test`` split is published for
-    this dataset.
+    against the full ESCO v1.1.0 skill taxonomy with a 0-4 relevance scale,
+    following the BEIR layout (``queries``, ``corpus``, ``qrels``). Score scale:
+    0 unrelated, 1 plausible in domain, 2 recommendable but off-granularity,
+    3 strongly implied, 4 explicitly demonstrated. Only a ``test`` split is
+    published for this dataset.
     """
 
     def __init__(self, **kwargs):
@@ -547,17 +527,20 @@ class TechWolfGradedSkillExtractRanking(BaseGradedSkillExtractRanking):
         """Skill extraction TechWolf graded task description."""
         return (
             "Extract skills from text descriptions in a generic distribution of job "
-            "descriptions, against the full ESCO v1.1.0 taxonomy."
+            "descriptions, with graded 0-4 relevance against the full ESCO v1.1.0 taxonomy."
         )
 
     @property
     def citation(self) -> str:
         """Skill extraction TechWolf graded task citation."""
-        return """@article{decorte2023extreme,
-  title={Extreme multi-label skill extraction training using large language models},
-  author={Decorte, Jens-Joris and Verlinden, Severine and Van Hautte, Jeroen and Deleu, Johannes and Develder, Chris and Demeester, Thomas},
-  journal={arXiv preprint arXiv:2307.10778},
-  year={2023}
+        return """@misc{veys2026gradingunannotatedinsightsworkrb,
+  title={Grading the Unannotated: Insights from the WorkRB Skill Extraction Challenge at RecSys-HR 2026},
+  author={Warre Veys and Luis Gasco and Jens-Joris Decorte},
+  year={2026},
+  eprint={2611.03525},
+  archivePrefix={arXiv},
+  primaryClass={cs.AI},
+  url={https://arxiv.org/abs/2611.03525},
 }
 """
 

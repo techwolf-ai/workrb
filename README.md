@@ -85,16 +85,17 @@ pip install workrb
 | Job Normalization MELO         | `MELORanking` | multi_label | 633 queries x 33813 targets         | 21        |
 | Skill to Job WorkBench         | `ESCOSkill2JobRanking` | multi_label | 13492 queries x 3039 targets        | 28        |
 | Skill Extraction House         | `HouseSkillExtractRanking` | multi_label | 262 queries x 13891 targets         | 28        |
-| Skill Extraction House Graded  | `HouseGradedSkillExtractRanking` | multi_label | 61 queries x 13891 targets          | 1         |
+| Skill Extraction House Graded  | `HouseGradedSkillExtractRanking` | multi_label | 261 queries x 13891 targets         | 1         |
 | Skill Extraction Tech          | `TechSkillExtractRanking` | multi_label | 338 queries x 13891 targets         | 28        |
-| Skill Extraction Tech Graded   | `TechGradedSkillExtractRanking` | multi_label | 75 queries x 13891 targets          | 1         |
+| Skill Extraction Tech Graded   | `TechGradedSkillExtractRanking` | multi_label | 338 queries x 13891 targets         | 1         |
 | Skill Extraction SkillSkape    | `SkillSkapeExtractRanking` | multi_label | 1191 queries x 13891 targets        | 28        |
-| Skill Extraction SkillSkape Graded | `SkillSkapeGradedSkillExtractRanking` | multi_label | 100 queries x 13891 targets         | 1         |
+| Skill Extraction SkillSkape Graded | `SkillSkapeGradedSkillExtractRanking` | multi_label | 500 queries x 13891 targets         | 1         |
 | Skill Extraction TechWolf      | `TechWolfSkillExtractRanking` | multi_label | 326 queries x 13891 targets         | 28        |
+| Skill Extraction TechWolf Graded | `TechWolfGradedSkillExtractRanking` | multi_label | 324 queries x 13891 targets         | 1         |
 | Skill Extraction SkillXL       | `SkillXLSkillExtractRanking` | multi_label | 944 queries x 13891 targets         | 28        |
 | Skill Similarity SkillMatch-1K | `SkillMatch1kSkillSimilarityRanking` | single_label | 900 queries x 2648 targets          | 1         |
 | Skill Normalization ESCO       | `ESCOSkillNormRanking` | multi_label | 72008 queries x 13939 targets       | 28        |
-| Skill Normalization ESCO Graded | `ESCOGradedSkillNormRanking` | multi_label | 50 queries x 13891 targets          | 1         |
+| Skill Normalization ESCO Graded | `ESCOGradedSkillNormRanking` | multi_label | 450 queries x 13891 targets         | 1         |
 | Skill Normalization MELS       | `MELSRanking` | multi_label | 1722 queries x 19466 targets        | 5         |
 | Query-Candidate Matching       | `SearchQueryCandidateRanking` | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
 | Project-Candidate Matching     | `ProjectCandidateRanking` | multi_label | 200 queries x 4019 (x-lang) targets | 5         |
