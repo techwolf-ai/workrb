@@ -2,11 +2,44 @@
 
 from collections.abc import Sequence
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, TypeVar
+
+_REGISTERED: dict[tuple[type, str], Enum] = {}
+_E = TypeVar("_E", bound="_ExtensibleEnum")
 
 
-class Language(str, Enum):
-    """Language enum."""
+class _ExtensibleEnum(str, Enum):
+    """Enum that accepts extra values at runtime through ``register``."""
+
+    @classmethod
+    def register(cls: type[_E], value: str) -> _E:
+        """Register a value not shipped with WorkRB and return its member.
+
+        Call once at import time, before creating tasks that use the value.
+        Registering an existing value returns the existing member.
+        """
+        # Case variants would become separate rows in aggregated results.
+        if not isinstance(value, str) or not value or value != value.lower():
+            raise ValueError(
+                f"{cls.__name__} values must be non-empty lowercase strings: {value!r}"
+            )
+        try:
+            return cls(value)
+        except ValueError:
+            member = str.__new__(cls, value)
+            member._name_ = value.upper()
+            member._value_ = value
+            _REGISTERED[cls, value] = member
+            return member
+
+    @classmethod
+    def _missing_(cls, value):
+        # Non-string values (possibly unhashable) keep raising ValueError.
+        return _REGISTERED.get((cls, value)) if isinstance(value, str) else None
+
+
+class Language(_ExtensibleEnum):
+    """Language enum. Add codes not listed here with ``Language.register("sw")``."""
 
     EN = "en"
     DE = "de"
@@ -178,11 +211,12 @@ class DatasetSplit(str, Enum):
     TEST = "test"
 
 
-class ModelInputType(str, Enum):
+class ModelInputType(_ExtensibleEnum):
     """
     Type describing the input modality for a model.
 
     Can be used for type-specific routing in model inference.
+    Add types not listed here with ``ModelInputType.register("my_type")``.
     """
 
     JOB_TITLE = "job_title"

@@ -52,7 +52,7 @@ model = workrb.models.BiEncoderModel("all-MiniLM-L6-v2")
 # 2. Select (multilingual) tasks to evaluate
 tasks = [
     workrb.tasks.ESCOJob2SkillRanking(split="val", languages=["en"]),
-    workrb.tasks.ESCOSkillNormRanking(split="val", languages=["de", "fr"])
+    workrb.tasks.ESCOSkillNormRanking(split="val", languages=["de", "fr"]),
 ]
 
 # 3. Run benchmark & view results
@@ -132,11 +132,13 @@ This section covers common usage patterns. Table of Contents:
 Add your custom task or model by (1) inheriting from a predefined base class and implementing the abstract methods, and (2) adding it to the registry: 
 - **Custom Tasks**: Inherit from `RankingTask`, `MultilabelClassificationTask`,... Implement the abstract methods. Register via `@register_task()`.
 - **Custom models**: Inherit from `ModelInterface`. Implement the abstract methods. Register via `@register_model()`.
+- **Custom languages and input types**: Built-in values such as `"en"`, `"de"` or `"job_title"` work out of the box; see `Language` and `ModelInputType` in [types.py](src/workrb/types.py) for the full lists. Only when you need a value that is *not* in those lists, register it once at import time. For example, Swahili (`"sw"`) and a course-title input type are not shipped in v0.7.0, so you would add them with `Language.register("sw")` and `ModelInputType.register("course_title")`. After that, they behave like any built-in value. Values that are neither built in nor registered raise a `ValueError`. For a custom task group, subclass `BaseTaskGroup`.
 
 ```python
 from workrb.tasks.abstract.ranking_base import RankingTask
 from workrb.models.base import ModelInterface
 from workrb.registry import register_task, register_model
+
 
 @register_task()
 class MyCustomTask(RankingTask):
@@ -149,8 +151,9 @@ class MyCustomModel(ModelInterface):
     name: str = "MyCustomModel"
     ...
 
+
 # Use your custom model and task:
-model_results = workrb.evaluate(MyCustomModel(),[MyCustomTask()])
+model_results = workrb.evaluate(MyCustomModel(), [MyCustomTask()])
 ```
 
 **For detailed examples**, see:
@@ -169,7 +172,7 @@ WorkRB automatically saves result checkpoints after each dataset evaluation with
 # Run 1: Gets interrupted after 2 tasks
 tasks = [
     workrb.tasks.ESCOJob2SkillRanking(
-        split="val", 
+        split="val",
         languages=["en"],
     )
 ]
@@ -320,7 +323,9 @@ You can override the default metrics per task via the `metrics` parameter of `ev
 
 ```python
 results = workrb.evaluate(
-    model, tasks, output_folder="results/my_model",
+    model,
+    tasks,
+    output_folder="results/my_model",
     metrics={"ESCOJob2SkillRanking": ["map", "mrr", "recall@5", "recall@10"]},
 )
 ```
@@ -358,7 +363,7 @@ results: BenchmarkResults = workrb.evaluate(
     model,
     tasks,
     language_aggregation_mode=LanguageAggregationMode.MONOLINGUAL_ONLY,
-    execution_mode=ExecutionMode.ALL, # Execute all so we can later switch language_aggregation_mode
+    execution_mode=ExecutionMode.ALL,  # Execute all so we can later switch language_aggregation_mode
 )
 # No lazy mode was used; We can override the aggregation mode at summary time
 summary = results.get_summary_metrics(
@@ -377,7 +382,7 @@ Evaluate multiple models in a single call with `evaluate_multiple_models()`. Eac
 results = workrb.evaluate_multiple_models(
     models=[model_a, model_b],
     tasks=tasks,
-    output_folder_template="results/{model_name}", # Use explicit '{model_name}', used for templating
+    output_folder_template="results/{model_name}",  # Use explicit '{model_name}', used for templating
 )
 # results["model_a_name"] -> BenchmarkResults
 # results["model_b_name"] -> BenchmarkResults
